@@ -15,3 +15,5 @@ Trang quản trị: `/admin`.
 - Client kiểm tra role để hiện UI, nhưng quyền thực sự nằm ở RLS database và Storage.
 - Gỡ một ảnh dự án sẽ xóa ảnh khỏi slot, không tự khôi phục bìa mặc định; có thể tải ảnh mới sau đó.
 - Chưa có người dùng admin nào được tạo tự động, vì kết nối Supabase của ChatGPT chưa được cấp quyền vào project Dortis.
+
+Trường tài khoản mặc định là `admin`. Frontend ánh xạ `admin` đến `VITE_DORTIS_ADMIN_EMAIL` và xác thực bằng Supabase Auth. Nếu email này chưa được cấu hình, có thể nhập email trực tiếp nhưng vẫn cần role admin.

@@ -136,7 +136,7 @@ export default function AdminPage() {
   const [user, setUser] = useState(null)
   const [authorized, setAuthorized] = useState(false)
   const [checking, setChecking] = useState(!!supabase)
-  const [email, setEmail] = useState(ADMIN_EMAIL)
+  const [loginName, setLoginName] = useState('admin')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -159,7 +159,9 @@ export default function AdminPage() {
     event.preventDefault()
     setError(''); setBusy(true)
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+      const accountEmail = loginName.trim().toLowerCase() === 'admin' ? ADMIN_EMAIL : loginName.trim()
+      if (!accountEmail || !accountEmail.includes('@')) throw new Error('Admin email not configured')
+      const { error } = await supabase.auth.signInWithPassword({ email: accountEmail, password })
       if (error) throw error
       setPassword('')
       await check()
@@ -178,10 +180,10 @@ export default function AdminPage() {
   return <main className="admin-auth"><form className="admin-login" onSubmit={signIn}>
     <a href="/" className="admin-back">← TRỞ VỀ TRANG CHỦ</a><span>DORTIS / PRIVATE ACCESS</span><h1>Quản trị<br/><em>Dortis.</em></h1>
     <p>Đăng nhập để chỉnh sửa hình ảnh trang chủ và hồ sơ dự án.</p>
-    <label>TÀI KHOẢN ADMIN<input type="email" required autoComplete="username" value={email} placeholder="Email tài khoản admin" onChange={e=>setEmail(e.target.value)}/></label>
+    <label>TÀI KHOẢN ADMIN<input type="text" required autoComplete="username" value={loginName} placeholder="admin" onChange={e=>setLoginName(e.target.value)}/></label>
     <label>MẬT KHẨU<input type="password" required autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Nhập mật khẩu"/></label>
     {error && <p role="alert" className="admin-auth-error">{error}</p>}
-    <button disabled={busy || !email} type="submit">{busy ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP →'}</button>
-    <small>Chỉ tài khoản có vai trò admin mới được phép ghi dữ liệu. Mật khẩu không lưu trong mã nguồn.</small>
+    <button disabled={busy || !loginName} type="submit">{busy ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP →'}</button>
+    <small>Tài khoản “admin” được ánh xạ sang email đã khai báo trong môi trường Supabase. Bạn cũng có thể nhập email trực tiếp. Mật khẩu không lưu trong mã nguồn.</small>
   </form></main>
 }

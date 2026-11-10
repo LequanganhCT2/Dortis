@@ -47,6 +47,12 @@ on conflict (id) do update
 set public = true, file_size_limit = excluded.file_size_limit,
 allowed_mime_types = excluded.allowed_mime_types;
 
+drop policy if exists "dortis_admin_select_media" on storage.objects;
+create policy "dortis_admin_select_media" on storage.objects
+for select to authenticated
+using (bucket_id = 'dortis-media'
+  and (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
 drop policy if exists "dortis_admin_upload_media" on storage.objects;
 create policy "dortis_admin_upload_media" on storage.objects
 for insert to authenticated
