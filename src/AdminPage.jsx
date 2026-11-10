@@ -6,6 +6,11 @@ const API_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://whkqdusoowrrhtvej
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 const ADMIN_EMAIL = import.meta.env.VITE_DORTIS_ADMIN_EMAIL || ''
 const MAX_BYTES = 5 * 1024 * 1024
+const DEFAULT_IMAGES = {
+  'project-16v2PQ2wO53Z1xBw3FPpkcY1yQAgACbNN': 'https://drive.google.com/thumbnail?id=16v2PQ2wO53Z1xBw3FPpkcY1yQAgACbNN&sz=w1200',
+  'project-1_Z6CuCYS9ycTzngdCPdq0_2IyG0qm6iw': 'https://res.cloudinary.com/dh9e61rog/image/upload/v1794320059/dortis/projects/ludance-cover.png',
+  'project-1j1j6rqEm58Sn2H9jwi2SbALgsM1pp3c7': 'https://res.cloudinary.com/dh9e61rog/image/upload/v1794320083/dortis/projects/la-trinh-cover.png',
+}
 const SLOTS = [
   { id: 'hero', title: 'Ảnh nền Hero', note: 'Ảnh trang đầu, ưu tiên ảnh ngang' },
   { id: 'service-cv', title: 'Dịch vụ · CV & Portfolio' },
@@ -116,9 +121,9 @@ function ImageEditor({ user, signOut }) {
     <header className="admin-intro"><span>DORTIS / ADMIN</span><h1>Quản lý hình ảnh.</h1><p>Thay hoặc gỡ ảnh của từng mục trên Home Page. Thay đổi được lưu vào Supabase và hiển thị cho khách truy cập.</p></header>
     {error && <p className="admin-alert error" role="alert">{error}</p>}
     {message && <p className="admin-alert success" role="status">{message}</p>}
-    <div className="admin-grid">{SLOTS.map(slot => <article key={slot.id} className="admin-slot">
-      <div className="admin-thumb">{images[slot.id]?.image_url ?
-        <img src={images[slot.id].image_url} alt={'Ảnh của ' + slot.title} /> :
+    <div className="admin-grid">{SLOTS.map(slot => { const currentImage = Object.prototype.hasOwnProperty.call(images,slot.id) ? images[slot.id]?.image_url : DEFAULT_IMAGES[slot.id]; return <article key={slot.id} className="admin-slot">
+      <div className="admin-thumb">{currentImage ?
+        <img src={currentImage} alt={'Ảnh của ' + slot.title} /> :
         <span className="admin-empty"><b>DT</b><small>CHƯA CÓ ẢNH TÙY CHỈNH</small></span>}</div>
       <div className="admin-slot-body"><h2>{slot.title}</h2><p>{slot.note || 'Ảnh thay đổi riêng cho khu vực này.'}</p>
         <div className="admin-slot-actions"><label className={'admin-upload ' + (pending ? 'disabled' : '')}>
@@ -127,7 +132,7 @@ function ImageEditor({ user, signOut }) {
         </label>
         <button type="button" disabled={!!pending} onClick={() => setConfirmDelete(slot.id)}>GỠ ẢNH</button></div>
       </div>
-    </article>)}</div>
+    </article> })}</div>
     {confirmDelete && <div className="admin-confirm-backdrop"><section className="admin-confirm" role="dialog" aria-modal="true" aria-label="Xác nhận gỡ ảnh"><h2>Gỡ ảnh đã chọn?</h2><p>Ảnh sẽ không còn hiển thị tại mục này. Dữ liệu gốc của các PDF dự án vẫn giữ nguyên.</p><div><button type="button" onClick={() => setConfirmDelete(null)}>HỦY</button><button type="button" onClick={() => remove(confirmDelete)}>GỠ ẢNH</button></div></section></div>}
   </div>
 }
