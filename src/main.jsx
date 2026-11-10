@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import LiquidRibbons from './LiquidRibbons'
+import AdminPage, { useSiteImages } from './AdminPage'
 import './style.css'
 
 const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://whkqdusoowrrhtvejrie.supabase.co').replace(/\/+$/, '')
@@ -119,6 +120,7 @@ function ArtistDialog({ artist, onClose }) {
   </div>
 }
 function App() {
+  const { siteImages } = useSiteImages()
   const [menuOpen, setMenuOpen] = useState(false)
   const [active, setActive] = useState('top')
   const [scrollRatio, setScrollRatio] = useState(0)
@@ -219,7 +221,7 @@ function App() {
 
     <main>
       <section id="top" className="hero scene-section">
-        <div className="hero-rainbow" aria-hidden="true"/>
+        <div className="hero-rainbow" aria-hidden="true" style={siteImages.hero ? { backgroundImage: `linear-gradient(#f4f6f877,#f4f6f877),url("${siteImages.hero}")`, backgroundSize:"cover", backgroundPosition:"center" } : undefined}/>
         <LiquidRibbons className="hero-liquid" />
         <div className="hero-dust hero-dust-one" aria-hidden="true"/><div className="hero-dust hero-dust-two" aria-hidden="true"/>
         <div className="hero-inner">
@@ -240,7 +242,7 @@ function App() {
         <div className="section-intro" data-reveal><SectionMark number="02" label="CHÚNG TÔI LÀM GÌ?" /><div className="section-intro-row"><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông. Dortis biến ý tưởng thành trải nghiệm nghệ thuật tinh tế và có chiều sâu.</p></div></div>
         <div className="services-grid">{services.map((service, index) => <article className={'service-card service-' + service.style} key={service.number} data-reveal style={{ '--reveal-delay': index * 85 + 'ms' }}>
           <div className="service-card-top"><span>{service.number} / SERVICE</span><span><Arrow /></span></div>
-          <div className="service-art" aria-hidden="true"><span className="service-art-back"/><div className="service-art-frame"><span className="service-art-label">{service.symbol}</span><span className="service-art-glyph">{service.style === 'cv' ? 'A' : service.style === 'brand' ? 'Dt' : service.style === 'visual' ? '✳' : 'D.'}</span><span className="service-art-mini">DORTIS — EST. 2026</span></div></div>
+          <div className="service-art" aria-hidden="true">{siteImages["service-"+service.style] && <img className="service-custom-image" src={siteImages["service-"+service.style]} alt="" loading="lazy"/>}<span className="service-art-back"/><div className="service-art-frame"><span className="service-art-label">{service.symbol}</span><span className="service-art-glyph">{service.style === 'cv' ? 'A' : service.style === 'brand' ? 'Dt' : service.style === 'visual' ? '✳' : 'D.'}</span><span className="service-art-mini">DORTIS — EST. 2026</span></div></div>
           <div className="service-card-copy"><p>{service.english}</p><h3>{service.title}</h3><span>{service.description}</span></div>
         </article>)}</div>
       </section>
@@ -249,7 +251,9 @@ function App() {
         <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>{projectDocuments.length ? 'Từng dự án được giới thiệu riêng dưới dạng PDF. Chọn một dự án để xem tài liệu đầy đủ.' : 'Các dự án được giới thiệu riêng theo từng tài liệu PDF để bạn dễ xem và khám phá.'}</p></div></div>
         {projectDocuments.length > 0 ? <div className="pdf-project-grid section-shell">
           {projectDocuments.map((project, index) => <button key={project.driveId || project.pdfUrl} className="pdf-project-card" data-reveal style={{ '--reveal-delay': ((index % 3) * 100) + 'ms' }} type="button" onClick={() => setOpenedProject(project)}>
-            <span className="pdf-project-art"><span className="pdf-project-index">{String(index + 1).padStart(2, '0')} / DORTIS PROJECT</span><span className="pdf-project-sheet"><span>DT</span><strong>PROJECT<br/>PORTFOLIO</strong><small>PDF / DOCUMENT</small></span><span className="pdf-project-open">↗</span></span>
+            <span className="pdf-project-art"><span className="pdf-project-index">{String(index + 1).padStart(2, '0')} / DORTIS PROJECT</span>{(Object.prototype.hasOwnProperty.call(siteImages,'project-'+project.driveId) ? siteImages['project-'+project.driveId] : project.coverUrl) ?
+              <img className="pdf-project-cover" src={Object.prototype.hasOwnProperty.call(siteImages,'project-'+project.driveId) ? siteImages['project-'+project.driveId] : project.coverUrl} alt={'Bìa hồ sơ ' + project.title} loading="lazy" /> :
+              <span className="pdf-project-no-cover">CHƯA CÓ ẢNH</span>}<span className="pdf-project-open">↗</span></span>
             <span className="pdf-project-info"><span>{project.category || 'DORTIS / PROJECT'}{project.year ? ' · ' + project.year : ''}</span><strong>{project.title}</strong><small>{project.description || 'Xem tài liệu dự án dưới dạng PDF.'}</small></span>
           </button>)}
         </div> : <div className="pdf-project-empty section-shell"><p>DORTIS PROJECTS</p><h3>Các dự án đang được cập nhật.</h3><span>Danh mục PDF sẽ hiển thị từng dự án riêng khi tài liệu được kết nối.</span></div>}
@@ -264,7 +268,7 @@ function App() {
       </section>
 
       <section id="ve-dortis" className="manifesto-section scene-section">
-        <div className="manifesto-halo" aria-hidden="true"/><div className="manifesto-glass" aria-hidden="true"/>
+        <div className="manifesto-halo" aria-hidden="true"/>{siteImages.about ? <img className="about-custom-image" src={siteImages.about} alt="" loading="lazy"/> : <div className="manifesto-glass" aria-hidden="true"/>}
         <div className="manifesto-content section-shell" data-reveal><SectionMark number="05" label="THE DORTIS PHILOSOPHY"/><p className="manifesto-kicker">ĐẰNG SAU MỌI ÁNH ĐÈN SÂN KHẤU</p><h2>Một nghệ sĩ không chỉ có <em>âm nhạc.</em><br/>Họ có một <strong>câu chuyện</strong> xứng đáng được nhìn thấy.</h2><div className="manifesto-bottom"><p>Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p><span>CREATIVITY WITH PURPOSE / DORTIS</span></div></div>
       </section>
 
@@ -272,7 +276,7 @@ function App() {
 
       <section className="faq-section section-shell scene-section"><div data-reveal className="faq-heading"><SectionMark number="07" label="FREQUENTLY ASKED QUESTIONS" /><h2>Một vài điều<br/><em>bạn muốn biết.</em></h2></div><div className="faq-list">{faqs.map(([q, a], index) => <details data-reveal key={q} style={{ '--reveal-delay': index * 65 + 'ms' }}><summary><span>{String(index + 1).padStart(2, '0')}</span>{q}<span className="faq-plus">+</span></summary><p>{a}</p></details>)}</div></section>
 
-      <section id="lien-he" className="contact-section scene-section"><div className="contact-aurora" aria-hidden="true"/><div className="contact-inner section-shell" data-reveal><SectionMark number="08" label="LET'S MAKE SOMETHING MEANINGFUL"/><h2>Cùng tạo nên<br/><em>dấu ấn của bạn.</em></h2><p>Từ một ý tưởng nhỏ đến hình ảnh nghệ sĩ trọn vẹn — Dortis sẵn sàng cho những kết nối sáng tạo. Thông tin liên hệ chính thức sẽ được cập nhật.</p><a href="#nghe-si" className="button-dark">KHÁM PHÁ HỒ SƠ NGHỆ SĨ <Arrow /></a><span className="contact-orb">✳</span></div></section>
+      <section id="lien-he" className="contact-section scene-section"><div className="contact-aurora" aria-hidden="true" style={siteImages.contact ? { backgroundImage:`linear-gradient(#e5f2f28f,#e5f2f28f),url("${siteImages.contact}")`,backgroundSize:"cover",backgroundPosition:"center" } : undefined}/><div className="contact-inner section-shell" data-reveal><SectionMark number="08" label="LET'S MAKE SOMETHING MEANINGFUL"/><h2>Cùng tạo nên<br/><em>dấu ấn của bạn.</em></h2><p>Từ một ý tưởng nhỏ đến hình ảnh nghệ sĩ trọn vẹn — Dortis sẵn sàng cho những kết nối sáng tạo. Thông tin liên hệ chính thức sẽ được cập nhật.</p><a href="#nghe-si" className="button-dark">KHÁM PHÁ HỒ SƠ NGHỆ SĨ <Arrow /></a><span className="contact-orb">✳</span></div></section>
     </main>
     <footer className="footer section-shell"><div className="footer-top"><a href="#top"><Brand /></a><p>Chúng tôi giúp nghệ sĩ xây dựng hình ảnh chuyên nghiệp và lan tỏa dấu ấn riêng.</p><a href="#top" className="back-to-top">VỀ ĐẦU TRANG ↑</a></div><div className="footer-bottom"><span>© 2026 DORTIS. MADE FOR ARTISTS.</span><span>ART · IDENTITY · EMOTION</span></div></footer>
     <ArtistDialog artist={selected} onClose={closeDialog}/>
@@ -288,4 +292,4 @@ function App() {
     </div>}
   </div>
 }
-createRoot(document.getElementById('root')).render(<App />)
+createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage /> : <App />)

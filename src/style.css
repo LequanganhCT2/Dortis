@@ -83,3 +83,13 @@ body::-webkit-scrollbar,
 .pdf-project-empty h3{font-size:clamp(23px,2.4vw,34px);line-height:1.4;letter-spacing:-.03em;margin:0 0 10px}
 .pdf-project-empty span{font-size:12px;color:#778494;line-height:1.9}
 @media(max-width:650px){.pdf-project-empty{margin-top:28px;padding:34px 23px;min-height:185px}}
+
+/* Admin-managed imagery on the public Dortis homepage. */
+.service-custom-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;pointer-events:none}
+.about-custom-image{position:absolute;top:0;right:0;width:45%;height:100%;object-fit:cover;opacity:.35;pointer-events:none;mask-image:linear-gradient(90deg,transparent,#000 45%)}
+.pdf-project-cover{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#e7eef3;z-index:1;transition:transform .65s}
+.pdf-project-card:hover .pdf-project-cover{transform:scale(1.04)}
+.pdf-project-no-cover{font-size:11px;font-weight:800;letter-spacing:.15em;color:#526a85;position:relative;z-index:2}
+.pdf-project-art:has(.pdf-project-cover):before{display:none}
+.pdf-project-art:has(.pdf-project-cover){background:#eef1f4}
+@media(max-width:650px){.about-custom-image{width:65%;opacity:.22}}
