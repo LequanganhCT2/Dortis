@@ -134,7 +134,36 @@ function App() {
   const [genre, setGenre] = useState('Tất cả')
   const [selected, setSelected] = useState(null)
   const [reload, setReload] = useState(0)
+  const [projectDocuments, setProjectDocuments] = useState([])
+  const [openedProject, setOpenedProject] = useState(null)
   const closeDialog = useCallback(() => setSelected(null), [])
+  const closeProject = useCallback(() => setOpenedProject(null), [])
+  useEffect(() => {
+    if (!openedProject) return
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = e => { if (e.key === 'Escape') closeProject() }
+    window.addEventListener('keydown', onKey)
+    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', onKey) }
+  }, [openedProject, closeProject])
+
+  useEffect(() => {
+    let disposed = false
+    fetch('/projects.json')
+      .then(response => {
+        if (!response.ok) throw new Error('Chưa có danh sách PDF dự án')
+        return response.json()
+      })
+      .then(entries => {
+        if (!Array.isArray(entries)) throw new Error('projects.json phải là một mảng')
+        const valid = entries.filter(p => p && typeof p.title === 'string' &&
+          (typeof p.driveId === 'string' && /^[a-zA-Z0-9_-]{10,150}$/.test(p.driveId) ||
+           typeof p.pdfUrl === 'string' && /^https:\/\//.test(p.pdfUrl)))
+        if (!disposed) setProjectDocuments(valid)
+      })
+      .catch(() => { if (!disposed) setProjectDocuments([]) })
+    return () => { disposed = true }
+  }, [])
 
   useEffect(() => {
     if (IS_DEMO) return
@@ -222,11 +251,17 @@ function App() {
       </section>
 
       <section id="du-an" className="works-section scene-section">
-        <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>Những hướng thể hiện thị giác tiêu biểu cho tinh thần Dortis. Các hình bên dưới là concept minh họa, chưa phải dự án khách hàng thực tế.</p></div></div>
-        <div className="works-grid section-shell">{works.map((work, index) => <article className={'work-card ' + work.style} key={work.number} data-reveal style={{ '--reveal-delay': index * 100 + 'ms' }}>
+        <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>{projectDocuments.length ? 'Từng dự án được giới thiệu riêng dưới dạng PDF. Chọn một dự án để xem tài liệu đầy đủ.' : 'Những hướng thể hiện thị giác tiêu biểu cho tinh thần Dortis. Các hình bên dưới là concept minh họa, chưa phải dự án khách hàng thực tế.'}</p></div></div>
+        {projectDocuments.length > 0 ? <div className="pdf-project-grid section-shell">
+          {projectDocuments.map((project, index) => <button key={project.driveId || project.pdfUrl} className="pdf-project-card" data-reveal style={{ '--reveal-delay': ((index % 3) * 100) + 'ms' }} type="button" onClick={() => setOpenedProject(project)}>
+            <span className="pdf-project-art"><span className="pdf-project-index">{String(index + 1).padStart(2, '0')} / DORTIS PROJECT</span><span className="pdf-project-sheet"><span>DT</span><strong>PROJECT<br/>PORTFOLIO</strong><small>PDF / DOCUMENT</small></span><span className="pdf-project-open">↗</span></span>
+            <span className="pdf-project-info"><span>{project.category || 'DORTIS / PROJECT'}{project.year ? ' · ' + project.year : ''}</span><strong>{project.title}</strong><small>{project.description || 'Xem tài liệu dự án dưới dạng PDF.'}</small></span>
+          </button>)}
+        </div> : <div className="works-grid section-shell">{works.map((work, index) => <article className={'work-card ' + work.style} key={work.number} data-reveal style={{ '--reveal-delay': index * 100 + 'ms' }}>
           <div className="work-media"><div className="work-media-glow"/><span className="work-watermark">{index === 0 ? 'D' : index === 1 ? '✧' : 'DT'}</span><div className="work-caption"><span>DORTIS CREATIVE</span><strong>{index === 0 ? 'The Artist' : index === 1 ? 'A New Vision' : 'Your Stage'}</strong><small>STUDY / 0{index + 1}</small></div><span className="work-tag">CONCEPT / MINH HỌA</span></div>
           <div className="work-info"><span>{work.number} / {work.group}</span><h3>{work.title}</h3><p>{work.subtitle}</p></div>
-        </article>)}</div>
+        </article>)}</div>}
+
       </section>
 
       <section id="nghe-si" className="artists-section section-shell scene-section">
@@ -249,6 +284,16 @@ function App() {
     </main>
     <footer className="footer section-shell"><div className="footer-top"><a href="#top"><Brand /></a><p>Chúng tôi giúp nghệ sĩ xây dựng hình ảnh chuyên nghiệp và lan tỏa dấu ấn riêng.</p><a href="#top" className="back-to-top">VỀ ĐẦU TRANG ↑</a></div><div className="footer-bottom"><span>© 2026 DORTIS. MADE FOR ARTISTS.</span><span>ART · IDENTITY · EMOTION</span></div></footer>
     <ArtistDialog artist={selected} onClose={closeDialog}/>
+    {openedProject && <div className="pdf-viewer-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeProject() }}>
+      <section className="pdf-viewer" role="dialog" aria-modal="true" aria-label={'Tài liệu dự án ' + openedProject.title}>
+        <header className="pdf-viewer-head"><div><small>DORTIS / PROJECT PDF</small><h3>{openedProject.title}</h3></div><div className="pdf-viewer-actions">
+          <a href={openedProject.driveId ? 'https://drive.google.com/file/d/' + openedProject.driveId + '/view' : openedProject.pdfUrl} target="_blank" rel="noopener noreferrer">MỞ PDF ↗</a>
+          <button type="button" onClick={closeProject} aria-label="Đóng tài liệu">✕</button>
+        </div></header>
+        <iframe title={'PDF dự án ' + openedProject.title} src={openedProject.driveId ? 'https://drive.google.com/file/d/' + openedProject.driveId + '/preview' : openedProject.pdfUrl} loading="lazy" referrerPolicy="no-referrer" />
+        <p className="pdf-viewer-hint">Nếu PDF không hiển thị, hãy dùng nút “MỞ PDF” và kiểm tra quyền chia sẻ tài liệu Google Drive.</p>
+      </section>
+    </div>}
   </div>
 }
 createRoot(document.getElementById('root')).render(<App />)
