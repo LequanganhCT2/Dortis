@@ -189,7 +189,7 @@ function App() {
     (a.stage_name + ' ' + (a.genre || '') + ' ' + (a.location || '')).toLocaleLowerCase('vi').includes(keyword.trim().toLocaleLowerCase('vi'))
   ), [artists, genre, keyword])
 
-  useReveals([artists.length, loading, error, keyword, genre].join(':'))
+  useReveals([artists.length, projectDocuments.length, loading, error, keyword, genre].join(':'))
 
   useEffect(() => {
     let frame = 0
