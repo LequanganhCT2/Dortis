@@ -215,7 +215,7 @@ function App() {
       <nav aria-label="Điều hướng chính" className={'main-nav ' + (menuOpen ? 'menu-open' : '')}>
         {navItems.map(([id, text]) => <a href={'#' + id} key={id} className={active === id ? 'active' : ''} onClick={() => setMenuOpen(false)}>{text}</a>)}
       </nav>
-      <a className="header-contact" href="#lien-he" onClick={() => setMenuOpen(false)}>HỢP TÁC <Arrow /></a>
+      <a className="header-contact" href="/admin" onClick={() => setMenuOpen(false)} aria-label="Đăng nhập quản trị Dortis">ĐĂNG NHẬP <Arrow /></a>
       <button className="menu-toggle" aria-label={menuOpen ? 'Đóng menu' : 'Mở menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? '✕' : '☰'}</button>
     </header>
 
