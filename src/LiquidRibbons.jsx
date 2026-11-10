@@ -161,7 +161,7 @@ export default function LiquidRibbons({ className = '' }) {
         if (!inView && frame) { cancelAnimationFrame(frame); frame = 0 }
       }, { rootMargin: '80px' })
       inViewport.observe(element)
-      element.addEventListener('pointermove', pointer, { passive: true })
+      window.addEventListener('pointermove', pointer, { passive: true })
       window.addEventListener('scroll', onScroll, { passive: true })
       onScroll()
       const visibility = () => { if (document.hidden && frame) { cancelAnimationFrame(frame); frame = 0 } else if (!document.hidden && inView && !frame) frame = requestAnimationFrame(render) }
@@ -170,7 +170,7 @@ export default function LiquidRibbons({ className = '' }) {
       cleanup = () => {
         observer.disconnect()
         inViewport.disconnect()
-        element.removeEventListener('pointermove', pointer)
+        window.removeEventListener('pointermove', pointer)
         window.removeEventListener('scroll', onScroll)
         document.removeEventListener('visibilitychange', visibility)
         cancelAnimationFrame(frame)
