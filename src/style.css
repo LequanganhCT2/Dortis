@@ -76,3 +76,10 @@ body::-webkit-scrollbar,
 .pdf-viewer iframe{border:0;width:100%;flex:1;background:#f4f6f8}.pdf-viewer-hint{font-size:10px;color:#748393;margin:0;padding:10px 20px;text-align:center;line-height:1.6}
 @media(max-width:900px){.pdf-project-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:650px){.pdf-project-grid{grid-template-columns:1fr;gap:18px;margin-top:28px}.pdf-project-art{height:275px}.pdf-project-sheet{min-height:195px}.pdf-viewer-backdrop{padding:8px}.pdf-viewer{height:97svh}.pdf-viewer-head{padding:12px 14px}.pdf-viewer-head h3{font-size:13px}.pdf-viewer-actions a{font-size:9px;padding:9px 11px}.pdf-viewer-hint{font-size:9px}}
+
+/* Empty state while awaiting actual, verified PDFs from the specified Drive folder. */
+.pdf-project-empty{margin-top:45px;padding:54px 42px;background:#fff;border:1px solid #d9e2e9;border-radius:14px;min-height:210px}
+.pdf-project-empty p{font-size:10px;color:#008f91;font-weight:750;letter-spacing:.14em;margin:0 0 17px}
+.pdf-project-empty h3{font-size:clamp(23px,2.4vw,34px);line-height:1.4;letter-spacing:-.03em;margin:0 0 10px}
+.pdf-project-empty span{font-size:12px;color:#778494;line-height:1.9}
+@media(max-width:650px){.pdf-project-empty{margin-top:28px;padding:34px 23px;min-height:185px}}
