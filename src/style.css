@@ -33,3 +33,17 @@
 .footer .brand-wordmark-svg{width:136px;height:43px}
 @media(max-width:650px){.brand-wordmark-svg{width:108px;height:33px}.footer .brand-wordmark-svg{width:124px;height:38px}}
 @media(max-width:380px){.brand-wordmark-svg{width:98px;height:30px}}
+
+/* Hide visible scrollbars without disabling vertical/horizontal scroll.
+   Mouse wheel, touch swipes, trackpad and keyboard navigation remain functional. */
+html, body, .dialog {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Legacy Microsoft */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.dialog::-webkit-scrollbar {
+  display: none; /* Chromium / Safari */
+  width: 0;
+  height: 0;
+}
