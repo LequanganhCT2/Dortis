@@ -212,10 +212,6 @@ function App() {
         <p className="hero-side-label">EXPRESS YOUR TRUE COLORS / DORTIS</p>
       </section>
 
-      <div className="ticker" aria-label="Giá trị sáng tạo của Dortis"><div className="ticker-track" aria-hidden="true">
-        {Array.from({ length: 2 }, (_, n) => <span key={n}>ARTIST IDENTITY <i>✦</i> VISUAL STORYTELLING <i>✦</i> CREATIVE DIRECTION <i>✦</i> DIGITAL EXPERIENCE <i>✦</i></span>)}
-      </div></div>
-
       <section id="dich-vu" className="services-section section-shell scene-section">
         <div className="section-intro" data-reveal><SectionMark number="02" label="CHÚNG TÔI LÀM GÌ?" /><div className="section-intro-row"><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông. Dortis biến ý tưởng thành trải nghiệm nghệ thuật tinh tế và có chiều sâu.</p></div></div>
         <div className="services-grid">{services.map((service, index) => <article className={'service-card service-' + service.style} key={service.number} data-reveal style={{ '--reveal-delay': index * 85 + 'ms' }}>
