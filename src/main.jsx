@@ -19,11 +19,6 @@ const services = [
   { number: '03', title: 'Thiết kế truyền thông', english: 'VISUAL COMMUNICATION', description: 'Thiết kế hình ảnh, ấn phẩm và chất liệu truyền thông cho mỗi hành trình nghệ thuật.', symbol: 'CREATE / FEEL', style: 'visual' },
   { number: '04', title: 'Website nghệ sĩ', english: 'DIGITAL PRESENCE', description: 'Một điểm đến số đầy cảm xúc, nơi công chúng có thể khám phá thế giới nghệ sĩ.', symbol: 'WWW / DORTIS', style: 'web' },
 ]
-const works = [
-  { number: '01', group: 'ARTIST PORTFOLIO', title: 'Một câu chuyện, một bản sắc.', subtitle: 'Thiết kế hồ sơ nghệ sĩ', style: 'work-portrait' },
-  { number: '02', group: 'VISUAL DIRECTION', title: 'Nhìn âm nhạc qua một lăng kính khác.', subtitle: 'Ngôn ngữ thị giác', style: 'work-visual' },
-  { number: '03', group: 'DIGITAL EXPERIENCE', title: 'Cảm xúc trong từng điểm chạm.', subtitle: 'Website & trải nghiệm số', style: 'work-digital' },
-]
 const faqs = [
   ['Dortis là gì?', 'Dortis là dự án sáng tạo giúp xây dựng hình ảnh chuyên nghiệp, giới thiệu hành trình và quản lý hồ sơ công khai của ca sĩ, nghệ sĩ.'],
   ['Dortis có những dịch vụ nào?', 'Dortis định hướng phát triển dịch vụ CV & Portfolio, xây dựng nhận diện cá nhân, thiết kế truyền thông và website nghệ sĩ.'],
@@ -251,16 +246,13 @@ function App() {
       </section>
 
       <section id="du-an" className="works-section scene-section">
-        <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>{projectDocuments.length ? 'Từng dự án được giới thiệu riêng dưới dạng PDF. Chọn một dự án để xem tài liệu đầy đủ.' : 'Những hướng thể hiện thị giác tiêu biểu cho tinh thần Dortis. Các hình bên dưới là concept minh họa, chưa phải dự án khách hàng thực tế.'}</p></div></div>
+        <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>{projectDocuments.length ? 'Từng dự án được giới thiệu riêng dưới dạng PDF. Chọn một dự án để xem tài liệu đầy đủ.' : 'Các dự án được giới thiệu riêng theo từng tài liệu PDF để bạn dễ xem và khám phá.'}</p></div></div>
         {projectDocuments.length > 0 ? <div className="pdf-project-grid section-shell">
           {projectDocuments.map((project, index) => <button key={project.driveId || project.pdfUrl} className="pdf-project-card" data-reveal style={{ '--reveal-delay': ((index % 3) * 100) + 'ms' }} type="button" onClick={() => setOpenedProject(project)}>
             <span className="pdf-project-art"><span className="pdf-project-index">{String(index + 1).padStart(2, '0')} / DORTIS PROJECT</span><span className="pdf-project-sheet"><span>DT</span><strong>PROJECT<br/>PORTFOLIO</strong><small>PDF / DOCUMENT</small></span><span className="pdf-project-open">↗</span></span>
             <span className="pdf-project-info"><span>{project.category || 'DORTIS / PROJECT'}{project.year ? ' · ' + project.year : ''}</span><strong>{project.title}</strong><small>{project.description || 'Xem tài liệu dự án dưới dạng PDF.'}</small></span>
           </button>)}
-        </div> : <div className="works-grid section-shell">{works.map((work, index) => <article className={'work-card ' + work.style} key={work.number} data-reveal style={{ '--reveal-delay': index * 100 + 'ms' }}>
-          <div className="work-media"><div className="work-media-glow"/><span className="work-watermark">{index === 0 ? 'D' : index === 1 ? '✧' : 'DT'}</span><div className="work-caption"><span>DORTIS CREATIVE</span><strong>{index === 0 ? 'The Artist' : index === 1 ? 'A New Vision' : 'Your Stage'}</strong><small>STUDY / 0{index + 1}</small></div><span className="work-tag">CONCEPT / MINH HỌA</span></div>
-          <div className="work-info"><span>{work.number} / {work.group}</span><h3>{work.title}</h3><p>{work.subtitle}</p></div>
-        </article>)}</div>}
+        </div> : <div className="pdf-project-empty section-shell"><p>DORTIS PROJECTS</p><h3>Các dự án đang được cập nhật.</h3><span>Danh mục PDF sẽ hiển thị từng dự án riêng khi tài liệu được kết nối.</span></div>}
 
       </section>
 
