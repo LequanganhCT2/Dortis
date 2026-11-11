@@ -7,6 +7,7 @@ import './cax.css'
 import './philosophy.css'
 import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
 import CircularServiceCarousel from './CircularServiceCarousel'
+import PhilosophyStoryCard from './PhilosophyStoryCard'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
@@ -167,16 +168,7 @@ function App() {
               <p className="dortis-philosophy-lead">Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p>
               <a className="dortis-philosophy-cta" href="#gia-tri">KHÁM PHÁ GIÁ TRỊ DORTIS <span aria-hidden="true">↗</span></a>
             </div>
-            <aside className="dortis-philosophy-card" aria-label="Bản sắc Dortis">
-              {siteImages.about ? <img className="dortis-philosophy-photo" src={siteImages.about} alt="Hình ảnh nhận diện Dortis" loading="lazy" /> : null}
-              <span className="dortis-philosophy-card-top">DORTIS / ARTIST IDENTITY</span>
-              <div className="dortis-philosophy-symbol" aria-hidden="true"><span>D</span><span>T</span></div>
-              <div className="dortis-philosophy-card-bottom">
-                <span>ART</span>
-                <span>IDENTITY</span>
-                <span>EMOTION</span>
-              </div>
-            </aside>
+            <PhilosophyStoryCard imageUrl={siteImages.about} />
           </div>
           <div className="dortis-philosophy-footer"><span>CREATIVITY WITH PURPOSE</span><span>EVERY ARTIST HAS A STORY.</span><span>DORTIS © 2026</span></div>
         </div>

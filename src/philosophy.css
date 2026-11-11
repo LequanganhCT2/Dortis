@@ -97,3 +97,67 @@
   .dortis-philosophy-card,.dortis-philosophy-cta{transition:none!important;animation:none!important}
   .dortis-philosophy-card:hover{transform:none}
 }
+
+
+/* Accessible interactive chapter card layered on the Pearl Editorial design. */
+.dortis-philosophy-story{min-height:515px;justify-content:space-between;gap:15px}
+.dortis-philosophy-story .dortis-philosophy-card-top{font-size:9px;letter-spacing:.12em}
+.dortis-philosophy-story .dortis-philosophy-watermark{
+  position:absolute;right:-18px;top:25px;min-height:0;opacity:.075;
+  transform:rotate(-10deg);pointer-events:none;z-index:0
+}
+.dortis-philosophy-story .dortis-philosophy-watermark span{font-size:128px}
+.dortis-philosophy-story-content{position:relative;z-index:2;margin-top:auto;margin-bottom:12px}
+.dortis-philosophy-story-content h3{
+  max-width:330px;color:#19283b;font-size:clamp(18px,1.65vw,24px);
+  line-height:1.55;letter-spacing:-.035em;margin:0 0 19px;font-weight:750
+}
+.dortis-philosophy-story-content h3 em{
+  color:#008f91;font-family:'Noto Serif','Be Vietnam Pro',serif;
+  font-weight:550;font-style:italic;letter-spacing:-.01em;line-height:1.55
+}
+.dortis-philosophy-story-list{display:flex;flex-direction:column;gap:8px}
+.dortis-philosophy-story-item{
+  appearance:none;display:block;width:100%;text-align:left;color:#19283b;
+  border:1px solid #d2e5e3;background:#ffffffe0;border-radius:11px;
+  padding:12px 13px;transition:background .35s,border-color .35s,transform .35s,box-shadow .35s
+}
+.dortis-philosophy-story-item:hover{background:#f2faf8;border-color:#a5d6d0}
+.dortis-philosophy-story-item.is-active{
+  background:#e3f3ef;border-color:#9bccc8;
+  box-shadow:0 12px 23px #276b6d10;transform:translateX(-4px)
+}
+.dortis-philosophy-story-row{display:flex;gap:10px;align-items:center;min-width:0}
+.dortis-philosophy-story-num{font-size:17px;line-height:1.3;font-style:italic;font-weight:550;font-family:'Noto Serif',serif;color:#008f91;min-width:28px}
+.dortis-philosophy-story-title{font-size:12px;font-weight:780;letter-spacing:-.018em;line-height:1.5;white-space:nowrap}
+.dortis-philosophy-story-label{font-size:8px;font-weight:800;letter-spacing:.08em;color:#69858b;margin-left:auto}
+.dortis-philosophy-story-icon{
+  flex:none;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;
+  background:#edf7f5;font-size:16px;color:#008587
+}
+.dortis-philosophy-story-item.is-active .dortis-philosophy-story-icon{background:#fff}
+.dortis-philosophy-story-answer{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .42s cubic-bezier(.22,1,.36,1),opacity .28s ease}
+.dortis-philosophy-story-item.is-active .dortis-philosophy-story-answer{grid-template-rows:1fr;opacity:1}
+.dortis-philosophy-story-answer-inner{
+  min-height:0;overflow:hidden;display:block;color:#507881;
+  font-size:10px;line-height:1.85;max-width:320px
+}
+.dortis-philosophy-story-item.is-active .dortis-philosophy-story-answer-inner{padding:9px 0 1px 38px}
+.dortis-philosophy-story .dortis-philosophy-card-bottom{margin-top:auto}
+@media(max-width:760px){
+  .dortis-philosophy-story{min-height:465px;max-width:570px}
+  .dortis-philosophy-story .dortis-philosophy-watermark span{font-size:115px}
+}
+@media(max-width:480px){
+  .dortis-philosophy-story{min-height:450px;padding:20px}
+  .dortis-philosophy-story-content h3{font-size:19px}
+  .dortis-philosophy-story-label{font-size:7px}
+  .dortis-philosophy-story-item{padding:10px}
+  .dortis-philosophy-story-row{gap:7px}
+  .dortis-philosophy-story-title{font-size:12px}
+  .dortis-philosophy-story-item.is-active .dortis-philosophy-story-answer-inner{padding-left:34px}
+}
+@media(prefers-reduced-motion:reduce){
+  .dortis-philosophy-story-item,.dortis-philosophy-story-answer{transition:none!important}
+  .dortis-philosophy-story-item.is-active{transform:none}
+}
