@@ -6,13 +6,26 @@ import React from 'react'
 import './artist-editorial.css'
 
 function PortfolioMedia({ section, artist, index }) {
-  const items=(Array.isArray(section.media)?section.media:[]).filter(m=>m?.url)
+  const stored=(Array.isArray(section.media)?section.media:[]).filter(m=>m?.url)
+  const items=stored.length?stored:
+    (section.legacy_page_image_url&&Array.isArray(section.photos))?
+      section.photos.map((region,i)=>({url:section.legacy_page_image_url,region,isLegacy:true,
+        alt:'Ảnh nghệ sĩ '+artist.name+' · '+(i+1)})):[]
+
   if(!items.length)return <div className="a2-media-placeholder" aria-hidden="true">
     <span className="a2-placeholder-ornament">✳</span><span>{artist.name}</span>
   </div>
   return <div className={'a2-media-cluster a2-media-count-'+Math.min(items.length,4)}>
     {items.map((item,i)=><div className="a2-media-photo" key={item.path||item.url}>
       <img src={item.url} loading={index===0&&i===0?'eager':'lazy'}
+        className={item.isLegacy?'a2-legacy-cropped-media':''}
+        style={item.isLegacy?{
+          width:(100/item.region.w)+'%',height:(100/item.region.h)+'%',
+          maxWidth:'none',maxHeight:'none',
+          left:(-100*item.region.x/item.region.w)+'%',
+          top:(-100*item.region.y/item.region.h)+'%',
+          position:'absolute',objectFit:'fill'
+        }:undefined}
         alt={item.alt||'Hình ảnh '+artist.name+' – '+section.title+' '+(i+1)}/>
       <span aria-hidden="true">{String(i+1).padStart(2,'0')}</span>
     </div>)}

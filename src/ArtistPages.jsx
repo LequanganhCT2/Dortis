@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from './AdminPage'
 import './artist-pages.css'
 import ArtistPortfolioSections from './ArtistPortfolioSections'
+import { designArtistPdf, identifyArtistLayout } from './artistLayouts'
 
 function ArtistBrand(){return <a className="artist-brand-link" href="/" aria-label="Dortis – về trang chủ">
   <span className="artist-brand-mark">DT</span><span>DORTIS<span className="artist-brand-dot">.</span></span>
@@ -51,7 +52,16 @@ export default function ArtistPages(){
     {loading?<main className="artist-loading" role="status">Đang tải hồ sơ nghệ sĩ...</main>:
     error?<main className="artist-loading" role="alert">{error}</main>:
     slug?(!profile?<main className="artist-loading"><h1>Hồ sơ chưa công khai.</h1><p>Trang này chưa được xuất bản hoặc không tồn tại.</p><a href="/artists">← TẤT CẢ NGHỆ SĨ</a></main>:
-      <ArtistPortfolioSections profile={profile} sections={profile.sections}/>    ):
+      <ArtistPortfolioSections profile={profile} sections={(()=> {
+        const existing=Array.isArray(profile.sections)?profile.sections:[]
+        if(!existing.length || existing[0]?.layout || !identifyArtistLayout(profile.slug))return existing
+        const designed=designArtistPdf({name:profile.name,role:profile.role,
+          page_count:existing.length,sections:existing},profile.slug)
+        return designed.sections.map((section,i)=>({
+          ...section,
+          legacy_page_image_url:existing[i]?.image_url||null
+        }))
+      })()}/>    ):
     <main className="artist-list-main">
       <section className="artist-list-header"><span className="artist-kicker">DORTIS / ARTIST STORIES</span>
         <h1>Những gương mặt.<br/><em>Những câu chuyện riêng.</em></h1>
