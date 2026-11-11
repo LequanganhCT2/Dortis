@@ -111,3 +111,26 @@
 .hero-editor-delete-button:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:600px){.hero-editor-head-actions{gap:5px}
 .hero-editor-delete-button{padding:9px 8px;font-size:9px}}
+
+/* Match the public Hero: 4:3 horizontal photo, clear image, top-aligned title. */
+.hero-card-live-preview{aspect-ratio:4/3}
+.hero-card-live-preview>img{opacity:1;object-fit:cover;object-position:center}
+.hero-card-live-preview:before{
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.65) 0%,rgba(255,255,255,.27) 35%,
+    rgba(255,255,255,0) 64%,rgba(255,255,255,.5) 100%);
+}
+.hero-card-live-content{
+  justify-content:flex-start;
+  gap:8px;
+  padding:clamp(15px,1.8vw,24px);
+}
+.hero-card-live-content>strong{
+  font-size:clamp(22px,2.1vw,34px);
+  line-height:1.12;
+  text-shadow:0 1px 12px rgba(255,255,255,.77);
+}
+.hero-card-live-content>small{margin-top:auto;text-shadow:0 1px 9px rgba(255,255,255,.8)}
+@media(max-width:600px){
+  .hero-card-live-content>strong{font-size:clamp(20px,6vw,29px)}
+}

@@ -333,3 +333,66 @@ body{overflow-x:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif;font-optica
 @media(prefers-reduced-motion:reduce){
   .cax-hero-deck .dortis-rotating-media.cax-deck-custom-image .current{animation:none}
 }
+
+/* Hero showcase: imported wide images keep their native 4:3 landscape framing.
+   Text occupies a single upper block rather than floating in the photo center. */
+.cax-hero-deck .cax-deck-card{
+  width:65%;
+  height:auto;
+  aspect-ratio:4/3;
+  padding:clamp(16px,1.85vw,27px);
+}
+.cax-hero-deck .dortis-rotating-media.cax-deck-custom-image{
+  opacity:1;
+  z-index:0;
+}
+.cax-hero-deck .cax-deck-card .dortis-media-layer{
+  object-fit:cover;
+  object-position:center;
+}
+.cax-hero-deck .cax-deck-card::before{
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.65) 0%,
+    rgba(255,255,255,.27) 35%,
+    rgba(255,255,255,0) 64%,
+    rgba(255,255,255,.5) 100%);
+  z-index:1;
+}
+.cax-hero-deck .cax-deck-top-copy{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+  gap:8px;
+  width:100%;
+  position:relative;
+  z-index:2;
+  pointer-events:none;
+}
+.cax-hero-deck .cax-deck-top-copy .cax-sheet-eyebrow,
+.cax-hero-deck .cax-deck-top-copy .cax-sheet-headline{
+  margin:0;
+  text-shadow:0 1px 12px rgba(255,255,255,.77);
+}
+.cax-hero-deck .cax-deck-card .cax-sheet-headline{
+  font-size:clamp(22px,2.5vw,35px);
+  line-height:1.12;
+}
+.cax-hero-deck .cax-deck-card .cax-sheet-footer{
+  position:relative;
+  z-index:2;
+  margin-top:auto;
+  text-shadow:0 1px 9px rgba(255,255,255,.8);
+}
+@media(max-width:640px){
+  .cax-hero-deck .cax-deck-card{
+    width:75%;
+    height:auto;
+    aspect-ratio:4/3;
+    padding:clamp(12px,3.4vw,18px);
+  }
+  .cax-hero-deck .cax-deck-card .cax-sheet-headline{
+    font-size:clamp(20px,5.5vw,29px);
+  }
+  .cax-hero-deck .cax-deck-top-copy{gap:6px}
+}

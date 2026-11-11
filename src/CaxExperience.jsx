@@ -144,9 +144,11 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
             interval={5800+i*550} loading="eager"
             onIndexChange={index=>setHeroImageIndices(old=>old[cardId-1]===index?old:
               old.map((v,j)=>j===cardId-1?index:v))}/>
-          <span className="cax-sheet-eyebrow">{imageText('Eyebrow',copy['card'+cardId+'Eyebrow']||'DORTIS STUDIO / '+s.code)}</span>
-          <strong className="cax-sheet-headline">{imageText('Line1',s.lines[0])}
-            <span>{imageText('Line2',s.lines[1])}</span></strong>
+          <span className="cax-deck-top-copy">
+            <span className="cax-sheet-eyebrow">{imageText('Eyebrow',copy['card'+cardId+'Eyebrow']||'DORTIS STUDIO / '+s.code)}</span>
+            <strong className="cax-sheet-headline">{imageText('Line1',s.lines[0])}
+              <span>{imageText('Line2',s.lines[1])}</span></strong>
+          </span>
           <span className="cax-sheet-footer">{imageText('Footer',copy['card'+cardId+'Footer']||s.kind)}<span aria-hidden="true">↗</span></span>
         </button>
       })}
