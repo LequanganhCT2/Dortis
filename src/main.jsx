@@ -10,6 +10,7 @@ import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from '.
 import CircularServiceCarousel from './CircularServiceCarousel'
 import PhilosophyStoryCard from './PhilosophyStoryCard'
 import DortisFAQ from './DortisFAQ'
+import CaxHeroCopy from './CaxHeroCopy'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
@@ -129,13 +130,7 @@ function App() {
         <div className="hero-rainbow" aria-hidden="true"/>
         <LiquidRibbons className="hero-liquid"/>
         <div className="cax-hero-grid">
-          <div className="cax-hero-copy">
-            <p className="cax-kicker">✳ DORTIS — CREATIVE ARTIST STUDIO / EST. 2026</p>
-            <h1>Chúng tôi giúp <span className="cobalt">nghệ sĩ</span> xây dựng hình ảnh <span className="teal">chuyên nghiệp</span> và lan tỏa <span className="ember">dấu ấn riêng.</span></h1>
-            <p className="cax-lead">Nơi bản sắc được định hình, câu chuyện được kể bằng cảm xúc và mỗi nghệ sĩ có một không gian riêng để tỏa sáng.</p>
-            <div className="cax-hero-actions"><a href="#dich-vu" className="button-dark">KHÁM PHÁ DỊCH VỤ <Arrow /></a><a href="#trai-nghiem" className="button-outline">TRẢI NGHIỆM THỬ <Arrow /></a></div>
-            <p className="cax-hero-bottomline">ART. IDENTITY. EMOTION. &nbsp; — &nbsp; EVERY ARTIST HAS A STORY.</p>
-          </div><CaxHeroDeck images={siteImages}/>
+          <CaxHeroCopy /><CaxHeroDeck images={siteImages}/>
         </div>
       </section>
 
