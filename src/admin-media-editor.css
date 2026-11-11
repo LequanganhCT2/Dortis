@@ -66,3 +66,48 @@
   text-underline-offset:5px;
 }
 .admin-media-workspace-link:hover{color:#008f91}
+
+/* Hero: six independent image bundles, each with four editable cards. */
+.admin-hero-sets{display:grid;gap:20px}
+.admin-hero-sets-toolbar{display:flex;align-items:center;justify-content:space-between;gap:25px;
+  padding:18px 20px;border:1px solid #d9e4e8;border-radius:13px;background:#f8fbfc}
+.admin-hero-sets-toolbar strong{font-size:15px}
+.admin-hero-sets-toolbar p{font-size:11px;color:#6e8090;line-height:1.8;margin:6px 0 0;max-width:730px}
+.admin-hero-sets-toolbar>button{border:0;background:#182238;color:#fff;border-radius:8px;
+  padding:14px 19px;white-space:nowrap;font:750 11px/1.2 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer}
+.admin-hero-sets-toolbar>button:disabled{opacity:.42;cursor:not-allowed}
+.admin-hero-set{background:#fff;border:1px solid #d9e4e8;border-radius:15px;padding:22px;min-width:0}
+.admin-hero-set-heading{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}
+.admin-hero-set-heading>div:first-child>span{font-size:9px;font-weight:850;letter-spacing:.14em;color:#008f91}
+.admin-hero-set-heading h3{font-size:20px;line-height:1.4;margin:6px 0}
+.admin-hero-set-heading p{margin:0;color:#6d8290;font-size:11px;line-height:1.7}
+.admin-hero-set-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.admin-hero-set-actions .admin-upload{font-size:10px;white-space:nowrap;min-height:40px}
+.admin-hero-set-delete,.admin-hero-set-remove{
+  border:1px solid #dbe2e7;background:transparent;color:#9d3144;border-radius:7px;
+  padding:10px 12px;font-size:10px;font-weight:750;cursor:pointer
+}
+.admin-hero-set-delete:disabled,.admin-hero-set-remove:disabled{opacity:.4;cursor:not-allowed}
+.admin-hero-set-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.admin-hero-set-card{display:flex;flex-direction:column;align-items:stretch;min-width:0;
+  border:1px solid #e5ecef;border-radius:11px;padding:12px;gap:10px;background:#fbfcfd}
+.admin-hero-set-preview{aspect-ratio:4/5;border-radius:7px;overflow:hidden;position:relative;
+  display:grid;place-items:center;background:linear-gradient(125deg,#d5eaef,#f4e0d5);
+  font-size:13px;font-weight:800;color:#718995}
+.admin-hero-set-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.admin-hero-set-card>strong{font-size:11px;line-height:1.5;min-height:32px}
+.admin-hero-set-card .admin-upload{align-self:stretch;min-height:40px;font-size:9px;padding:10px;
+  text-align:center;white-space:normal}
+.admin-hero-set-remove{align-self:stretch}
+.admin-hero-set-progress{font-size:11px;color:#315e76}
+@media(max-width:900px){
+  .admin-hero-set-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .admin-hero-sets-toolbar,.admin-hero-set-heading{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:480px){
+  .admin-hero-set{padding:12px}
+  .admin-hero-set-grid{gap:8px}
+  .admin-hero-set-card{padding:8px;gap:8px}
+  .admin-hero-set-card>strong{font-size:10px}
+  .admin-hero-sets-toolbar{padding:14px}
+}

@@ -1,5 +1,6 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import {copyFor} from './siteContent'
+import { completeHeroImageSets } from './heroImageSets'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -35,13 +36,24 @@ function useTouchSwipe(left,right){
 }
 export function CaxHeroDeck({images={},galleries={},content={}}){
   const copy=copyFor(content,'hero')
+  const heroSets=completeHeroImageSets(images)
   const displayShowcases=showcases.map((item,i)=>({...item,
     label:copy['card'+(i+1)+'Title'],
     lines:[copy['card'+(i+1)+'Line1'],copy['card'+(i+1)+'Line2']]
   }))
   const [selected,setSelected]=useState(0)
   const [expanded,setExpanded]=useState(false)
+  const [heroSetIndex,setHeroSetIndex]=useState(0)
   const reduce=useReducedMotion()
+  const activeHeroSetIndex=heroSets.length ? heroSetIndex%heroSets.length : 0
+  useEffect(()=>{
+    if(heroSets.length<2||reduce||expanded)return
+    const timer=window.setInterval(()=>{
+      if(document.visibilityState==='visible')
+        setHeroSetIndex(index=>(index+1)%heroSets.length)
+    },12000)
+    return ()=>window.clearInterval(timer)
+  },[heroSets.length,reduce,expanded])
   const drag=useRef(null)
   const ignoreClickUntil=useRef(0)
   const stageRef=useRef(null)
@@ -128,7 +140,11 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
           key={s.code} style={cssVars} aria-pressed={active}
           aria-label={s.label+(active&&expanded?' – nhấn lại để thu gọn':' – chọn thẻ')}
           onClick={()=>toggleCard(i)}>
-          <RotatingImage urls={getMediaUrls(images,galleries,'hero')} className="cax-deck-custom-image" offset={i} loading="eager"/>
+          {heroSets.length ? <span className="cax-deck-custom-image cax-hero-set-images" aria-hidden="true">
+            {heroSets.map((set,setIndex)=><img key={set.setNumber} src={set.urls[i]}
+              alt="" decoding="async" loading={setIndex===0?'eager':'lazy'}
+              className={setIndex===activeHeroSetIndex?'is-current':''}/>)}
+          </span> : <RotatingImage urls={getMediaUrls(images,galleries,'hero')} className="cax-deck-custom-image" offset={i} loading="eager"/>}
           <span className="cax-sheet-eyebrow">DORTIS STUDIO / {s.code}</span>
           <strong className="cax-sheet-headline">{s.lines[0]}<span>{s.lines[1]}</span></strong>
           <span className="cax-sheet-footer">{s.kind}<span aria-hidden="true">↗</span></span>
@@ -141,6 +157,11 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
         aria-current={i===selected?'true':undefined} className={i===selected?'active':''}
         onClick={()=>{setExpanded(true);setSelected(i)}}/>)}</span>
       <span className="cax-deck-arrows">
+        {heroSets.length>0&&<span className="cax-hero-set-switcher" aria-label="Bộ ảnh đang hiển thị">
+          {heroSets.length>1&&<button type="button" aria-label="Bộ ảnh trước" onClick={()=>setHeroSetIndex(index=>(index-1+heroSets.length)%heroSets.length)}>‹</button>}
+          <span>BỘ {String(heroSets[activeHeroSetIndex].setNumber).padStart(2,'0')} / 06</span>
+          {heroSets.length>1&&<button type="button" aria-label="Bộ ảnh tiếp theo" onClick={()=>setHeroSetIndex(index=>(index+1)%heroSets.length)}>›</button>}
+        </span>}
         {expanded&&<button className="cax-deck-collapse" type="button" onClick={()=>setExpanded(false)} aria-label="Thu gọn bốn thẻ">×</button>}
         <button type="button" onClick={()=>shift(-1)} aria-label="Dịch vụ trước">←</button>
         <button type="button" onClick={()=>shift(1)} aria-label="Dịch vụ tiếp theo">→</button>
