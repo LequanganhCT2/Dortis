@@ -19,5 +19,7 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Verify PDF multipart storage roundtrip
+        run: npm test
       - name: Build production frontend
         run: npm run build

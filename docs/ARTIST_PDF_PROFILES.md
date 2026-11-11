@@ -35,13 +35,15 @@
 
 ## Technical constraints
 
-- Large PDF upload: Supabase TUS resumable 6 MB chunks via pinned `tus-js-client@4.3.1` (files above 6 MB); normal upload for smaller files.
+- Large PDF import: **lossless private multipart storage**. Files above 4 MiB are uploaded as independent 4 MiB `application/octet-stream` objects into `dortis-artist-pdfs`. Each part obeys Supabase's global single-object limit (Free: max 50 MB). Every PDF source is reassembled byte-for-byte in the Admin browser when publishing.
+- `artist_profile_sources.pdf_storage_path` is backward compatible: legacy references are a plain private object path; multipart references are prefixed with `dortis-pdf-parts-v1:` and contain an ordered path manifest plus expected byte size.
+- `supabase/dortis_artist_pdf_parts.sql` allows private PDF chunks in the Storage bucket. PDF parts are not public URLs. Deleting a profile removes all its parts. Failed uploads remove partial objects.
 - PDF parser: pinned \`pdfjs-dist@6.5.438\`, loaded only when importing or rendering pages.
-- Up to 60 pages and 100 MB per PDF in the browser. Supabase project's global maximum upload size may be lower; a larger document can be compressed first.
+- Up to 60 pages and 100 MB per PDF in the browser. A 100 MB PDF is split into at most 25 private 4 MiB objects; no PDF quality or text is lost. Upload storage usage is still counted normally.
 - Image extraction: rendered PDF pages, max 1160px width, preferred WebP at 0.77 quality, fallback JPEG, 5MB max per generated page.
 - PDF text extraction does **not** support OCR. Scanned/image-only pages need manual transcript if the body text should be searchable.
 - Full fidelity of arbitrary PDF typography/layout is not guaranteed; chapter layout is styled HTML/CSS and page snapshots preserve original visual composition.
 
 ## Verification
 
-GitHub Actions runs Vite build on push. Supabase migration in \`supabase/dortis_artist_profiles.sql\` has been applied to the Dortis project. Check importing and publishing a sample PDF with admin session manually.
+GitHub Actions runs Node multipart roundtrip tests and Vite build on push. Supabase migration in \`supabase/dortis_artist_profiles.sql\` has been applied to the Dortis project. Check importing and publishing a sample PDF with admin session manually.

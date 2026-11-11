@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { extractArtistPdf, renderPagesFromPdf, renderPdfPage, slugifyArtist, destroyArtistPdf } from './artistPdf'
+import { uploadArtistPdf, downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
 import './admin-artists.css'
 
-const PDF_BUCKET='dortis-artist-pdfs'
 const PAGE_BUCKET='dortis-artist-pages'
 const MAX_PDF=100*1024*1024
 const emptyNotice='Hồ sơ chỉ công khai sau khi bạn bấm Xuất bản. PDF gốc luôn ở bucket riêng tư.'
 const getError=(e,fallback='Có lỗi xảy ra.')=>{
-  if(e?.statusCode==='413'||String(e?.message||'').includes('maximum allowed size'))return 'PDF quá lớn so với giới hạn upload của dự án Supabase. Hãy giảm dung lượng file trước khi tải lại.'
+  if(e?.statusCode==='413'||/maximum size exceeded|entitytoo(?:large|big)|413/i.test(String(e?.message||'')))return 'Storage đang từ chối một phần PDF 4 MB. Kiểm tra Storage → Settings: Global file size limit phải ít nhất 4 MB, hoặc liên hệ quản trị viên Supabase.'
   return e?.message||fallback
 }
 const cleanSection=s=>({
@@ -18,7 +18,6 @@ const cleanSection=s=>({
   image_url:s.image_url||null,
   image_storage_path:s.image_storage_path||null
 })
-const uploadMime='application/pdf'
 export default function AdminArtistProfiles({user,signOut,supabase}){
   const [profiles,setProfiles]=useState([])
   const [sources,setSources]=useState({})
@@ -79,35 +78,6 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
   }
 
 
-  async function uploadPrivatePdf(path,file){
-    if(file.size<=6*1024*1024){
-      const {error:upError}=await supabase.storage.from(PDF_BUCKET)
-        .upload(path,file,{contentType:uploadMime,upsert:false})
-      if(upError)throw upError
-      return
-    }
-    const {data:{session},error:sessionError}=await supabase.auth.getSession()
-    if(sessionError||!session?.access_token)throw new Error('Phiên đăng nhập hết hạn. Hãy đăng nhập lại.')
-    const tus=await import('tus-js-client')
-    const sourceUrl=supabase.supabaseUrl.replace(/\/+$/,'')
-    const base=sourceUrl.endsWith('.supabase.co')?
-      sourceUrl.replace(/\.supabase\.co$/,'.storage.supabase.co'):sourceUrl
-    return new Promise((resolve,reject)=>{
-      const upload=new tus.Upload(file,{
-        endpoint:base+'/storage/v1/upload/resumable',
-        headers:{authorization:'Bearer '+session.access_token},
-        uploadDataDuringCreation:true,
-        removeFingerprintOnSuccess:true,
-        retryDelays:[0,2500,5000,10000,20000],
-        metadata:{bucketName:PDF_BUCKET,objectName:path,contentType:uploadMime,cacheControl:'3600'},
-        chunkSize:6*1024*1024,
-        onError:reject,
-        onProgress:(uploaded,total)=>setProgress('Đang tải PDF riêng tư · '+Math.round(uploaded/Math.max(1,total)*100)+'%'),
-        onSuccess:resolve
-      })
-      upload.start()
-    })
-  }
 
   async function importFiles(files){
     const list=Array.from(files||[])
@@ -118,16 +88,18 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
     const failed=[]
     for(let i=0;i<list.length;i++){
       const file=list[i]
-      let path=null,createdId=null
+      let storageRef=null,createdId=null
       try{
         if(!/\.pdf$/i.test(file.name)||file.size>MAX_PDF)throw new Error('Chỉ nhận PDF tối đa 100 MB.')
         setProgress('['+(i+1)+'/'+list.length+'] Đang trích xuất '+file.name+'...')
         const parsed=await extractArtistPdf(file,(done,total)=>
           setProgress('['+(i+1)+'/'+list.length+'] Đọc trang '+done+'/'+total+' · '+file.name))
         const slug=await uniqueSlug(parsed.slug)
-        path='artist-pdfs/'+crypto.randomUUID()+'/'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-90)
+        const basePath='artist-pdfs/'+crypto.randomUUID()+'/'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-90)
         setProgress('['+(i+1)+'/'+list.length+'] Đang lưu PDF riêng tư...')
-        await uploadPrivatePdf(path,file)
+        const uploaded = await uploadArtistPdf(supabase,file,basePath,(done,total)=>
+          setProgress('['+(i+1)+'/'+list.length+'] Đã lưu phần '+done+'/'+total+' · '+file.name))
+        storageRef=uploaded.storageRef
         const introduction=parsed.sections.find(s=>s.body&&s.body.length>75)?.body.slice(0,500)||''
         const {data:created,error:insertError}=await supabase.from('artist_profiles')
           .insert({name:parsed.name,slug,role:parsed.role,tagline:'',
@@ -136,13 +108,13 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
         if(insertError)throw insertError
         createdId=created.id
         const {error:sourceError}=await supabase.from('artist_profile_sources')
-          .insert({profile_id:createdId,original_filename:file.name,pdf_storage_path:path,
+          .insert({profile_id:createdId,original_filename:file.name,pdf_storage_path:storageRef,
             page_count:parsed.page_count,uploaded_by:user.id})
         if(sourceError)throw sourceError
         imported++
       }catch(e){
         if(createdId)await supabase.from('artist_profiles').delete().eq('id',createdId)
-        if(path)await supabase.storage.from(PDF_BUCKET).remove([path])
+        if(storageRef)await removeArtistPdf(supabase,storageRef)
         failed.push(file.name+': '+getError(e))
       }
     }
@@ -182,8 +154,8 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
     let pdf
     try{
       setProgress('Đang tải PDF gốc từ khu vực lưu trữ riêng tư...')
-      const {data:blob,error:downloadError}=await supabase.storage.from(PDF_BUCKET).download(source.pdf_storage_path)
-      if(downloadError)throw downloadError
+      const blob=await downloadArtistPdf(supabase,source.pdf_storage_path,(done,total)=>
+        setProgress('Đang khôi phục PDF nguồn · '+done+'/'+total+' phần'))
       pdf=await renderPagesFromPdf(blob)
       const pageImages={}
       for(let i=1;i<=pdf.numPages;i++){
@@ -254,7 +226,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
         if(imagesError)setError('Đã xóa hồ sơ, nhưng một số ảnh còn trong Storage.')
       }
       if(pdfPath){
-        const {error:pdfError}=await supabase.storage.from(PDF_BUCKET).remove([pdfPath])
+        const {error:pdfError}=await removeArtistPdf(supabase,pdfPath)
         if(pdfError)setError('Đã xóa hồ sơ, nhưng PDF nguồn chưa được thu hồi khỏi Storage.')
       }
       if(selected===row.id){setSelected(null);setForm(null)}
@@ -269,7 +241,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       <div className="admin-topline"><a href="/admin" className="admin-home">← QUẢN LÝ HÌNH ẢNH</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></div>
       <header className="artist-admin-intro"><span>DORTIS / ARTIST PROFILE CMS</span>
         <h1>Hồ sơ <em>nghệ sĩ.</em></h1>
-        <p>Mỗi PDF tạo một hồ sơ riêng. Nội dung từng trang được trích xuất và dựng lại bằng HTML/CSS; trang ảnh gốc được kết xuất thành tư liệu minh họa khi xuất bản.</p>
+        <p>Mỗi PDF tạo một hồ sơ riêng. File lớn được lưu thành nhiều phần riêng tư để tránh giới hạn dung lượng Supabase. Nội dung trích xuất được dựng lại bằng HTML/CSS khi xuất bản.</p>
         <div className="artist-admin-heading-actions"><a href="/artists" target="_blank" rel="noreferrer">XEM TRANG NGHỆ SĨ ↗</a><a href="/admin">QUẢN LÝ ẢNH ↗</a></div>
       </header>
       {error&&<p className="admin-alert error" role="alert">{error}</p>}
@@ -284,7 +256,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
             e.target.value=''
             importFiles(files)
           }}/>
-          <span>+ TẢI PDF NGHỆ SĨ</span><small>PDF · TỐI ĐA 100 MB / FILE</small>
+          <span>+ TẢI PDF NGHỆ SĨ</span><small>PDF · TỐI ĐA 100 MB / FILE · TỰ CHIA NHỎ</small>
         </label>
       </section>
       <section className="artist-admin-content">
