@@ -9,6 +9,7 @@ import './values-3d.css'
 import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
 import CircularServiceCarousel from './CircularServiceCarousel'
 import PhilosophyStoryCard from './PhilosophyStoryCard'
+import DortisFAQ from './DortisFAQ'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
@@ -177,7 +178,7 @@ function App() {
 
       <CaxBrandValues />
 
-      <section className="faq-section section-shell scene-section"><div data-reveal className="faq-heading"><SectionMark number="07" label="FREQUENTLY ASKED QUESTIONS" /><h2>Một vài điều<br/><em>bạn muốn biết.</em></h2></div><div className="faq-list">{faqs.map(([q, a], index) => <details data-reveal key={q} style={{ '--reveal-delay': index * 65 + 'ms' }}><summary><span>{String(index + 1).padStart(2, '0')}</span>{q}<span className="faq-plus">+</span></summary><p>{a}</p></details>)}</div></section>
+      <DortisFAQ items={faqs} />
 
       <section id="lien-he" className="cax-contact scene-section">
         <div className="cax-contact-layout section-shell">
