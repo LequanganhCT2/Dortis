@@ -1,6 +1,6 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import {copyFor} from './siteContent'
-import { getHeroCardPhotos } from './heroImageSets'
+import { getHeroCardPhotos, getActiveHeroCardCount } from './heroImageSets'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -8,6 +8,8 @@ const showcases = [
   { code:'02', label:'Artist Branding', lines:['Artist','Branding'], kind:'THƯƠNG HIỆU NGHỆ SĨ' },
   { code:'03', label:'Thiết kế truyền thông', lines:['Visual','Campaign'], kind:'THỊ GIÁC TRUYỀN THÔNG' },
   { code:'04', label:'Website nghệ sĩ', lines:['Artist','Website'], kind:'KHÔNG GIAN SỐ' },
+  { code:'05', label:'Creative Studio', lines:['Creative','Studio'], kind:'Ý TƯỞNG SÁNG TẠO' },
+  { code:'06', label:'Digital Stories', lines:['Digital','Stories'], kind:'CÂU CHUYỆN SỐ' },
 ]
 const values = [
   ['D','Design','Thiết kế: Chuyển hóa ý tưởng thành sản phẩm thiết kế nghệ thuật chuyên nghiệp.','Thiết kế luôn có mục đích, không chỉ có hình thức.'],
@@ -37,13 +39,15 @@ function useTouchSwipe(left,right){
 export function CaxHeroDeck({images={},galleries={},content={}}){
   const copy=copyFor(content,'hero')
   const heroCardPhotos=getHeroCardPhotos(images)
-  const displayShowcases=showcases.map((item,i)=>({...item,
+  const cardCount=getActiveHeroCardCount(copy)
+  const displayShowcases=showcases.slice(0,cardCount).map((item,i)=>({...item,
     label:copy['card'+(i+1)+'Title'],
     lines:[copy['card'+(i+1)+'Line1'],copy['card'+(i+1)+'Line2']]
   }))
   const [selected,setSelected]=useState(0)
   const [expanded,setExpanded]=useState(false)
-  const [heroImageIndices,setHeroImageIndices]=useState([0,0,0,0])
+  const [heroImageIndices,setHeroImageIndices]=useState([0,0,0,0,0,0])
+  useEffect(()=>{setSelected(index=>Math.min(index,cardCount-1))},[cardCount])
   const reduce=useReducedMotion()
   const drag=useRef(null)
   const ignoreClickUntil=useRef(0)
@@ -96,10 +100,10 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
     stageRef.current?.classList.remove('is-dragging')
   }
   const current=displayShowcases[selected]
-  return <div className={'cax-hero-deck tone-'+selected+(expanded?' cax-deck-expanded':'')} aria-label="Giới thiệu bốn nhóm dịch vụ Dortis">
-    <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(selected+1).padStart(2,'0')} / 04</span></div>
+  return <div className={'cax-hero-deck tone-'+selected+(expanded?' cax-deck-expanded':'')} aria-label={'Giới thiệu '+cardCount+' thẻ sáng tạo Dortis'}>
+    <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(selected+1).padStart(2,'0')} / {String(cardCount).padStart(2,'0')}</span></div>
     <div className="cax-deck-stage" ref={stageRef} tabIndex={0} aria-roledescription="carousel"
-      aria-label={expanded?'Bốn thẻ dịch vụ đã mở. Kéo trái phải hoặc chọn thẻ để xem':'Các thẻ dịch vụ đang xếp chồng. Nhấn thẻ để mở'}
+      aria-label={expanded?'Thẻ dịch vụ đã mở. Kéo trái phải hoặc chọn thẻ để xem':'Các thẻ dịch vụ đang xếp chồng. Nhấn thẻ để mở'}
       onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null}}
       onPointerMove={pointerMove} onPointerLeave={pointerLeave}
       onKeyDown={e=>{
@@ -115,12 +119,12 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
         const imageText=(field,fallback)=>copy[imageCopyKey+field]||fallback
         const active=i===selected
         const behind=(i-selected+displayShowcases.length)%displayShowcases.length
-        const collapsedX=[0,-8,9,3][behind]
-        const collapsedY=[0,3,2,-7][behind]
-        const collapsedAngle=[2,-12,13,6][behind]
-        const collapsedScale=[1.18,1.08,1.05,.99][behind]
-        const fanX=[-62,-21,21,62][i]
-        const fanAngle=[-12,-5,5,12][i]
+        const collapsedX=[0,-8,9,3,-5,6][behind]
+        const collapsedY=[0,3,2,-7,4,-3][behind]
+        const collapsedAngle=[2,-12,13,6,-16,15][behind]
+        const collapsedScale=[1.18,1.08,1.05,.99,.94,.9][behind]
+        const fanX=cardCount===1?0:-66+(i*132)/(cardCount-1)
+        const fanAngle=cardCount===1?0:-12+(i*24)/(cardCount-1)
         const cssVars={
           '--cax-fan-x':fanX+'%',
           '--cax-fan-angle':fanAngle+'deg',
@@ -151,12 +155,12 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
         aria-current={i===selected?'true':undefined} className={i===selected?'active':''}
         onClick={()=>{setExpanded(true);setSelected(i)}}/>)}</span>
       <span className="cax-deck-arrows">
-        {expanded&&<button className="cax-deck-collapse" type="button" onClick={()=>setExpanded(false)} aria-label="Thu gọn bốn thẻ">×</button>}
+        {expanded&&<button className="cax-deck-collapse" type="button" onClick={()=>setExpanded(false)} aria-label="Thu gọn các thẻ">×</button>}
         <button type="button" onClick={()=>shift(-1)} aria-label="Dịch vụ trước">←</button>
         <button type="button" onClick={()=>shift(1)} aria-label="Dịch vụ tiếp theo">→</button>
       </span>
     </div>
-    <div className="cax-deck-bottom-row"><span className="cax-deck-status" aria-live="polite">{expanded?'04 THẺ ĐANG MỞ · NHẤN THẺ ĐƯỢC CHỌN ĐỂ THU GỌN':'MỞ THẺ ĐỂ KHÁM PHÁ 4 DỊCH VỤ'}</span>
+    <div className="cax-deck-bottom-row"><span className="cax-deck-status" aria-live="polite">{expanded?String(cardCount).padStart(2,'0')+' THẺ ĐANG MỞ · NHẤN THẺ ĐƯỢC CHỌN ĐỂ THU GỌN':'MỞ THẺ ĐỂ KHÁM PHÁ '+cardCount+' DỊCH VỤ'}</span>
       <a className="cax-deck-link" href="#dich-vu">KHÁM PHÁ DỊCH VỤ {current.code} ↗</a>
     </div>
   </div>

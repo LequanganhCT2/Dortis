@@ -1,0 +1,105 @@
+/* Dortis Hero editorial workstation: compact cards, edit on demand. */
+.hero-editor-root{display:flex;flex-direction:column;gap:16px;margin-top:16px;min-width:0;color:#172337}
+.hero-editor-toolbar{display:flex;justify-content:space-between;align-items:center;gap:18px;
+  border:1px solid #dbe6ea;border-radius:13px;padding:18px 20px;background:#f8fbfc}
+.hero-editor-toolbar>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.hero-editor-toolbar>div>span{font-size:9px;color:#008f91;letter-spacing:.13em;font-weight:850}
+.hero-editor-toolbar strong{font-size:20px;letter-spacing:-.035em}
+.hero-editor-toolbar p{margin:0;color:#6e7d8d;font-size:11px;line-height:1.7}
+.hero-add-card,.hero-editor-save{border:1px solid #172337;background:#172337;color:white;
+  border-radius:8px;padding:13px 18px;font:750 11px/1.4 'Be Vietnam Pro',system-ui,sans-serif;
+  letter-spacing:.035em;white-space:nowrap;cursor:pointer;transition:opacity .2s}
+.hero-add-card:disabled,.hero-editor-save:disabled{opacity:.48;cursor:not-allowed}
+.hero-editor-error,.hero-editor-success{font-size:12px;border-radius:7px;padding:12px 14px;margin:0}
+.hero-editor-error{background:#fff1ef;color:#982c39}
+.hero-editor-success{background:#eefaf8;color:#176e65}
+.hero-editor-stack{display:grid;gap:13px;min-width:0}
+.hero-editor-card{border:1px solid #dde6eb;border-radius:13px;background:#fff;min-width:0;overflow:hidden;
+  box-shadow:0 5px 18px rgba(22,46,71,.035)}
+.hero-editor-card.is-open{border-color:#a4ced0;box-shadow:0 18px 45px rgba(26,84,100,.08)}
+.hero-editor-card-heading{display:flex;gap:20px;align-items:center;justify-content:space-between;padding:16px 19px}
+.hero-editor-card-label{display:flex;align-items:center;gap:13px;min-width:0}
+.hero-card-sequence{display:grid;place-items:center;flex-shrink:0;width:42px;height:42px;
+  border-radius:9px;background:#e9f4f5;color:#008f91;font-size:13px;font-weight:850}
+.hero-editor-card-label>div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.hero-editor-card-label strong{font-size:15px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.hero-editor-card-label small{font-size:10px;font-weight:650;color:#79909d}
+.hero-editor-edit-button{border:1px solid #cfdde4;background:transparent;color:#213448;border-radius:8px;
+  padding:10px 16px;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}
+.hero-editor-edit-button:hover{background:#eff7f7;border-color:#bad9db}
+.hero-editor-edit-button:disabled{opacity:.5;cursor:not-allowed}
+.hero-editor-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr) minmax(0,.95fr);
+  gap:18px;padding:19px;border-top:1px solid #e4edf0;background:#fcfdfd;align-items:start}
+.hero-editor-col{min-width:0;display:flex;flex-direction:column;gap:10px}
+.hero-editor-col h4{font-size:11px;letter-spacing:.11em;color:#008f91;font-weight:850;margin:0}
+.hero-editor-col>p{font-size:11px;line-height:1.75;color:#6e8291;margin:0 0 4px}
+.hero-editor-col>p small{display:block;font-size:10px;color:#8498a6;margin-top:3px}
+.hero-editor-text label{display:flex;flex-direction:column;gap:5px;min-width:0}
+.hero-editor-text label>span{font-size:10px;font-weight:760;color:#485d70}
+.hero-editor-text input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #d9e3ea;
+  border-radius:7px;background:#fff;font:500 12px/1.5 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#162439;outline:none;min-width:0}
+.hero-editor-text input:focus{border-color:#039397;box-shadow:0 0 0 3px #059b9a15}
+.hero-editor-text-divider{height:1px;background:#dce8eb;margin:7px 0}
+.hero-photo-upload-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.hero-photo-upload{display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center;
+  cursor:pointer;min-height:86px;width:100%;border:1px dashed #a5c8d3;border-radius:9px;
+  background:#eef7f7;text-align:center;box-sizing:border-box}
+.hero-photo-upload>span{font-size:12px;font-weight:850;color:#126d77}
+.hero-photo-upload>small{font-size:10px;color:#728b99}
+.hero-photo-upload input,.hero-photo-replace input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.hero-photo-upload.disabled,.hero-photo-replace.disabled{opacity:.44;cursor:not-allowed}
+.hero-photo-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.hero-photo-option{position:relative;aspect-ratio:5/5;background:#f3f7f9;border:1px solid #d7e4e8;
+  padding:0;overflow:hidden;border-radius:7px;cursor:pointer}
+.hero-photo-option.active{outline:2px solid #008f91;outline-offset:1px}
+.hero-photo-option img{width:100%;height:100%;object-fit:cover}
+.hero-photo-option small{position:absolute;left:5px;top:5px;z-index:1;background:#fffffff0;
+  color:#294459;border-radius:4px;padding:3px 6px;font-size:9px;font-weight:800}
+.hero-photo-empty{display:grid;place-items:center;height:100%;font-size:28px;color:#acbfca}
+.hero-photo-selected-actions{display:flex;flex-direction:column;gap:10px;margin-top:5px;
+  border-top:1px solid #e2eaee;padding-top:12px}
+.hero-photo-selected-actions>span{font-size:10px;font-weight:800;color:#547084}
+.hero-photo-selected-actions>div{display:flex;gap:7px;flex-wrap:wrap}
+.hero-photo-replace,.hero-photo-delete{padding:10px 12px;border-radius:7px;font-size:10px;
+  letter-spacing:.03em;font-weight:800;cursor:pointer;display:inline-flex}
+.hero-photo-replace{background:#172337;color:#fff;position:relative}
+.hero-photo-delete{background:transparent;border:1px solid #e9ccd3;color:#aa3447}
+.hero-photo-delete:disabled{opacity:.45;cursor:not-allowed}
+.hero-card-live-preview{position:relative;aspect-ratio:4/5;background:linear-gradient(145deg,#fffefa,#edf5f7);
+  overflow:hidden;isolation:isolate;border:1px solid #edf0f4;border-radius:11px;box-shadow:0 15px 38px #163c5120}
+.hero-card-live-preview:before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,#ffffffe6 0%,#fffffff2 12%,#ffffffad 70%);z-index:1;pointer-events:none}
+.hero-card-live-preview>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.43}
+.hero-card-live-content{position:absolute;z-index:2;inset:0;display:flex;flex-direction:column;
+  justify-content:space-between;gap:20px;padding:clamp(16px,2vw,26px)}
+.hero-card-live-content>span{font-size:10px;font-weight:850;letter-spacing:.07em;color:#008f91;line-height:1.6}
+.hero-card-live-content>strong{font-size:clamp(24px,2.3vw,38px);line-height:1.18;font-weight:850;
+  letter-spacing:-.05em;color:#172337;overflow-wrap:anywhere}
+.hero-card-live-content>strong em{display:block;font-style:normal}
+.hero-card-live-content>small{display:flex;gap:10px;justify-content:space-between;
+  border-top:1px solid #dbe3e8;padding-top:12px;color:#537385;font-weight:800;font-size:10px}
+.hero-live-site-link{align-self:flex-start;color:#315e76;font-size:10px;letter-spacing:.035em;
+  font-weight:800;text-decoration:none}
+.hero-live-site-link:hover{text-decoration:underline}
+.hero-editor-footer{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  background:#f6fafb;padding:16px 20px;border-top:1px solid #e0ebee}
+.hero-editor-footer>span{color:#6d8393;font-size:10px;line-height:1.6}
+.hero-editor-footer>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.hero-editor-cancel{border:1px solid #cddde4;background:#fff;color:#51677c;border-radius:8px;
+  padding:11px 14px;cursor:pointer;font-size:10px;font-weight:800}
+@media(max-width:1140px){
+  .hero-editor-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .hero-editor-preview{grid-column:1/-1;max-width:500px;width:100%;margin-inline:auto}
+}
+@media(max-width:720px){
+  .hero-editor-toolbar,.hero-editor-footer{align-items:stretch;flex-direction:column}
+  .hero-editor-toolbar .hero-add-card{align-self:flex-start}
+  .hero-editor-columns{grid-template-columns:minmax(0,1fr);gap:24px;padding:14px}
+  .hero-editor-preview{grid-column:auto;max-width:450px}
+  .hero-editor-card-heading{padding:13px;gap:8px}
+  .hero-editor-card-label strong{font-size:13px}
+  .hero-editor-edit-button{padding:9px 11px;font-size:10px}
+  .hero-editor-footer>div{justify-content:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.hero-editor-root *{transition:none!important}}

@@ -56,14 +56,14 @@ const schemas={
     field('secondaryButton','Nút trải nghiệm','TRẢI NGHIỆM THỬ'),
     field('signature','Dòng chữ cuối','ART. IDENTITY. EMOTION. — EVERY ARTIST HAS A STORY.'),
   ]),section('Chữ trong bộ bốn thẻ 3D',[
-    ...['CV & Portfolio','Artist Branding','Thiết kế truyền thông','Website nghệ sĩ'].flatMap((title,i)=>[
+    ...['CV & Portfolio','Artist Branding','Thiết kế truyền thông','Website nghệ sĩ','Creative Studio','Digital Stories'].flatMap((title,i)=>[
       field('card'+(i+1)+'Title','Thẻ '+(i+1)+' · Tên',title),
-      field('card'+(i+1)+'Line1','Thẻ '+(i+1)+' · Chữ lớn dòng 1',['CV &','Artist','Visual','Artist'][i]),
-      field('card'+(i+1)+'Line2','Thẻ '+(i+1)+' · Chữ lớn dòng 2',['Portfolio','Branding','Campaign','Website'][i]),
+      field('card'+(i+1)+'Line1','Thẻ '+(i+1)+' · Chữ lớn dòng 1',['CV &','Artist','Visual','Artist','Creative','Digital'][i]),
+      field('card'+(i+1)+'Line2','Thẻ '+(i+1)+' · Chữ lớn dòng 2',['Portfolio','Branding','Campaign','Website','Studio','Stories'][i]),
       field('card'+(i+1)+'Eyebrow','Thẻ '+(i+1)+' · Dòng nhỏ trên ảnh','DORTIS STUDIO / '+String(i+1).padStart(2,'0')),
-      field('card'+(i+1)+'Footer','Thẻ '+(i+1)+' · Dòng dưới ảnh',['HỒ SƠ NGHỆ SĨ','THƯƠNG HIỆU NGHỆ SĨ','THỊ GIÁC TRUYỀN THÔNG','KHÔNG GIAN SỐ'][i]),
+      field('card'+(i+1)+'Footer','Thẻ '+(i+1)+' · Dòng dưới ảnh',['HỒ SƠ NGHỆ SĨ','THƯƠNG HIỆU NGHỆ SĨ','THỊ GIÁC TRUYỀN THÔNG','KHÔNG GIAN SỐ','Ý TƯỞNG SÁNG TẠO','CÂU CHUYỆN SỐ'][i]),
     ])
-  ]),...Array.from({length:4},(_,cardIndex)=>section('Chữ riêng trên từng ảnh · Thẻ '+(cardIndex+1),
+  ]),...Array.from({length:6},(_,cardIndex)=>section('Chữ riêng trên từng ảnh · Thẻ '+(cardIndex+1),
     Array.from({length:6},(_,photoIndex)=>[
       field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Eyebrow','Ảnh '+(photoIndex+1)+' · Dòng nhỏ',''),
       field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Line1','Ảnh '+(photoIndex+1)+' · Chữ lớn dòng 1',''),
@@ -168,6 +168,7 @@ export const SITE_CONTENT_SCHEMAS=schemas
 export const SITE_CONTENT_DEFAULTS=Object.fromEntries(Object.entries(schemas).map(([key,groups])=>[
   key,Object.fromEntries(groups.flatMap(group=>group.fields.map(f=>[f.key,f.value])))
 ]))
+SITE_CONTENT_DEFAULTS.hero.cardCount='4'
 export function copyFor(siteContent,key){
   return {...(SITE_CONTENT_DEFAULTS[key]||{}),...(siteContent?.[key]||{})}
 }
