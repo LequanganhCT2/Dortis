@@ -8,7 +8,7 @@ create table if not exists public.site_images (
   storage_path text,
   updated_by uuid references auth.users(id) on delete set null,
   updated_at timestamptz not null default now(),
-  constraint valid_site_image_slot check (slot ~ '^(hero|service-(cv|brand|visual|web)|project-[a-zA-Z0-9_-]{10,150}|about|contact)$'),
+  constraint valid_site_image_slot check (slot ~ '^(hero|service-(cv|brand|visual|web)|service-gallery-(05|06|07|08|09|10)|project-[a-zA-Z0-9_-]{10,150}|about|contact)$'),
   constraint valid_public_image_url check (image_url is null or image_url ~ '^https://')
 );
 alter table public.site_images enable row level security;

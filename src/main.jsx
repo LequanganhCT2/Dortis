@@ -4,7 +4,8 @@ import LiquidRibbons from './LiquidRibbons'
 import AdminPage, { useSiteImages } from './AdminPage'
 import './style.css'
 import './cax.css'
-import { CaxHeroDeck, CaxServicePanels, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
+import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
+import CircularServiceCarousel from './CircularServiceCarousel'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
@@ -136,8 +137,8 @@ function App() {
 
       <section id="dich-vu" className="cax-services-section section-shell scene-section">
         <header className="cax-section-head"><div><p className="cax-kicker">02 / OUR EXPERTISE</p><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2></div><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông, Dortis biến ý tưởng thành trải nghiệm sáng tạo có chiều sâu.</p></header>
-        <CaxServicePanels services={services} images={siteImages}/>
-        <p className="cax-service-hint">Chọn thẻ để xem chi tiết. Hình sản phẩm trong trạng thái chưa có ảnh duyệt là mẫu trình bày bằng giao diện, không phải tác phẩm của khách hàng.</p>
+        <CircularServiceCarousel services={services} images={siteImages} />
+        <p className="cax-service-hint">Kéo trái/phải để xoay vòng liên tục. Tối đa 5 thẻ hiển thị trên desktop và 10 ảnh có thể được quản lý trong Admin. Thẻ không có ảnh sử dụng bản mô phỏng giao diện.</p>
       </section>
 
       <section id="du-an" className="cax-selected-work scene-section">
