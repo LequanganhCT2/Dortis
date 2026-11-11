@@ -77,43 +77,130 @@ body{overflow-x:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif;font-optica
 .cax-project-placeholder strong{font-size:clamp(22px,2.5vw,35px);letter-spacing:-.05em;line-height:1.35}
 .cax-project-placeholder p{color:#718193;line-height:1.85;font-size:12px;max-width:440px}
 .cax-project-placeholder span{white-space:nowrap;font-size:10px;color:var(--teal);font-weight:800;letter-spacing:.08em}
-.cax-artist-experience{background:#182238;color:#fff;padding:100px 0}
-.cax-artist-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:25px;margin-bottom:28px}
-.cax-artist-heading .cax-kicker{color:#91d8d8}
-.cax-artist-heading>div:first-child>p:last-child{font-size:12px;line-height:1.9;color:#b7cbd8;max-width:530px}
-.cax-artist-heading h2{color:#fff}
-.cax-artist-heading h2 em{color:#afc9ff}
-.cax-mode-toggle{background:#ffffff10;border:1px solid #ffffff3b;border-radius:30px;padding:5px;display:flex;gap:3px;flex-shrink:0}
-.cax-mode-toggle button{min-height:44px;border:0;padding:10px 17px;border-radius:24px;background:transparent;color:#dbe5ee;font-size:10px;font-weight:800;letter-spacing:.06em}
-.cax-mode-toggle button.active{background:#fff;color:#182238}
-.cax-artist-frame{padding:23px;border:1px solid #ffffff31;background:#ffffff0a;border-radius:19px}
-.cax-artist-frame-label{display:flex;justify-content:space-between;gap:14px;font-size:10px;letter-spacing:.1em;font-weight:750;color:#c8dbe5;margin-bottom:20px}
-.cax-quick{display:grid;grid-template-columns:.82fr 1.18fr;gap:15px}
-.cax-quick-cover{min-height:325px;border:1px solid #ffffff28;background:radial-gradient(ellipse at 76% 14%,#7395af,transparent 48%),linear-gradient(138deg,#325473,#19263c);border-radius:11px;padding:30px;display:flex;flex-direction:column;justify-content:space-between}
-.cax-quick-cover small,.cax-quick-cover span{color:#c5dce7;font-size:10px;letter-spacing:.12em}
-.cax-quick-cover strong{color:#fff;font-size:clamp(45px,5.3vw,80px);line-height:.9;letter-spacing:-.07em}
-.cax-quick-info{border-radius:11px;background:#ffffff0e;padding:28px;display:flex;flex-direction:column;justify-content:center;gap:15px}
-.cax-quick-info .cax-kicker{color:#8acccd;margin:0}
-.cax-quick-info h3{font-size:27px;letter-spacing:-.045em;line-height:1.3;margin:0}
-.cax-quick-info h3 small{font-size:10px;font-weight:500;letter-spacing:0;color:#b5c9d8}
-.cax-quick-info p:not(.cax-kicker){font-size:12px;color:#c4d2dd;line-height:1.95;margin:0}
-.cax-quick-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.cax-quick-stats span{border:1px solid #ffffff28;border-radius:7px;padding:10px;font-size:9px;color:#a8c2d1}
-.cax-quick-stats b{display:block;font-size:11px;color:#fff;letter-spacing:.04em}
-.cax-quick-info>a{display:inline-flex;align-items:center;min-height:44px;width:max-content;max-width:100%;font-size:10px;font-weight:850;letter-spacing:.06em;color:#fff;border-bottom:1px solid #a8dee0}
-.cax-explore{position:relative}
-.cax-explore-screen{min-height:350px;background:#dce9ec;border-radius:10px;color:#182238;padding:32px;display:flex;flex-direction:column;justify-content:space-between;gap:22px;touch-action:pan-y;transition:background .35s}
-.cax-explore-screen.chapter-1{background:#e0e3f1}.cax-explore-screen.chapter-2{background:#f0dfd6}
-.cax-explore-screen>span{font-size:10px;color:#49788b;font-weight:850;letter-spacing:.12em}
-.cax-explore-screen strong{display:block;font-size:clamp(33px,4.1vw,57px);line-height:1.24;letter-spacing:-.055em;max-width:660px}
-.cax-explore-screen p{font-size:12px;line-height:1.85;color:#5e7481;max-width:600px}
-.cax-explore-screen>small{letter-spacing:.1em;font-size:9px;color:#547a8b}
-.cax-explore-chapters{display:flex;gap:8px;margin-top:12px}
-.cax-explore-chapters button{flex:1;min-height:58px;border:1px solid #ffffff28;color:#ccd8e2;background:#ffffff12;border-radius:7px;font-size:10px;font-weight:700;letter-spacing:.06em;text-align:left;padding:10px}
-.cax-explore-chapters button b{display:block;font-size:14px}
-.cax-explore-chapters button.active{border-color:#b4d8dc;color:#fff;background:#ffffff26}
-.cax-explore-arrows{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
-.cax-explore-arrows button{background:#ffffff19;color:#fff;border-color:#ffffff35}
+/* CAX ARTIST EXPERIENCE — PEARL / MINT EDITORIAL */
+.cax-artist-experience{
+  --artist-pearl:#f2f7f7;--artist-mint:#d5ecea;--artist-ink:#19283b;
+  --artist-muted:#617987;--artist-teal:#008f91;--artist-chip:#e2f1ef;
+  --artist-border:#d3e4e5;
+  position:relative;isolation:isolate;overflow:hidden;
+  background:radial-gradient(ellipse at 6% 14%,#e0f2f0 0,transparent 42%),
+    radial-gradient(ellipse at 96% 88%,#eaf4f9 0,transparent 45%),var(--artist-pearl);
+  color:var(--artist-ink);padding:106px 0 112px
+}
+.cax-artist-experience:before{
+  content:"";position:absolute;inset:0 0 auto;height:1px;
+  background:linear-gradient(90deg,transparent,#cbdcdb,transparent);pointer-events:none
+}
+.cax-artist-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:25px;margin-bottom:32px;position:relative}
+.cax-artist-heading .cax-kicker{color:var(--artist-teal);font-size:10px;letter-spacing:.14em}
+.cax-artist-heading h2{color:var(--artist-ink);line-height:1.36;letter-spacing:-.047em}
+.cax-artist-heading h2 em{color:var(--artist-teal);font-family:'Noto Serif','Be Vietnam Pro',serif;font-weight:500;font-style:italic;letter-spacing:-.022em;line-height:1.5}
+.cax-artist-heading>div:first-child>p:last-child{font-size:13px;line-height:1.9;color:var(--artist-muted);max-width:570px;margin:16px 0 0}
+.cax-mode-toggle{
+  background:#ffffffd6;border:1px solid var(--artist-border);border-radius:32px;
+  padding:5px;display:flex;gap:4px;flex-shrink:0;box-shadow:0 5px 19px #1d596b08
+}
+.cax-mode-toggle button{
+  min-height:44px;border:0;padding:10px 19px;border-radius:25px;
+  background:transparent;color:#536f7a;font-size:10px;font-weight:800;
+  letter-spacing:.05em;transition:background .3s ease,color .3s ease,box-shadow .3s ease
+}
+.cax-mode-toggle button:hover:not(.active){background:var(--artist-chip)}
+.cax-mode-toggle button.active{background:var(--artist-teal);color:#fff;box-shadow:0 5px 13px #008f912a}
+.cax-artist-frame{
+  padding:24px;border:1px solid var(--artist-border);background:#ffffffcf;
+  border-radius:23px;box-shadow:0 23px 58px #3157710d
+}
+.cax-artist-frame-label{
+  display:flex;justify-content:space-between;gap:14px;font-size:10px;letter-spacing:.1em;
+  font-weight:750;color:#64828c;margin-bottom:20px
+}
+.cax-quick{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:16px;animation:cax-artist-fadein 480ms cubic-bezier(.22,1,.36,1) both}
+.cax-quick-cover{
+  min-height:365px;border:1px solid #c6e1df;
+  background:radial-gradient(ellipse at 85% 15%,#ffffff91 0,transparent 43%),
+    linear-gradient(135deg,#d1eae8,#e6f3f1);
+  border-radius:16px;padding:34px;display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;transition:transform 420ms cubic-bezier(.22,1,.36,1),box-shadow 420ms ease
+}
+.cax-quick-cover:after{content:"";position:absolute;width:270px;height:270px;right:-130px;bottom:-175px;border:1px solid #a3d0cc88;border-radius:50%;pointer-events:none}
+.cax-quick-cover:hover{transform:translateY(-3px);box-shadow:0 15px 26px #2c716a13}
+.cax-quick-cover small,.cax-quick-cover span{color:#477981;font-size:10px;font-weight:750;letter-spacing:.1em;position:relative;z-index:1}
+.cax-quick-cover strong{
+  color:var(--artist-ink);font-family:'Be Vietnam Pro',Arial,sans-serif;font-size:clamp(50px,5.3vw,82px);
+  font-weight:800;line-height:1.06;letter-spacing:-.055em;position:relative;z-index:1;text-shadow:none
+}
+.cax-quick-info{
+  border:1px solid #e2ecec;border-radius:16px;background:#ffffff;padding:30px;
+  display:flex;flex-direction:column;justify-content:center;gap:13px;min-width:0
+}
+.cax-quick-info .cax-kicker{color:var(--artist-teal);margin:0;font-size:10px}
+.cax-quick-info h3{color:var(--artist-ink);font-size:clamp(23px,2.2vw,31px);font-weight:760;letter-spacing:-.045em;line-height:1.4;margin:0}
+.cax-quick-info h3 small{font-size:11px;font-weight:500;letter-spacing:0;color:var(--artist-muted)}
+.cax-quick-info p:not(.cax-kicker){font-size:12px;color:var(--artist-muted);line-height:1.9;margin:0}
+.cax-quick-stats{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;margin-top:2px}
+.cax-quick-stats span{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  border:1px solid #dcebe9;background:var(--artist-chip);border-radius:9px;
+  padding:10px 13px;font-size:10px;line-height:1.5;color:var(--artist-muted);
+  transition:background .25s,border-color .25s,transform .25s
+}
+.cax-quick-stats span:hover{background:#d7edeb;border-color:#c5e1dc;transform:translateX(3px)}
+.cax-quick-stats b{font-size:11px;line-height:1.4;color:var(--artist-ink);letter-spacing:.035em}
+.cax-quick-info>a{
+  display:inline-flex;align-items:center;min-height:44px;width:max-content;max-width:100%;
+  font-size:10px;font-weight:850;letter-spacing:.06em;color:#007b7c;
+  border-bottom:1px solid #74bcb9;transition:color .25s,border-color .25s
+}
+.cax-quick-info>a:hover{color:#005d62;border-color:#005d62}
+.cax-explore{position:relative;animation:cax-artist-fadein 480ms cubic-bezier(.22,1,.36,1) both}
+.cax-explore-screen{
+  min-height:356px;background:linear-gradient(135deg,var(--artist-mint),#e5f3f1);
+  border:1px solid #c8e2de;border-radius:16px;color:var(--artist-ink);padding:34px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:22px;
+  touch-action:pan-y;transition:background .5s ease,box-shadow .4s ease;outline-offset:5px
+}
+.cax-explore-screen.chapter-1{background:linear-gradient(135deg,#e0eef4,#eff5f8);border-color:#d2e3ec}
+.cax-explore-screen.chapter-2{background:linear-gradient(135deg,#f1e9e3,#f9f2ef);border-color:#e8dcd3}
+.cax-explore-screen>span{font-size:10px;color:#367780;font-weight:850;letter-spacing:.12em}
+.cax-explore-screen strong{
+  display:block;font-size:clamp(33px,4.1vw,57px);line-height:1.27;letter-spacing:-.05em;
+  font-family:'Be Vietnam Pro',Arial,sans-serif;font-weight:770;max-width:690px
+}
+.cax-explore-screen p{font-size:13px;line-height:1.85;color:#547382;max-width:640px}
+.cax-explore-screen>small{letter-spacing:.1em;font-size:9px;color:#63838d}
+.cax-explore-chapters{display:flex;gap:8px;margin-top:13px}
+.cax-explore-chapters button{
+  flex:1;min-height:60px;border:1px solid #d6e5e4;color:#5c7983;background:#ffffffd6;
+  border-radius:10px;font-size:10px;font-weight:750;letter-spacing:.06em;text-align:left;
+  padding:11px 14px;transition:background .3s,border-color .3s,transform .3s
+}
+.cax-explore-chapters button b{display:block;font-size:14px;color:var(--artist-ink)}
+.cax-explore-chapters button.active{border-color:#87c9c3;color:#007c7c;background:var(--artist-chip)}
+.cax-explore-chapters button:hover:not(.active){transform:translateY(-2px);background:#f5fbfa}
+.cax-explore-arrows{display:flex;justify-content:flex-end;gap:7px;margin-top:12px}
+.cax-explore-arrows button{
+  background:#fff;color:var(--artist-ink);border-color:#c5dbde;
+  min-width:44px;min-height:44px
+}
+.cax-explore-arrows button:hover{background:var(--artist-chip)}
+@keyframes cax-artist-fadein{from{opacity:.2;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){
+  .cax-artist-experience{padding-top:65px;padding-bottom:65px}
+  .cax-artist-frame{padding:14px;border-radius:17px}
+  .cax-quick-cover{min-height:230px;padding:23px}
+  .cax-quick-cover strong{font-size:clamp(50px,12vw,66px)}
+  .cax-quick-info{padding:21px}
+  .cax-quick-stats span{padding:10px 12px}
+  .cax-explore-screen{min-height:300px;padding:23px}
+  .cax-explore-chapters button{padding:10px 9px}
+  .cax-artist-heading h2{line-height:1.39}
+}
+@media(prefers-reduced-motion:reduce){
+  .cax-quick,.cax-explore{animation:none!important}
+  .cax-quick-cover,.cax-quick-stats span,.cax-mode-toggle button,.cax-explore-screen,.cax-explore-chapters button{transition:none!important}
+  .cax-quick-cover:hover,.cax-quick-stats span:hover,.cax-explore-chapters button:hover{transform:none!important}
+}
 .cax-values{padding-top:115px;padding-bottom:115px}
 .cax-values-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:35px;margin-bottom:35px}
 .cax-values-heading>p{max-width:370px;font-size:13px;line-height:1.9;color:#647788}
