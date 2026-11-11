@@ -81,8 +81,7 @@ const laTrinh={
   sections:[
     section('cover','LA TRINH','Ca sĩ', [crop(.52,.02,.41,.96)],{eyebrow:'LA TRINH / ARTIST PORTFOLIO'}),
     section('feature','Hành trình âm nhạc',
-      'Với La Trinh, âm nhạc không chỉ là những giai điệu, mà là tiếng lòng, là nơi cô gửi gắm trọn vẹn những thăng trầm của cảm xúc. Khởi đầu từ niềm đam mê cháy bỏng, mỗi bước đi trên con đường nghệ thuật đều là một dấu ấn của sự nỗ lực, rèn luyện không ngừng nghỉ để hoàn thiện bản thân. Cô luôn tin rằng, mỗi ca khúc là một câu chuyện, và người nghệ sĩ là người kể chuyện bằng cả trái tim.
-Âm nhạc là hành trình kết nối những cảm xúc.',
+      'Với La Trinh, âm nhạc không chỉ là những giai điệu, mà là tiếng lòng, là nơi cô gửi gắm trọn vẹn những thăng trầm của cảm xúc. Khởi đầu từ niềm đam mê cháy bỏng, mỗi bước đi trên con đường nghệ thuật đều là một dấu ấn của sự nỗ lực, rèn luyện không ngừng nghỉ để hoàn thiện bản thân. Cô luôn tin rằng, mỗi ca khúc là một câu chuyện, và người nghệ sĩ là người kể chuyện bằng cả trái tim.\nÂm nhạc là hành trình kết nối những cảm xúc.',
       [crop(.04,.03,.36,.94)],{eyebrow:'CHÂN DUNG NGHỆ SĨ'}),
     section('stats','Dấu ấn nghệ thuật',
       'Một hành trình bền bỉ với âm nhạc, từ các chương trình văn hóa nghệ thuật đến những sân khấu và sự kiện đa dạng.',
