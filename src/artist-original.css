@@ -1,0 +1,36 @@
+/* Pixel-faithful portfolio pages: preserve the original page image aspect ratio. */
+.artist-pdf-original{--orig-ink:#19283b;background:#eef3f5;color:var(--orig-ink);overflow:hidden}
+.artist-original-heading{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:24px;padding:clamp(28px,4vw,54px) clamp(18px,5vw,82px) 26px;max-width:1520px;margin:auto}
+.artist-original-heading p{font-size:10px;letter-spacing:.12em;font-weight:840;color:#008f91;margin:0 0 12px}
+.artist-original-heading h1{font-size:clamp(28px,4vw,55px);line-height:1.4;letter-spacing:-.05em;font-weight:770;margin:0}
+.artist-original-heading h1 span{color:#f17b48}
+.artist-original-heading>div>span{display:block;margin-top:8px;font-size:12px;font-weight:600;color:#758a97}
+.artist-original-heading>div>span i{margin:0 6px;color:#a9bcc7}
+.artist-original-layout-switch{display:flex;gap:3px;background:#ffffffc9;border:1px solid #d5e3e8;border-radius:40px;padding:4px;box-shadow:0 5px 17px #18364508}
+.artist-original-layout-switch button{min-height:38px;padding:10px 15px;border-radius:30px;background:transparent;color:#617986;border:0;font:780 10px 'Be Vietnam Pro',sans-serif;white-space:nowrap}
+.artist-original-layout-switch button.active{background:#19283b;color:white}
+.artist-original-stack{max-width:1350px;margin:0 auto;display:flex;flex-direction:column;align-items:stretch}
+.artist-original-stack.is-continuous{gap:0;padding:0;box-shadow:0 30px 90px #243e5424}
+.artist-original-stack.is-separate{gap:32px;padding:0 clamp(18px,5vw,80px)}
+.artist-original-page{width:100%;min-width:0;position:relative}
+.artist-original-page-label{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 4px;color:#607e8c;font-size:9px;font-weight:830;letter-spacing:.12em}
+.artist-original-page-image{border:0;cursor:zoom-in;padding:0;margin:0;display:block;overflow:hidden;width:100%;height:auto;position:relative;background:white;box-shadow:none;line-height:0}
+.artist-original-stack.is-separate .artist-original-page-image{border-radius:9px;box-shadow:0 18px 44px #1b40501a;border:1px solid #d7e4e6}
+.artist-original-page-image img{display:block;width:100%;height:auto;max-width:100%;object-fit:contain;object-position:center;image-rendering:auto}
+.artist-original-page-image:focus-visible{outline:3px solid #008f91;outline-offset:3px;z-index:1}
+.artist-original-missing{display:grid;place-items:center;aspect-ratio:16/9;font:650 13px 'Be Vietnam Pro',sans-serif;color:#6f8796;background:#eaf0f3;line-height:1.8}
+.artist-original-footer{max-width:1350px;margin:0 auto;padding:36px clamp(20px,5vw,82px) 65px;display:flex;align-items:center;justify-content:space-between;gap:17px;flex-wrap:wrap}
+.artist-original-footer span{font-size:9px;color:#008f91;letter-spacing:.12em;font-weight:830}
+.artist-original-footer p{color:#677f8c;font-size:12px;margin:9px 0 0;line-height:1.7}
+.artist-original-footer a{font-size:11px;color:#19283b;font-weight:830;border-bottom:1px solid #6db4b3;padding:12px 0}
+.artist-original-lightbox{position:fixed;inset:0;z-index:9000;background:#0d1524f5;color:white;display:flex;flex-direction:column}
+.artist-original-lightbox-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px clamp(14px,3vw,34px);gap:15px;border-bottom:1px solid #ffffff2c;background:#0d1524;z-index:1}
+.artist-original-lightbox-toolbar strong{font-size:11px;letter-spacing:.09em;font-weight:850}
+.artist-original-lightbox-toolbar>div{display:flex;gap:8px;align-items:center}
+.artist-original-lightbox-toolbar button{background:#ffffff1a;color:white;border:1px solid #ffffff36;border-radius:8px;min-width:40px;min-height:40px;padding:8px 13px;font:780 12px 'Be Vietnam Pro',sans-serif}
+.artist-original-lightbox-toolbar button:disabled{opacity:.3;cursor:not-allowed}
+.artist-original-lightbox-toolbar button.artist-original-close{background:white;color:#182238}
+.artist-original-lightbox-scroll{flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;overscroll-behavior:contain;padding:clamp(15px,3vw,30px)}
+.artist-original-lightbox-scroll img{width:auto;height:auto;max-width:none;min-width:min(1100px,100%);display:block;background:#fff;box-shadow:0 22px 55px #0007}
+@media(max-width:720px){.artist-original-heading{padding:24px 18px 20px}.artist-original-stack.is-continuous{width:100%}.artist-original-stack.is-separate{gap:19px;padding:0 13px}.artist-original-page-label{padding:9px 4px;font-size:8px}.artist-original-lightbox-scroll img{min-width:950px}.artist-original-footer{padding:30px 20px 45px}.artist-original-heading h1{font-size:clamp(28px,7vw,43px)}}
+@media(prefers-reduced-motion:reduce){.artist-original-page-image{scroll-behavior:auto}}

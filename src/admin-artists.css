@@ -127,3 +127,25 @@
   .artist-admin-css-preview>.a2-portfolio{height:75vh}
   .artist-admin-css-preview .a2-portfolio-topline{padding:15px 19px}
 }
+
+/* High-fidelity PDF view choice */
+.artist-admin-render-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;border:1px solid #d7e5e9;border-radius:14px;background:#f7fafb;padding:18px;margin:0 0 24px}
+.artist-admin-render-mode legend{padding:0 10px;color:#008f91;font-size:10px;font-weight:850;letter-spacing:.09em}
+.artist-admin-render-mode label{display:flex;align-items:flex-start;gap:10px;min-width:0;background:#fff;border:1px solid #dae6eb;border-radius:10px;padding:16px;cursor:pointer}
+.artist-admin-render-mode label.chosen{border-color:#008f91;background:#e9f6f4;box-shadow:0 0 0 1px #008f9122}
+.artist-admin-render-mode label input{accent-color:#008f91;flex:0 0 auto;width:17px;height:17px;margin-top:2px}
+.artist-admin-render-mode label span{display:flex;flex-direction:column;gap:7px}
+.artist-admin-render-mode label strong{font-size:11px;color:#19283b;font-weight:850}
+.artist-admin-render-mode label small{font-size:10px;line-height:1.85;color:#647f8c;font-weight:550}
+.artist-admin-render-mode>p{grid-column:span 2;font-size:10px;color:#956b32;line-height:1.8;margin:0}
+.artist-admin-render-mode:disabled label{opacity:.74;cursor:not-allowed}
+.artist-admin-original-page-row{display:flex;flex-direction:column;gap:9px;padding:20px;border:1px solid #d6e4e8;background:linear-gradient(130deg,#fff,#f4fafb);border-radius:12px}
+.artist-admin-original-page-row>strong{color:#008f91;font-size:12px;letter-spacing:.12em}
+.artist-admin-original-page-row>span{color:#718a95;font-size:11px;line-height:1.8}
+.artist-admin-original-page-row>img{width:min(100%,240px);max-height:340px;height:auto;object-fit:contain;border:1px solid #e1e8eb;box-shadow:0 7px 15px #103a5411}
+.artist-admin-css-preview>.artist-pdf-original{height:min(780px,76vh);overflow-y:auto;overscroll-behavior:contain}
+.artist-admin-css-preview .artist-original-heading{padding:18px;gap:12px}
+.artist-admin-css-preview .artist-original-heading h1{font-size:35px}
+.artist-admin-css-preview .artist-original-stack{max-width:850px}
+.artist-admin-css-preview .artist-original-footer{padding:25px}
+@media(max-width:650px){.artist-admin-render-mode{grid-template-columns:1fr}.artist-admin-render-mode>p{grid-column:auto}.artist-admin-css-preview>.artist-pdf-original{height:75vh}}

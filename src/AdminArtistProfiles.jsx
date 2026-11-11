@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { extractArtistPdf, renderPagesFromPdf, slugifyArtist, destroyArtistPdf } from './artistPdf'
 import { designArtistPdf, identifyArtistLayout, normalizeArtistSection, ARTIST_LAYOUT_OPTIONS } from './artistLayouts'
 import { renderArtistPhotoCrops } from './artistPhotoCrops'
+import { renderPdfPageOriginal } from './artistPdfOriginal'
+import ArtistOriginalPages from './ArtistOriginalPages'
 import ArtistPortfolioSections from './ArtistPortfolioSections'
 import { uploadArtistPdf, downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
 import './admin-artists.css'
 
 const PAGE_BUCKET='dortis-artist-pages'
 const MAX_PDF=100*1024*1024
-const emptyNotice='Hồ sơ chỉ công khai sau khi bạn bấm Xuất bản. Các section được dựng bằng HTML/CSS, không nhúng ảnh toàn trang PDF.'
+const emptyNotice='Bản nháp chỉ công khai sau khi bấm Xuất bản. Chế độ Nguyên bản giữ đúng bố cục mỗi trang PDF; bản HTML/CSS vẫn có thể lựa chọn.'
 const getError=(e,fallback='Có lỗi xảy ra.')=>{
   if(e?.statusCode==='413'||/maximum size exceeded|entitytoo(?:large|big)|413/i.test(String(e?.message||'')))return 'Storage đang từ chối một phần PDF 4 MB. Kiểm tra Storage → Settings: Global file size limit phải ít nhất 4 MB, hoặc liên hệ quản trị viên Supabase.'
   return e?.message||fallback
@@ -16,6 +18,7 @@ const getError=(e,fallback='Có lỗi xảy ra.')=>{
 const cleanSection=normalizeArtistSection
 const allPhotoPaths=sections=>[...new Set((sections||[]).flatMap(s=>[
   s.image_storage_path,
+  s.original_page_path,
   ...(Array.isArray(s.media)?s.media.map(x=>x.path):[])
 ]).filter(Boolean))]
 
@@ -53,6 +56,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
     setSelected(profile.id)
     setForm({
       id:profile.id,name:profile.name,slug:profile.slug,role:profile.role,
+      render_mode:profile.render_mode||'original',
       tagline:profile.tagline||'',intro:profile.intro||'',
       sections:Array.isArray(profile.sections)?profile.sections.map(cleanSection):[],
       status:profile.status,cover_image_url:profile.cover_image_url
@@ -106,6 +110,27 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       const blob=await downloadArtistPdf(supabase,source.pdf_storage_path,(done,total)=>
         setProgress('Đang tải PDF nguồn để xem trước · '+done+'/'+total))
       pdf=await renderPagesFromPdf(blob)
+      if(form.render_mode==='original'){
+        const sections=[]
+        for(const section of form.sections){
+          setProgress('Đang dựng bản xem trước giống PDF · trang '+section.page+'/'+pdf.numPages)
+          const page=await pdf.getPage(section.page)
+          let rendered
+          try{rendered=await renderPdfPageOriginal(page,{targetWidth:1150})}
+          finally{page.cleanup()}
+          const imageUrl=URL.createObjectURL(rendered.blob)
+          generated.push(imageUrl)
+          sections.push({...cleanSection(section),
+            original_page_url:imageUrl,
+            original_page_width:rendered.width,original_page_height:rendered.height})
+        }
+        for(const old of previewUrls.current)URL.revokeObjectURL(old)
+        previewUrls.current=generated
+        setPreviewData({...form,sections})
+        setPreview(true)
+        setNotice('Bản xem trước giữ nguyên màu sắc, font, vị trí và tỷ lệ từng trang PDF.')
+        return
+      }
       const sections=[]
       let index=0
       for(const section of form.sections){
@@ -181,7 +206,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
           setProgress('['+(i+1)+'/'+list.length+'] Đã lưu phần '+done+'/'+total+' · '+file.name))
         storageRef=uploaded.storageRef
         const {data:created,error:insertError}=await supabase.from('artist_profiles')
-          .insert({name:designed.name,slug,role:designed.role,tagline:designed.tagline||'',
+          .insert({name:designed.name,slug,role:designed.role,render_mode:'original',tagline:designed.tagline||'',
             intro:designed.intro||'',sections:designed.sections,status:'draft',created_by:user.id})
           .select('id').single()
         if(insertError)throw insertError
@@ -212,7 +237,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       const {error:saveError}=await supabase.from('artist_profiles').update({
         name:form.name.trim(),slug:form.slug,role:form.role.trim()||'Nghệ sĩ',
         tagline:form.tagline.trim(),intro:form.intro,
-        sections:form.sections.map(cleanSection),updated_at:new Date().toISOString()
+        render_mode:form.render_mode||'original',sections:form.sections.map(cleanSection),updated_at:new Date().toISOString()
       }).eq('id',form.id)
       if(saveError)throw saveError
       await load()
@@ -236,39 +261,74 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       const blob=await downloadArtistPdf(supabase,source.pdf_storage_path,(done,total)=>
         setProgress('Đang khôi phục PDF nguồn · '+done+'/'+total+' phần'))
       pdf=await renderPagesFromPdf(blob)
-      const photoByPage={}
-      let processed=0
-      const withCrops=form.sections.filter(section=>(section.photos||[]).length>0)
-      for(const section of withCrops){
-        const pageNumber=section.page
-        if(pageNumber>pdf.numPages)throw new Error('Không tìm thấy trang PDF '+pageNumber)
-        setProgress('Đang dựng vùng ảnh riêng cho section '+(++processed)+'/'+withCrops.length+' · trang '+pageNumber)
-        const page=await pdf.getPage(pageNumber)
-        let crops
-        try {
-          crops=await renderArtistPhotoCrops(page,section.photos)
-        } finally {page.cleanup()}
-        const media=[]
-        for(let i=0;i<crops.length;i++){
-          const {blob:image,extension,type}=crops[i]
-          const assetPath=form.id+'/section-'+String(pageNumber).padStart(2,'0')
-            +'-photo-'+String(i+1).padStart(2,'0')+'-'+crypto.randomUUID()+'.'+extension
+      let sections
+      let cover=null
+      if(form.render_mode==='original'){
+        // High-fidelity mode: one responsive, full-composition image per PDF page.
+        // We never expose the private original PDF; only approved page renders.
+        const originalByPage={}
+        for(let i=1;i<=pdf.numPages;i++){
+          setProgress('Đang giữ nguyên bố cục trang PDF '+i+'/'+pdf.numPages+'...')
+          const page=await pdf.getPage(i)
+          let rendered
+          try{rendered=await renderPdfPageOriginal(page,{targetWidth:1850})}
+          finally{page.cleanup()}
+          const assetPath=form.id+'/original-page-'+String(i).padStart(2,'0')
+            +'-'+crypto.randomUUID()+'.'+rendered.extension
           const {error:uploadError}=await supabase.storage.from(PAGE_BUCKET)
-            .upload(assetPath,image,{contentType:type,cacheControl:'3600',upsert:false})
+            .upload(assetPath,rendered.blob,{contentType:rendered.type,cacheControl:'3600',upsert:false})
           if(uploadError)throw uploadError
           uploaded.push(assetPath)
           const {data:url}=supabase.storage.from(PAGE_BUCKET).getPublicUrl(assetPath)
-          media.push({url:url.publicUrl,path:assetPath,alt:'Ảnh '+form.name+' · '+section.title})
+          originalByPage[i]={
+            original_page_url:url.publicUrl,original_page_path:assetPath,
+            original_page_width:rendered.width,original_page_height:rendered.height,
+          }
         }
-        photoByPage[pageNumber]=media
+        sections=form.sections.map(section=>({
+          ...cleanSection(section),
+          ...originalByPage[section.page],
+          image_url:null,image_storage_path:null,media:[],
+        }))
+        cover=originalByPage[1]?.original_page_url||null
+      }else{
+        // Editable editorial mode keeps individual photos and HTML/CSS.
+        const photoByPage={}
+        let processed=0
+        const withCrops=form.sections.filter(section=>(section.photos||[]).length>0)
+        for(const section of withCrops){
+          const pageNumber=section.page
+          if(pageNumber>pdf.numPages)throw new Error('Không tìm thấy trang PDF '+pageNumber)
+          setProgress('Đang dựng ảnh riêng '+(++processed)+'/'+withCrops.length+' · trang '+pageNumber)
+          const page=await pdf.getPage(pageNumber)
+          let crops
+          try{crops=await renderArtistPhotoCrops(page,section.photos)}
+          finally{page.cleanup()}
+          const media=[]
+          for(let i=0;i<crops.length;i++){
+            const {blob:image,extension,type}=crops[i]
+            const assetPath=form.id+'/section-'+String(pageNumber).padStart(2,'0')
+              +'-photo-'+String(i+1).padStart(2,'0')+'-'+crypto.randomUUID()+'.'+extension
+            const {error:uploadError}=await supabase.storage.from(PAGE_BUCKET)
+              .upload(assetPath,image,{contentType:type,cacheControl:'3600',upsert:false})
+            if(uploadError)throw uploadError
+            uploaded.push(assetPath)
+            const {data:url}=supabase.storage.from(PAGE_BUCKET).getPublicUrl(assetPath)
+            media.push({url:url.publicUrl,path:assetPath,alt:'Ảnh '+form.name+' · '+section.title})
+          }
+          photoByPage[pageNumber]=media
+        }
+        sections=form.sections.map(section=>({
+          ...cleanSection(section),media:photoByPage[section.page]||[],
+          image_url:null,image_storage_path:null,
+          original_page_url:null,original_page_path:null,
+        }))
+        cover=sections.find(section=>section.layout==='cover'&&section.media.length)?.media[0]?.url
+          ||sections.find(section=>section.media.length)?.media[0]?.url||null
       }
-      const sections=form.sections.map(section=>({...cleanSection(section),
-        media:photoByPage[section.page]||[],image_url:null,image_storage_path:null}))
-      const cover=sections.find(section=>section.layout==='cover'&&section.media.length)?.media[0]?.url
-        ||sections.find(section=>section.media.length)?.media[0]?.url||null
       const {error:saveError}=await supabase.from('artist_profiles')
         .update({name:form.name.trim(),slug:form.slug,role:form.role,tagline:form.tagline,
-          intro:form.intro,sections,status:'published',
+          intro:form.intro,render_mode:form.render_mode||'original',sections,status:'published',
           cover_image_url:cover,
           updated_at:new Date().toISOString()}).eq('id',form.id)
       if(saveError)throw saveError
@@ -289,7 +349,8 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
     setBusy(true);setError('');setProgress('Đang ẩn hồ sơ và thu hồi ảnh công khai...')
     const paths=allPhotoPaths(form.sections)
     try{
-      const sections=form.sections.map(s=>({...cleanSection(s),media:[],image_url:null,image_storage_path:null}))
+      const sections=form.sections.map(s=>({...cleanSection(s),media:[],image_url:null,image_storage_path:null,
+        original_page_url:null,original_page_path:null,original_page_width:0,original_page_height:0}))
       const {error:dbError}=await supabase.from('artist_profiles').update({
         status:'draft',sections,cover_image_url:null,updated_at:new Date().toISOString()
       }).eq('id',form.id)
@@ -334,7 +395,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       <div className="admin-topline"><a href="/admin" className="admin-home">← QUẢN LÝ HÌNH ẢNH</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></div>
       <header className="artist-admin-intro"><span>DORTIS / ARTIST PROFILE CMS</span>
         <h1>Hồ sơ <em>nghệ sĩ.</em></h1>
-        <p>Mỗi PDF tạo một hồ sơ nghệ sĩ riêng. Mỗi trang PDF tương ứng một section HTML/CSS có bố cục, chữ và các vùng ảnh riêng. Các PDF mẫu được dựng sát phong cách gốc; Admin có thể điều chỉnh toàn bộ.</p>
+        <p>Mỗi PDF tạo một trang nghệ sĩ riêng. Chọn chế độ <strong>Giữ nguyên PDF</strong> để giữ đúng vị trí chữ, màu và ảnh trên từng trang. Hoặc chọn HTML/CSS để tự thiết kế nội dung.</p>
         <div className="artist-admin-heading-actions"><a href="/artists" target="_blank" rel="noreferrer">XEM TRANG NGHỆ SĨ ↗</a><a href="/admin">QUẢN LÝ ẢNH ↗</a></div>
       </header>
       {error&&<p className="admin-alert error" role="alert">{error}</p>}
@@ -369,6 +430,20 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
             <div className="artist-admin-editor-head"><div><span>02 / EDIT & REVIEW</span><h2>Biên tập hồ sơ</h2></div>
               <span className={'artist-admin-status '+form.status}>{form.status==='published'?'ĐÃ XUẤT BẢN':'BẢN NHÁP'}</span>
             </div>
+            <fieldset className="artist-admin-render-mode" disabled={busy||form.status==='published'}>
+              <legend>CHẾ ĐỘ HIỂN THỊ PORTFOLIO</legend>
+              <label className={form.render_mode==='original'?'chosen':''}>
+                <input type="radio" name="portfolio-mode" value="original" checked={form.render_mode!=='editorial'}
+                  onChange={()=>{updateField('render_mode','original');setPreview(false);setPreviewData(null)}}/>
+                <span><strong>GIỮ NGUYÊN PDF</strong><small>Đề xuất — giữ bố cục gốc từng trang, co giãn vừa màn hình, có phóng to</small></span>
+              </label>
+              <label className={form.render_mode==='editorial'?'chosen':''}>
+                <input type="radio" name="portfolio-mode" value="editorial" checked={form.render_mode==='editorial'}
+                  onChange={()=>{updateField('render_mode','editorial');setPreview(false);setPreviewData(null)}}/>
+                <span><strong>THIẾT KẾ WEB HTML/CSS</strong><small>Chữ và ảnh có thể chỉnh sửa riêng; bố cục có thể khác PDF gốc</small></span>
+              </label>
+              {form.status==='published'&&<p>Để thay đổi chế độ, hãy chuyển hồ sơ về bản nháp rồi xuất bản lại.</p>}
+            </fieldset>
             <div className="artist-admin-fields">
               <label>TÊN NGHỆ SĨ<input value={form.name} disabled={busy} onChange={e=>updateField('name',e.target.value)} maxLength={160}/></label>
               <label>VAI TRÒ<input value={form.role} disabled={busy} onChange={e=>updateField('role',e.target.value)} maxLength={120} placeholder="Ca sĩ, biên đạo, nghệ sĩ..."/></label>
@@ -381,17 +456,26 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
               <small>Chỉ Admin có quyền tải PDF gốc. Bản công khai không hiển thị file này.</small>
             </div>
             <div className="artist-admin-pages-heading">
-              <div><h3>Thiết kế từng section theo PDF</h3>
-                <p>{form.sections.length} trang PDF = {form.sections.length} section HTML/CSS. Ảnh chỉ được cắt từ vùng chân dung, không dùng ảnh chụp trang.</p></div>
+              <div><h3>{form.render_mode==='original'?'Trang PDF nguyên bản':'Thiết kế từng section HTML/CSS'}</h3>
+                <p>{form.render_mode==='original'
+                  ? form.sections.length+' trang sẽ được hiển thị đúng thứ tự và tỷ lệ gốc, không đổi vị trí các thành phần.'
+                  : form.sections.length+' trang PDF tương ứng các section HTML/CSS có thể chỉnh sửa.'}</p></div>
               <div className="artist-admin-design-tools">
-                <button type="button" disabled={busy||form.status==='published'||!identifyArtistLayout(sources[form.id]?.original_filename)}
+                <button type="button" disabled={busy||form.status==='published'||form.render_mode==='original'||!identifyArtistLayout(sources[form.id]?.original_filename)}
                   onClick={applyOriginalDesign}>ÁP DỤNG BỐ CỤC PDF GỐC</button>
                 <button type="button" disabled={busy} onClick={buildCssPreview}>
-                  {preview?'ĐÓNG BẢN XEM TRƯỚC':'XEM TRƯỚC HTML / CSS ↗'}</button>
+                  {preview?'ĐÓNG BẢN XEM TRƯỚC':form.render_mode==='original'?'XEM TRƯỚC GIỐNG PDF ↗':'XEM TRƯỚC HTML / CSS ↗'}</button>
               </div>
             </div>
             <div className="artist-admin-pages">
-              {form.sections.map((section,i)=><article key={section.page||i} className="artist-admin-page">
+              {form.render_mode==='original' ? form.sections.map((section,i)=>
+                <article key={section.page||i} className="artist-admin-original-page-row">
+                  <strong>TRANG {String(section.page||i+1).padStart(2,'0')}</strong>
+                  <span>Giữ bố cục, màu, font chữ và ảnh của trang PDF gốc.</span>
+                  {(section.original_page_url||section.image_url)&&<img loading="lazy"
+                    src={section.original_page_url||section.image_url} alt={'Trang PDF '+(i+1)}/>}
+                </article>
+              ) : form.sections.map((section,i)=><article key={section.page||i} className="artist-admin-page">
                 <div className="artist-admin-page-top"><span>SECTION {String(section.page||i+1).padStart(2,'0')}</span>
                   <span>{(section.photos||[]).length} ẢNH RIÊNG · {(section.highlights||[]).length} MỤC CHỮ</span></div>
                 <label>KIỂU BỐ CỤC CSS
@@ -451,7 +535,9 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
                 <strong>BẢN XEM TRƯỚC / CSS THẬT</strong>
                 <button type="button" onClick={()=>setPreview(false)}>ĐÓNG ×</button>
               </div>
-              <ArtistPortfolioSections profile={previewData} sections={previewData.sections}/>
+              {previewData.render_mode==='original'
+                ? <ArtistOriginalPages profile={previewData} sections={previewData.sections}/>
+                : <ArtistPortfolioSections profile={previewData} sections={previewData.sections}/>}
             </section>}
             <div className="artist-admin-editor-actions">
               <button type="button" className="artist-admin-save" disabled={busy} onClick={save}>LƯU NỘI DUNG</button>
@@ -460,7 +546,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
               {form.status==='published'&&<a href={'/artists/'+form.slug} target="_blank" rel="noreferrer">XEM TRANG CÔNG KHAI ↗</a>}
               <button type="button" className="artist-admin-delete" disabled={busy} onClick={()=>setDeleteTarget(profiles.find(x=>x.id===form.id))}>XÓA HỒ SƠ</button>
             </div>
-            <p className="artist-admin-warning">Các bản dựng HTML/CSS sử dụng nội dung từ PDF và vùng ảnh riêng. Một số trang PDF dùng ảnh raster có thể không tách được chữ tự động; hãy đối chiếu với PDF gốc và sửa nội dung trước khi xuất bản. Chỉ đăng nội dung bạn có quyền sử dụng. Chỉ những vùng ảnh riêng đã duyệt mới có đường dẫn công khai. Website không hiển thị ảnh chụp toàn trang PDF.</p>
+            <p className="artist-admin-warning">Chế độ Giữ nguyên PDF hiển thị ảnh từng trang để bảo toàn bố cục nhưng chữ trong ảnh không chỉnh sửa trực tiếp được. Chế độ HTML/CSS sử dụng nội dung từ PDF và vùng ảnh riêng. Một số trang PDF dùng ảnh raster có thể không tách được chữ tự động; hãy đối chiếu với PDF gốc và sửa nội dung trước khi xuất bản. Chỉ đăng nội dung bạn có quyền sử dụng. Chỉ những vùng ảnh riêng đã duyệt mới có đường dẫn công khai. Website không hiển thị ảnh chụp toàn trang PDF.</p>
           </div>}
         </div>
       </section>

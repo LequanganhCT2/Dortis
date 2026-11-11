@@ -1,0 +1,4 @@
+.artist-portfolio-modebar{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;padding:13px 18px;background:#dfecef;border-bottom:1px solid #cbdfe4}
+.artist-portfolio-modebar>span{font-size:9px;font-weight:830;letter-spacing:.11em;color:#698592;margin-right:8px}
+.artist-portfolio-modebar button{padding:10px 16px;min-height:39px;background:#fff;border:1px solid #c8dbe2;border-radius:27px;color:#4e6978;font:770 10px 'Be Vietnam Pro',sans-serif}
+.artist-portfolio-modebar button.active{background:#19283b;color:#fff;border-color:#19283b}

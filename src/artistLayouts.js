@@ -141,7 +141,11 @@ export function normalizeArtistSection(row={}) {
     photos:Array.isArray(row.photos)?row.photos.map(normalizeCrop).slice(0,8):[],
     media:Array.isArray(row.media)?row.media.filter(x=>x&&typeof x.url==='string').slice(0,8):[],
     image_url:row.image_url||null,
-    image_storage_path:row.image_storage_path||null
+    image_storage_path:row.image_storage_path||null,
+    original_page_url:row.original_page_url||null,
+    original_page_path:row.original_page_path||null,
+    original_page_width:Math.max(0,Number(row.original_page_width)||0),
+    original_page_height:Math.max(0,Number(row.original_page_height)||0)
   }
 }
 

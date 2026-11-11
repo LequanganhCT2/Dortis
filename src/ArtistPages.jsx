@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from './AdminPage'
 import './artist-pages.css'
-import ArtistPortfolioSections from './ArtistPortfolioSections'
+import ArtistPortfolioViewer from './ArtistPortfolioViewer'
+import './artist-portfolio-view.css'
 import { designArtistPdf, identifyArtistLayout } from './artistLayouts'
 
 function ArtistBrand(){return <a className="artist-brand-link" href="/" aria-label="Dortis – về trang chủ">
@@ -35,7 +36,7 @@ export default function ArtistPages(){
     async function load(){
       if(!supabase){setError('Chưa cấu hình kết nối dữ liệu.');setLoading(false);return}
       const query=slug?
-        supabase.from('artist_profiles').select('id,slug,name,role,tagline,intro,sections,cover_image_url').eq('slug',slug).eq('status','published').maybeSingle():
+        supabase.from('artist_profiles').select('id,slug,name,role,tagline,intro,sections,cover_image_url,render_mode').eq('slug',slug).eq('status','published').maybeSingle():
         supabase.from('artist_profiles').select('id,slug,name,role,tagline,cover_image_url').eq('status','published').order('updated_at',{ascending:false})
       const {data,error:e}=await query
       if(!active)return
@@ -52,13 +53,16 @@ export default function ArtistPages(){
     {loading?<main className="artist-loading" role="status">Đang tải hồ sơ nghệ sĩ...</main>:
     error?<main className="artist-loading" role="alert">{error}</main>:
     slug?(!profile?<main className="artist-loading"><h1>Hồ sơ chưa công khai.</h1><p>Trang này chưa được xuất bản hoặc không tồn tại.</p><a href="/artists">← TẤT CẢ NGHỆ SĨ</a></main>:
-      <ArtistPortfolioSections profile={profile} sections={(()=> {
+      <ArtistPortfolioViewer profile={profile} sections={(()=> {
         const existing=Array.isArray(profile.sections)?profile.sections:[]
         if(!existing.length || existing[0]?.layout || !identifyArtistLayout(profile.slug))return existing
         const designed=designArtistPdf({name:profile.name,role:profile.role,
           page_count:existing.length,sections:existing},profile.slug)
         return designed.sections.map((section,i)=>({
           ...section,
+          image_url:existing[i]?.image_url||null,
+          image_storage_path:existing[i]?.image_storage_path||null,
+          original_page_url:existing[i]?.original_page_url||null,
           legacy_page_image_url:existing[i]?.image_url||null
         }))
       })()}/>    ):
