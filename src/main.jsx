@@ -3,17 +3,10 @@ import { createRoot } from 'react-dom/client'
 import LiquidRibbons from './LiquidRibbons'
 import AdminPage, { useSiteImages } from './AdminPage'
 import './style.css'
+import './cax.css'
+import { CaxHeroDeck, CaxServicePanels, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
 
-const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://whkqdusoowrrhtvejrie.supabase.co').replace(/\/+$/, '')
-const PUBLIC_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
-const IS_DEMO = !PUBLIC_KEY
-const demoArtists = [
-  { id: 'demo-one', slug: 'lumi-demo', stage_name: 'LUMI', genre: 'Pop / R&B', location: 'TP. Hồ Chí Minh', biography: 'Hồ sơ minh họa giao diện Dortis. Nghệ sĩ và thông tin trong hồ sơ này không phải người có thật.', is_published: true, featured: true },
-  { id: 'demo-two', slug: 'noir-demo', stage_name: 'NOIR', genre: 'Indie / Alternative', location: 'Hà Nội', biography: 'Hồ sơ minh họa giao diện Dortis. Nghệ sĩ và thông tin trong hồ sơ này không phải người có thật.', is_published: true, featured: true },
-  { id: 'demo-three', slug: 'mira-demo', stage_name: 'MIRA', genre: 'Soul / Acoustic', location: 'Đà Nẵng', biography: 'Hồ sơ minh họa giao diện Dortis. Nghệ sĩ và thông tin trong hồ sơ này không phải người có thật.', is_published: true, featured: false },
-]
-
-const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['nghe-si', 'Nghệ sĩ'], ['ve-dortis', 'Về chúng tôi'], ['lien-he', 'Liên hệ']]
+const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
   { number: '01', title: 'CV & Portfolio', english: 'ARTIST IDENTITY', description: 'Một hồ sơ chỉn chu, nơi giọng hát, cá tính và những cột mốc được kể theo cách riêng.', symbol: '01 — PORTFOLIO', style: 'cv' },
   { number: '02', title: 'Xây dựng thương hiệu', english: 'PERSONAL BRANDING', description: 'Định hình bản sắc riêng và tạo nên một hình ảnh nghệ sĩ nhất quán, có chiều sâu.', symbol: 'DORTIS / DT', style: 'brand' },
@@ -21,11 +14,12 @@ const services = [
   { number: '04', title: 'Website nghệ sĩ', english: 'DIGITAL PRESENCE', description: 'Một điểm đến số đầy cảm xúc, nơi công chúng có thể khám phá thế giới nghệ sĩ.', symbol: 'WWW / DORTIS', style: 'web' },
 ]
 const faqs = [
-  ['Dortis là gì?', 'Dortis là dự án sáng tạo giúp xây dựng hình ảnh chuyên nghiệp, giới thiệu hành trình và quản lý hồ sơ công khai của ca sĩ, nghệ sĩ.'],
-  ['Dortis có những dịch vụ nào?', 'Dortis định hướng phát triển dịch vụ CV & Portfolio, xây dựng nhận diện cá nhân, thiết kế truyền thông và website nghệ sĩ.'],
-  ['Có cần đăng nhập để xem hồ sơ nghệ sĩ không?', 'Không. Giai đoạn hiện tại tập trung vào trang chủ và các hồ sơ nghệ sĩ đã được công bố. Chức năng đăng nhập sẽ được phát triển sau.'],
-  ['Thông tin nghệ sĩ được hiển thị từ đâu?', 'Khi cấu hình Supabase, trang chỉ đọc hồ sơ công khai từ cơ sở dữ liệu Dortis. Khi chưa cấu hình, giao diện hiển thị dữ liệu minh họa có gắn nhãn.'],
+  ['Dortis là gì?', 'Dortis là studio sáng tạo giúp nghệ sĩ định hình hình ảnh chuyên nghiệp, bản sắc và không gian số riêng.'],
+  ['Dortis có những dịch vụ nào?', 'Dortis cung cấp CV & Portfolio, Artist Branding, thiết kế truyền thông và website nghệ sĩ.'],
+  ['Quick EPK khác Explore Mode thế nào?', 'Quick EPK cho phép xem ngay thông tin cần thiết; Explore Mode kể hành trình theo các chương. Trải nghiệm hiện tại là mô phỏng ý tưởng.'],
+  ['Có thể xem PDF khách hàng công khai không?', 'Dortis chỉ công bố case study và tài liệu khi có quyền sử dụng công khai rõ ràng. Portfolio gốc của khách hàng không được mở mặc định.'],
 ]
+
 function Brand({ dark = false }) {
   const gradId = React.useId().replace(/:/g, '')
   return <span className={'brand ' + (dark ? 'brand--dark' : '')} aria-label="Dortis">
@@ -81,113 +75,19 @@ function useReveals(dep) {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(entry => {
         if (entry.isIntersecting) entry.target.classList.add('is-visible')
-        else if (entry.boundingClientRect.bottom < 0 || entry.boundingClientRect.top > window.innerHeight) entry.target.classList.remove('is-visible')
+        /* one-shot reveal: do not hide already viewed content */
       })
     }, { threshold: .08, rootMargin: '0px 0px -8% 0px' })
     nodes.forEach(n => obs.observe(n))
     return () => obs.disconnect()
   }, [dep])
 }
-function ArtistCard({ artist, index, onSelect }) {
-  return <button type="button" className={'artist-card artist-tone-' + (index % 4)} onClick={() => onSelect(artist)} data-reveal style={{ '--reveal-delay': (index % 3) * 95 + 'ms' }} aria-label={'Xem hồ sơ ' + artist.stage_name}>
-    <span className="artist-media">
-      {artist.avatar_url || artist.cover_url ? <img src={artist.avatar_url || artist.cover_url} alt={'Ảnh nghệ sĩ ' + artist.stage_name} loading="lazy" onError={e => { e.currentTarget.style.display = 'none' }} /> : <span className="artist-monogram" aria-hidden="true">{artist.stage_name.slice(0, 1)}</span>}
-      <span className="artist-topline">{String(index + 1).padStart(2, '0')} / DORTIS</span>
-      <span className="artist-toparrow"><Arrow /></span>
-    </span>
-    <span className="artist-info"><span><small>{artist.genre || 'ARTIST PROFILE'}</small><strong>{artist.stage_name}</strong><em>{artist.location || 'Việt Nam'}</em></span><span className="artist-view">XEM HỒ SƠ <Arrow /></span></span>
-  </button>
-}
-function ArtistDialog({ artist, onClose }) {
-  useEffect(() => {
-    if (!artist) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const key = e => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', key)
-    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', key) }
-  }, [artist, onClose])
-  if (!artist) return null
-  return <div className="dialog-backdrop" onPointerDown={e => { if (e.target === e.currentTarget) onClose() }}>
-    <section className="dialog" role="dialog" aria-modal="true" aria-label={'Hồ sơ nghệ sĩ ' + artist.stage_name}>
-      <button className="dialog-close" type="button" onClick={onClose} aria-label="Đóng hồ sơ">✕</button>
-      <SectionMark number="D / 01" label="ARTIST PROFILE" />
-      <h2>{artist.stage_name}</h2><p className="dialog-style">{artist.genre || 'Ca sĩ / Nghệ sĩ'} · {artist.location || 'Việt Nam'}</p>
-      {IS_DEMO && <p className="demo-pill">HỒ SƠ MINH HỌA — KHÔNG PHẢI NGHỆ SĨ THỰC</p>}
-      <div className="dialog-separator"/><p className="dialog-bio">{artist.biography || 'Nghệ sĩ chưa cập nhật phần giới thiệu.'}</p>
-      <p className="dialog-availability">Dortis / Nghệ sĩ & hành trình sáng tạo.</p>
-    </section>
-  </div>
-}
 function App() {
   const { siteImages } = useSiteImages()
   const [menuOpen, setMenuOpen] = useState(false)
   const [active, setActive] = useState('top')
   const [scrollRatio, setScrollRatio] = useState(0)
-  const [artists, setArtists] = useState(IS_DEMO ? demoArtists : [])
-  const [loading, setLoading] = useState(!IS_DEMO)
-  const [error, setError] = useState('')
-  const [keyword, setKeyword] = useState('')
-  const [genre, setGenre] = useState('Tất cả')
-  const [selected, setSelected] = useState(null)
-  const [reload, setReload] = useState(0)
-  const [projectDocuments, setProjectDocuments] = useState([])
-  const [openedProject, setOpenedProject] = useState(null)
-  const closeDialog = useCallback(() => setSelected(null), [])
-  const closeProject = useCallback(() => setOpenedProject(null), [])
-  useEffect(() => {
-    if (!openedProject) return
-    const previous = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = e => { if (e.key === 'Escape') closeProject() }
-    window.addEventListener('keydown', onKey)
-    return () => { document.body.style.overflow = previous; window.removeEventListener('keydown', onKey) }
-  }, [openedProject, closeProject])
-
-  useEffect(() => {
-    let disposed = false
-    fetch('/projects.json')
-      .then(response => {
-        if (!response.ok) throw new Error('Chưa có danh sách PDF dự án')
-        return response.json()
-      })
-      .then(entries => {
-        if (!Array.isArray(entries)) throw new Error('projects.json phải là một mảng')
-        const valid = entries.filter(p => p && typeof p.title === 'string' &&
-          (typeof p.driveId === 'string' && /^[a-zA-Z0-9_-]{10,150}$/.test(p.driveId) ||
-           typeof p.pdfUrl === 'string' && /^https:\/\//.test(p.pdfUrl)))
-        if (!disposed) setProjectDocuments(valid)
-      })
-      .catch(() => { if (!disposed) setProjectDocuments([]) })
-    return () => { disposed = true }
-  }, [])
-
-  useEffect(() => {
-    if (IS_DEMO) return
-    const ac = new AbortController()
-    setLoading(true); setError('')
-    fetch(SUPABASE_URL + '/rest/v1/artists?select=*&is_published=eq.true&order=sort_order.asc,created_at.desc&limit=60', {
-      headers: { apikey: PUBLIC_KEY, Accept: 'application/json' }, signal: ac.signal,
-    }).then(async response => {
-      if (!response.ok) {
-        const details = await response.json().catch(() => ({}))
-        throw new Error(details.message || 'Không thể tải hồ sơ (' + response.status + '). Kiểm tra cấu hình Supabase và RLS.')
-      }
-      return response.json()
-    }).then(data => { if (!ac.signal.aborted) setArtists(data) })
-      .catch(err => { if (!ac.signal.aborted) setError(err.message || 'Không thể tải dữ liệu.') })
-      .finally(() => { if (!ac.signal.aborted) setLoading(false) })
-    return () => ac.abort()
-  }, [reload])
-
-  const genres = useMemo(() => ['Tất cả', ...new Set(artists.map(a => a.genre).filter(Boolean))], [artists])
-  const shownArtists = useMemo(() => artists.filter(a =>
-    (genre === 'Tất cả' || a.genre === genre) &&
-    (a.stage_name + ' ' + (a.genre || '') + ' ' + (a.location || '')).toLocaleLowerCase('vi').includes(keyword.trim().toLocaleLowerCase('vi'))
-  ), [artists, genre, keyword])
-
-  useReveals([artists.length, projectDocuments.length, loading, error, keyword, genre].join(':'))
-
+  useReveals('dortis-cax-v14')
   useEffect(() => {
     let frame = 0
     const sync = () => {
@@ -220,76 +120,54 @@ function App() {
     </header>
 
     <main>
-      <section id="top" className="hero scene-section">
-        <div className="hero-rainbow" aria-hidden="true" style={siteImages.hero ? { backgroundImage: `linear-gradient(#f4f6f877,#f4f6f877),url("${siteImages.hero}")`, backgroundSize:"cover", backgroundPosition:"center" } : undefined}/>
-        <LiquidRibbons className="hero-liquid" />
-        <div className="hero-dust hero-dust-one" aria-hidden="true"/><div className="hero-dust hero-dust-two" aria-hidden="true"/>
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <p className="hero-overline entrance entrance-one"><span className="overline-star">✳</span> DORTIS — CREATIVE ARTIST STUDIO <span>EST. 2026</span></p>
-            <h1 className="entrance entrance-two">Chúng tôi giúp <span className="cobalt">nghệ sĩ</span> xây dựng hình ảnh <span className="teal">chuyên nghiệp</span> và lan tỏa <span className="ember">dấu ấn riêng.</span></h1>
-            <p className="hero-lead entrance entrance-three">Nơi bản sắc được định hình, câu chuyện được kể bằng cảm xúc và mỗi nghệ sĩ có một không gian riêng để tỏa sáng.</p>
-            <div className="hero-actions entrance entrance-four"><a href="#dich-vu" className="button-dark">KHÁM PHÁ DỊCH VỤ <Arrow /></a><a href="#du-an" className="button-outline">XEM DỰ ÁN <Arrow /></a></div>
-            <div className="hero-bottomnote entrance entrance-five"><span>01 / 06</span><span className="small-rule"/><span>ART. IDENTITY. EMOTION.</span></div>
-          </div>
-          <aside className="hero-floating-label entrance entrance-four" aria-hidden="true"><span>DT / 2026</span><strong>Every artist<br/>has a story.</strong><span>BEYOND THE ORDINARY ↗</span></aside>
+      <section id="top" className="cax-hero scene-section">
+        <div className="hero-rainbow" aria-hidden="true"/>
+        <LiquidRibbons className="hero-liquid"/>
+        <div className="cax-hero-grid">
+          <div className="cax-hero-copy">
+            <p className="cax-kicker">✳ DORTIS — CREATIVE ARTIST STUDIO / EST. 2026</p>
+            <h1>Chúng tôi giúp <span className="cobalt">nghệ sĩ</span> xây dựng hình ảnh <span className="teal">chuyên nghiệp</span> và lan tỏa <span className="ember">dấu ấn riêng.</span></h1>
+            <p className="cax-lead">Nơi bản sắc được định hình, câu chuyện được kể bằng cảm xúc và mỗi nghệ sĩ có một không gian riêng để tỏa sáng.</p>
+            <div className="cax-hero-actions"><a href="#dich-vu" className="button-dark">KHÁM PHÁ DỊCH VỤ <Arrow /></a><a href="#trai-nghiem" className="button-outline">TRẢI NGHIỆM THỬ <Arrow /></a></div>
+            <p className="cax-hero-bottomline">ART. IDENTITY. EMOTION. &nbsp; — &nbsp; EVERY ARTIST HAS A STORY.</p>
+          </div><CaxHeroDeck images={siteImages}/>
         </div>
-        <a href="#dich-vu" className="hero-scroll">CUỘN ĐỂ KHÁM PHÁ <span>↓</span></a>
-        <p className="hero-side-label">EXPRESS YOUR TRUE COLORS / DORTIS</p>
       </section>
 
-      <section id="dich-vu" className="services-section section-shell scene-section">
-        <div className="section-intro" data-reveal><SectionMark number="02" label="CHÚNG TÔI LÀM GÌ?" /><div className="section-intro-row"><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông. Dortis biến ý tưởng thành trải nghiệm nghệ thuật tinh tế và có chiều sâu.</p></div></div>
-        <div className="services-grid">{services.map((service, index) => <article className={'service-card service-' + service.style} key={service.number} data-reveal style={{ '--reveal-delay': index * 85 + 'ms' }}>
-          <div className="service-card-top"><span>{service.number} / SERVICE</span><span><Arrow /></span></div>
-          <div className="service-art" aria-hidden="true">{siteImages["service-"+service.style] && <img className="service-custom-image" src={siteImages["service-"+service.style]} alt="" loading="lazy"/>}<span className="service-art-back"/><div className="service-art-frame"><span className="service-art-label">{service.symbol}</span><span className="service-art-glyph">{service.style === 'cv' ? 'A' : service.style === 'brand' ? 'Dt' : service.style === 'visual' ? '✳' : 'D.'}</span><span className="service-art-mini">DORTIS — EST. 2026</span></div></div>
-          <div className="service-card-copy"><p>{service.english}</p><h3>{service.title}</h3><span>{service.description}</span></div>
-        </article>)}</div>
+      <section id="dich-vu" className="cax-services-section section-shell scene-section">
+        <header className="cax-section-head"><div><p className="cax-kicker">02 / OUR EXPERTISE</p><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2></div><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông, Dortis biến ý tưởng thành trải nghiệm sáng tạo có chiều sâu.</p></header>
+        <CaxServicePanels services={services} images={siteImages}/>
+        <p className="cax-service-hint">Chọn thẻ để xem chi tiết. Hình sản phẩm trong trạng thái chưa có ảnh duyệt là mẫu trình bày bằng giao diện, không phải tác phẩm của khách hàng.</p>
       </section>
 
-      <section id="du-an" className="works-section scene-section">
-        <div className="works-header section-shell" data-reveal><SectionMark number="03" label="SELECTED CREATIVE WORK" /><div className="section-intro-row"><h2>Cảm hứng <em>thành hình.</em></h2><p>{projectDocuments.length ? 'Từng dự án được giới thiệu riêng dưới dạng PDF. Chọn một dự án để xem tài liệu đầy đủ.' : 'Các dự án được giới thiệu riêng theo từng tài liệu PDF để bạn dễ xem và khám phá.'}</p></div></div>
-        {projectDocuments.length > 0 ? <div className="pdf-project-grid section-shell">
-          {projectDocuments.map((project, index) => <button key={project.driveId || project.pdfUrl} className="pdf-project-card" data-reveal style={{ '--reveal-delay': ((index % 3) * 100) + 'ms' }} type="button" onClick={() => setOpenedProject(project)}>
-            <span className="pdf-project-art"><span className="pdf-project-index">{String(index + 1).padStart(2, '0')} / DORTIS PROJECT</span>{(Object.prototype.hasOwnProperty.call(siteImages,'project-'+project.driveId) ? siteImages['project-'+project.driveId] : project.coverUrl) ?
-              <img className="pdf-project-cover" src={Object.prototype.hasOwnProperty.call(siteImages,'project-'+project.driveId) ? siteImages['project-'+project.driveId] : project.coverUrl} alt={'Bìa hồ sơ ' + project.title} loading="lazy" /> :
-              <span className="pdf-project-no-cover">CHƯA CÓ ẢNH</span>}<span className="pdf-project-open">↗</span></span>
-            <span className="pdf-project-info"><span>{project.category || 'DORTIS / PROJECT'}{project.year ? ' · ' + project.year : ''}</span><strong>{project.title}</strong><small>{project.description || 'Xem tài liệu dự án dưới dạng PDF.'}</small></span>
-          </button>)}
-        </div> : <div className="pdf-project-empty section-shell"><p>DORTIS PROJECTS</p><h3>Các dự án đang được cập nhật.</h3><span>Danh mục PDF sẽ hiển thị từng dự án riêng khi tài liệu được kết nối.</span></div>}
-
+      <section id="du-an" className="cax-selected-work scene-section">
+        <div className="section-shell">
+          <header className="cax-section-head"><div><p className="cax-kicker">03 / SELECTED CREATIVE WORK</p><h2>Cảm hứng <em>thành hình.</em></h2></div><p>Những dự án sáng tạo được chọn lọc và cho phép công bố sẽ xuất hiện tại đây.</p></header>
+          <div className="cax-project-placeholder"><div><strong>Những câu chuyện<br/>đang được chọn lọc.</strong><p>Các hồ sơ và PDF gốc của khách hàng không được công khai khi chưa có quyền sử dụng rõ ràng. Dự án sẽ được giới thiệu bằng ảnh bìa và nội dung đã duyệt.</p></div><span>PUBLIC GALLERY / COMING SOON</span></div>
+        </div>
       </section>
 
-      <section id="nghe-si" className="artists-section section-shell scene-section">
-        <div className="section-intro" data-reveal><SectionMark number="04" label="ARTISTS / THE PEOPLE BEHIND THE SOUND" /><div className="section-intro-row"><h2>Những gương mặt.<br/><em>Những dấu ấn.</em></h2><p>Mỗi nghệ sĩ mang theo một màu sắc riêng. Khám phá những câu chuyện âm nhạc và hành trình sáng tạo tại Dortis.</p></div></div>
-        {IS_DEMO && <div className="demo-banner" role="status">BẢN XEM TRƯỚC — Nghệ sĩ phía dưới là dữ liệu hư cấu để minh họa giao diện. Chưa có kết nối Supabase thực tế.</div>}
-        <div className="artist-controls"><label className="artist-search"><span>⌕</span><input type="search" placeholder="Tìm nghệ sĩ, thể loại, khu vực..." value={keyword} onChange={e => setKeyword(e.target.value)}/></label><label className="artist-filter"><span>THỂ LOẠI</span><select value={genre} onChange={e => setGenre(e.target.value)}>{genres.map(g => <option key={g} value={g}>{g}</option>)}</select></label></div>
-        {loading ? <p className="catalog-message" role="status">Đang tải dữ liệu nghệ sĩ...</p> : error ? <div className="catalog-message" role="alert">{error} <button type="button" onClick={() => setReload(v => v + 1)}>Thử lại ↗</button></div> : shownArtists.length === 0 ? <p className="catalog-message">{artists.length ? 'Không tìm thấy nghệ sĩ phù hợp.' : 'Chưa có nghệ sĩ công khai nào được công bố.'}</p> : <div className="artist-grid">{shownArtists.map((artist, index) => <ArtistCard artist={artist} index={index} key={artist.id} onSelect={setSelected} />)}</div>}
-      </section>
+      <CaxArtistExperience />
 
       <section id="ve-dortis" className="manifesto-section scene-section">
         <div className="manifesto-halo" aria-hidden="true"/>{siteImages.about ? <img className="about-custom-image" src={siteImages.about} alt="" loading="lazy"/> : <div className="manifesto-glass" aria-hidden="true"/>}
         <div className="manifesto-content section-shell" data-reveal><SectionMark number="05" label="THE DORTIS PHILOSOPHY"/><p className="manifesto-kicker">ĐẰNG SAU MỌI ÁNH ĐÈN SÂN KHẤU</p><h2>Một nghệ sĩ không chỉ có <em>âm nhạc.</em><br/>Họ có một <strong>câu chuyện</strong> xứng đáng được nhìn thấy.</h2><div className="manifesto-bottom"><p>Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p><span>CREATIVITY WITH PURPOSE / DORTIS</span></div></div>
       </section>
 
-      <section className="process-section section-shell scene-section"><div className="section-intro" data-reveal><SectionMark number="06" label="HOW WE CREATE"/><div className="section-intro-row"><h2>Từ cảm hứng<br/>đến <em>dấu ấn.</em></h2><p>Một hành trình tinh gọn, kết nối bản sắc cá nhân với trải nghiệm thị giác và không gian số.</p></div></div><div className="process-steps">{[['01', 'Lắng nghe', 'Bắt đầu từ câu chuyện, cá tính, âm nhạc và mục tiêu của nghệ sĩ.'], ['02', 'Định hình', 'Chọn ngôn ngữ hình ảnh, sắc độ và cảm xúc tạo nên nhận diện riêng.'], ['03', 'Sáng tạo', 'Chuyển hóa ý tưởng thành portfolio, truyền thông và trải nghiệm số.'], ['04', 'Lan tỏa', 'Đưa dấu ấn nghệ sĩ đến gần hơn với khán giả và các cơ hội mới.']].map(([n, title, description], index) => <article className="process-step" key={n} data-reveal style={{ '--reveal-delay': index * 90 + 'ms' }}><span className="process-num">{n}</span><div><h3>{title}</h3><p>{description}</p></div><span className="process-arrow">↗</span></article>)}</div></section>
+      <CaxBrandValues />
 
       <section className="faq-section section-shell scene-section"><div data-reveal className="faq-heading"><SectionMark number="07" label="FREQUENTLY ASKED QUESTIONS" /><h2>Một vài điều<br/><em>bạn muốn biết.</em></h2></div><div className="faq-list">{faqs.map(([q, a], index) => <details data-reveal key={q} style={{ '--reveal-delay': index * 65 + 'ms' }}><summary><span>{String(index + 1).padStart(2, '0')}</span>{q}<span className="faq-plus">+</span></summary><p>{a}</p></details>)}</div></section>
 
-      <section id="lien-he" className="contact-section scene-section"><div className="contact-aurora" aria-hidden="true" style={siteImages.contact ? { backgroundImage:`linear-gradient(#e5f2f28f,#e5f2f28f),url("${siteImages.contact}")`,backgroundSize:"cover",backgroundPosition:"center" } : undefined}/><div className="contact-inner section-shell" data-reveal><SectionMark number="08" label="LET'S MAKE SOMETHING MEANINGFUL"/><h2>Cùng tạo nên<br/><em>dấu ấn của bạn.</em></h2><p>Từ một ý tưởng nhỏ đến hình ảnh nghệ sĩ trọn vẹn — Dortis sẵn sàng cho những kết nối sáng tạo. Thông tin liên hệ chính thức sẽ được cập nhật.</p><a href="#nghe-si" className="button-dark">KHÁM PHÁ HỒ SƠ NGHỆ SĨ <Arrow /></a><span className="contact-orb">✳</span></div></section>
-    </main>
-    <footer className="footer section-shell"><div className="footer-top"><a href="#top"><Brand /></a><p>Chúng tôi giúp nghệ sĩ xây dựng hình ảnh chuyên nghiệp và lan tỏa dấu ấn riêng.</p><a href="#top" className="back-to-top">VỀ ĐẦU TRANG ↑</a></div><div className="footer-bottom"><span>© 2026 DORTIS. MADE FOR ARTISTS.</span><span>ART · IDENTITY · EMOTION</span><a href="/admin" aria-label="Đăng nhập quản trị Dortis">QUẢN TRỊ</a></div></footer>
-    <ArtistDialog artist={selected} onClose={closeDialog}/>
-    {openedProject && <div className="pdf-viewer-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) closeProject() }}>
-      <section className="pdf-viewer" role="dialog" aria-modal="true" aria-label={'Tài liệu dự án ' + openedProject.title}>
-        <header className="pdf-viewer-head"><div><small>DORTIS / PROJECT PDF</small><h3>{openedProject.title}</h3></div><div className="pdf-viewer-actions">
-          <a href={openedProject.driveId ? 'https://drive.google.com/file/d/' + openedProject.driveId + '/view' : openedProject.pdfUrl} target="_blank" rel="noopener noreferrer">MỞ PDF ↗</a>
-          <button type="button" onClick={closeProject} aria-label="Đóng tài liệu">✕</button>
-        </div></header>
-        <iframe title={'PDF dự án ' + openedProject.title} src={openedProject.driveId ? 'https://drive.google.com/file/d/' + openedProject.driveId + '/preview' : openedProject.pdfUrl} loading="lazy" referrerPolicy="no-referrer" />
-        <p className="pdf-viewer-hint">Nếu PDF không hiển thị, hãy dùng nút “MỞ PDF” và kiểm tra quyền chia sẻ tài liệu Google Drive.</p>
+      <section id="lien-he" className="cax-contact scene-section">
+        <div className="cax-contact-layout section-shell">
+          <div className="cax-contact-copy"><p className="cax-kicker">08 / THE NEXT CREATIVE CHAPTER</p><h2>Cùng tạo nên<br/><em>dấu ấn của bạn.</em></h2><p>Từ một ý tưởng nhỏ đến hình ảnh nghệ sĩ trọn vẹn — Dortis sẵn sàng cho những kết nối sáng tạo. Khám phá những dịch vụ hiện đang được giới thiệu.</p><a href="#dich-vu" className="button-dark">KHÁM PHÁ DỊCH VỤ <Arrow /></a></div>
+          <CaxFinalFan imageUrl={siteImages.contact}/>
+        </div>
       </section>
-    </div>}
+
+          </main>
+    <footer className="footer section-shell"><div className="footer-top"><a href="#top"><Brand /></a><p>Chúng tôi giúp nghệ sĩ xây dựng hình ảnh chuyên nghiệp và lan tỏa dấu ấn riêng.</p><a href="#top" className="back-to-top">VỀ ĐẦU TRANG ↑</a></div><div className="footer-bottom"><span>© 2026 DORTIS. MADE FOR ARTISTS.</span><span>ART · IDENTITY · EMOTION</span><a href="/admin" aria-label="Đăng nhập quản trị Dortis">QUẢN TRỊ</a></div></footer>
+
   </div>
 }
 createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage /> : <App />)
