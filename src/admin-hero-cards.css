@@ -155,3 +155,30 @@
 .hero-ratio-input select:focus{outline:2px solid #008f91}
 .hero-image-zoom-control{margin-top:11px}
 .hero-editor-preview .cax-single-card-preview{margin:8px 0 0}
+
+/* Admin-only card scale control; preview uses the real Homepage card and shared sizing. */
+.hero-card-size-control{margin:10px 0 12px}
+.hero-editor-preview .cax-single-card-preview .cax-deck-card{margin-inline:auto}
+
+/* Whole Hero layout controls and true full-deck preview. */
+.hero-layout-editor{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);
+  align-items:start;gap:18px;padding:18px;background:#f8fbfc;
+  border:1px solid #dbe6ea;border-radius:13px;min-width:0}
+.hero-layout-controls{display:flex;flex-direction:column;align-items:stretch;gap:15px;min-width:0}
+.hero-layout-controls h3{margin:0;color:#172337;font-size:13px;letter-spacing:.05em}
+.hero-layout-controls>p{margin:0;color:#6e8291;font-size:11px;line-height:1.8}
+.hero-layout-controls label>span{display:block;margin-bottom:7px;color:#486071;font-size:11px;font-weight:750}
+.hero-layout-controls>.hero-editor-save{align-self:flex-start}
+.hero-layout-spacing{margin:0}
+.hero-layout-overview{min-width:0;display:flex;flex-direction:column;gap:10px}
+.hero-layout-overview>strong{font-size:10px;letter-spacing:.07em;color:#426477}
+.hero-layout-overview .cax-hero-deck{max-width:560px;width:100%}
+.hero-layout-overview .cax-deck-top,.hero-layout-overview .cax-deck-bottom-row{font-size:9px}
+@media(max-width:1080px){
+  .hero-layout-editor{grid-template-columns:minmax(0,1fr)}
+  .hero-layout-overview .cax-hero-deck{max-width:550px;margin-inline:auto}
+}
+@media(max-width:600px){
+  .hero-layout-editor{padding:12px;gap:14px}
+  .hero-layout-controls>.hero-editor-save{width:100%}
+}

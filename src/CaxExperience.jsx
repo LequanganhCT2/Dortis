@@ -1,7 +1,7 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import {copyFor} from './siteContent'
 import { getHeroCardPhotos, getActiveHeroCardIds } from './heroImageSets'
-import {heroAspectRatio,heroWidthFactor,heroZoom} from './heroImagePresentation'
+import {heroAspectRatio,heroWidthFactor,heroZoom,heroCardSize,heroStageRatio,heroCardSpacing} from './heroImagePresentation'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -55,7 +55,8 @@ export function CaxHeroCard({
   const Tag=preview?'div':'button'
   return <Tag {...(preview?{}:{type:'button','aria-pressed':active,onClick})}
     className={'cax-deck-card cax-card-'+cardIndex+(active?' is-active':'')}
-    style={{...style,aspectRatio:ratio,'--cax-ratio-width':heroWidthFactor(ratio)}}
+    style={{...style,aspectRatio:ratio,'--cax-ratio-width':heroWidthFactor(ratio),
+      '--cax-home-scale':heroCardSize(copy,cardId)/100}}
     aria-label={preview?'Xem trước thẻ '+label:label}>
     <RotatingImage urls={imageUrls} className="cax-deck-custom-image"
       interval={interval} imageZoom={zoom} loading="eager"
@@ -78,6 +79,7 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
   const heroCardPhotos=getHeroCardPhotos(images)
   const activeCards=getActiveHeroCardIds(copy)
   const cardCount=activeCards.length
+  const spread=heroCardSpacing(copy)/100
   const displayShowcases=activeCards.map(id=>({...showcases[id-1],cardId:id,
     label:copy['card'+id+'Title'],
     lines:[copy['card'+id+'Line1'],copy['card'+id+'Line2']]
@@ -140,7 +142,8 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
   const current=displayShowcases[selected]
   return <div className={'cax-hero-deck tone-'+selected+(expanded?' cax-deck-expanded':'')} aria-label={'Giới thiệu '+cardCount+' thẻ sáng tạo Dortis'}>
     <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(selected+1).padStart(2,'0')} / {String(cardCount).padStart(2,'0')}</span></div>
-    <div className="cax-deck-stage" ref={stageRef} tabIndex={0} aria-roledescription="carousel"
+    <div className="cax-deck-stage" ref={stageRef}
+      style={{'--cax-stage-ratio':heroStageRatio(copy)}} tabIndex={0} aria-roledescription="carousel"
       aria-label={expanded?'Thẻ dịch vụ đã mở. Kéo trái phải hoặc chọn thẻ để xem':'Các thẻ dịch vụ đang xếp chồng. Nhấn thẻ để mở'}
       onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null}}
       onPointerMove={pointerMove} onPointerLeave={pointerLeave}
@@ -163,9 +166,9 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
         const fanX=cardCount===1?0:-66+(i*132)/(cardCount-1)
         const fanAngle=cardCount===1?0:-12+(i*24)/(cardCount-1)
         const cssVars={
-          '--cax-fan-x':fanX+'%',
+          '--cax-fan-x':(fanX*spread)+'%',
           '--cax-fan-angle':fanAngle+'deg',
-          '--cax-stack-x':collapsedX+'%',
+          '--cax-stack-x':(collapsedX*spread)+'%',
           '--cax-stack-y':collapsedY+'%',
           '--cax-stack-angle':collapsedAngle+'deg',
           '--cax-stack-scale':collapsedScale,

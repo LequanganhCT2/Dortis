@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { SITE_CONTENT_DEFAULTS } from './siteContent'
-import { CaxHeroCard } from './CaxExperience'
+import { CaxHeroCard, CaxHeroDeck } from './CaxExperience'
 import { MediaOpacityProvider } from './SiteMedia'
-import { HERO_RATIOS, heroAspectRatio, heroZoom } from './heroImagePresentation'
+import { HERO_RATIOS, heroAspectRatio, heroZoom, heroCardSize, heroStageRatio, heroCardSpacing } from './heroImagePresentation'
 import { HERO_CARD_LIMIT, HERO_IMAGES_PER_CARD, getActiveHeroCardIds, heroImageSlot } from './heroImageSets'
 import './admin-hero-cards.css'
 
@@ -25,6 +25,7 @@ const photoKey=(card,image,field)=>'card'+card+'Image'+image+field
 const cardKeys=card=>[
   ...FIELDS.map(([field])=>cardKey(card,field)),
   cardKey(card,'AspectRatio'),
+  cardKey(card,'HomeSize'),
   ...Array.from({length:HERO_IMAGES_PER_CARD},(_,index)=>
     [...PHOTO_FIELDS.map(([field])=>photoKey(card,index+1,field)),
       photoKey(card,index+1,'Zoom')]).flat()
@@ -48,8 +49,22 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
   const [localError,setLocalError]=useState('')
   const [localSuccess,setLocalSuccess]=useState('')
   const [opacityDraft,setOpacityDraft]=useState({})
+  const [layoutDraft,setLayoutDraft]=useState({})
+  const [savingLayout,setSavingLayout]=useState(false)
   const activeCards=getActiveHeroCardIds(saved)
   const cardCount=activeCards.length
+  const layoutCopy={...saved,...layoutDraft}
+  const layoutRatio=heroStageRatio(layoutCopy)
+  const layoutSpacing=heroCardSpacing(layoutCopy)
+  const layoutDirty=layoutRatio!==heroStageRatio(saved)||
+    layoutSpacing!==heroCardSpacing(saved)
+  const overviewImages=useMemo(()=>Object.fromEntries(
+    Object.entries(primary).map(([slot,row])=>[slot,row?.image_url])
+  ),[primary])
+  const overviewOpacities=useMemo(()=>Object.fromEntries(
+    Object.values(primary).filter(row=>row?.image_url&&row.opacity_percent!=null)
+      .map(row=>[row.image_url,Number(row.opacity_percent)])
+  ),[primary])
   const counts=useMemo(()=>activeCards.map(card=>{
     return Array.from({length:HERO_IMAGES_PER_CARD},(_,j)=>({
       number:j+1,slot:heroImageSlot(j+1,card),
@@ -115,6 +130,28 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
     }catch(error){setLocalError(fail(error));onError(fail(error))}
     finally{setBusy('')}
   }
+  const saveLayout=async()=>{
+    if(busy||savingLayout||!layoutDirty)return
+    setSavingLayout(true);clearMessages()
+    try{
+      const current=await readRaw()
+      const updates={
+        heroStageAspectRatio:layoutRatio,
+        heroCardSpacing:String(layoutSpacing)
+      }
+      const merged={...current,...updates}
+      const {data,error}=await supabase.from('site_content').upsert({
+        key:'hero',content:merged,updated_by:user.id,updated_at:new Date().toISOString()
+      },{onConflict:'key'}).select('key').single()
+      if(error||!data)throw error||new Error('Supabase chưa xác nhận cài đặt.')
+      setSaved({...defaults,...merged})
+      setLayoutDraft({})
+      setLocalSuccess('Đã lưu tỷ lệ khung ngoài và khoảng cách các thẻ.')
+      onNotice('Bố cục cụm Hero đã được cập nhật lên Homepage.')
+    }catch(error){setLocalError(fail(error));onError(fail(error))}
+    finally{setSavingLayout(false)}
+  }
+
   const addCard=async()=>{
     if(busy)return
     setBusy('adding');clearMessages()
@@ -268,6 +305,47 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
         {busy==='adding'?'ĐANG THÊM...':cardCount>=HERO_CARD_LIMIT?'ĐÃ ĐỦ 6 THẺ':'+ THÊM THẺ'}
       </button>
     </div>
+    <div className="hero-layout-editor">
+      <div className="hero-layout-controls">
+        <h3>BỐ CỤC CHUNG CỦA CỤM HERO</h3>
+        <p>Thay đổi kích thước khung lớn và khoảng cách giữa các thẻ khi bung mở.
+          Không ảnh hưởng tỷ lệ từng thẻ hay độ thu phóng ảnh bên trong.</p>
+        <label className="hero-ratio-input">
+          <span>Tỷ lệ khung ngoài chứa các ảnh</span>
+          <select value={layoutRatio} disabled={!!busy||savingLayout}
+            onChange={event=>setLayoutDraft(old=>({
+              ...old,heroStageAspectRatio:event.target.value
+            }))}>
+            {HERO_RATIOS.map(ratio=><option key={ratio} value={ratio}>
+              {ratio.replace('/',' : ')}{ratio==='4/3'?' · mặc định':''}
+            </option>)}
+          </select>
+        </label>
+        <div className="media-opacity-control hero-layout-spacing">
+          <div className="media-opacity-top">
+            <label htmlFor="hero-card-spacing">KHOẢNG CÁCH GIỮA CÁC THẺ</label>
+            <output>{layoutSpacing}%</output>
+          </div>
+          <input id="hero-card-spacing" type="range" min="50" max="160" step="5"
+            disabled={!!busy||savingLayout} value={layoutSpacing}
+            onChange={event=>setLayoutDraft(old=>({
+              ...old,heroCardSpacing:event.target.value
+            }))}/>
+          <small>50%: sát nhau · 100%: mặc định · 160%: trải rộng hơn.
+            Nhấn vào một thẻ trong phần xem trước để bung cụm ra.</small>
+        </div>
+        <button type="button" className="hero-editor-save"
+          disabled={!!busy||savingLayout||!layoutDirty} onClick={saveLayout}>
+          {savingLayout?'ĐANG LƯU...':'LƯU BỐ CỤC HERO ✓'}
+        </button>
+      </div>
+      <div className="hero-layout-overview">
+        <strong>XEM TRƯỚC TOÀN BỘ CỤM · COMPONENT HOMEPAGE</strong>
+        <MediaOpacityProvider opacities={overviewOpacities}>
+          <CaxHeroDeck images={overviewImages} content={{hero:layoutCopy}}/>
+        </MediaOpacityProvider>
+      </div>
+    </div>
     {localError&&<p className="hero-editor-error" role="alert">{localError}</p>}
     {localSuccess&&<p className="hero-editor-success" role="status">{localSuccess}</p>}
     <div className="hero-editor-stack">{counts.map((items,index)=>{
@@ -284,6 +362,7 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
       const display=field=>photoText(field)||txt(field)
       const cardDirty=dirty(card)
       const draftRatio=heroAspectRatio(draft,card)
+      const draftCardSize=heroCardSize(draft,card)
       const draftZoom=heroZoom(draft,card,photoNumber)
       const previewUrl=currentPhoto.image?.image_url
       // Preserve the exact homepage appearance when this photo still uses its
@@ -326,6 +405,18 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
                   </option>)}
                 </select>
               </label>
+              <div className="media-opacity-control hero-card-size-control">
+                <div className="media-opacity-top">
+                  <label htmlFor={'hero-card-size-'+card}>KÍCH THƯỚC THẺ TRÊN HOMEPAGE</label>
+                  <output>{draftCardSize}%</output>
+                </div>
+                <input id={'hero-card-size-'+card} type="range"
+                  min="40" max="100" step="5" value={draftCardSize}
+                  disabled={!!busy}
+                  onChange={event=>update(cardKey(card,'HomeSize'),event.target.value)}/>
+                <small>Thu nhỏ toàn bộ thẻ từ 100% xuống 40%, vẫn giữ tỷ lệ khung.
+                  Không thay đổi độ mờ hay mức thu phóng ảnh bên trong.</small>
+              </div>
               <div className="hero-editor-text-divider"/>
               <p>Chữ riêng cho ảnh {String(photoNumber).padStart(2,'0')}
                 <small>Để trống sẽ sử dụng chữ mặc định của thẻ.</small>
