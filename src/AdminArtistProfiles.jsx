@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { extractArtistPdf, renderPagesFromPdf, renderPdfPage, slugifyArtist } from './artistPdf'
+import { extractArtistPdf, renderPagesFromPdf, renderPdfPage, slugifyArtist, destroyArtistPdf } from './artistPdf'
 import './admin-artists.css'
 
 const PDF_BUCKET='dortis-artist-pdfs'
@@ -214,7 +214,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
       if(uploaded.length)await supabase.storage.from(PAGE_BUCKET).remove(uploaded)
       setError(getError(e,'Không thể xuất bản hồ sơ PDF.'))
     }finally{
-      if(pdf)await pdf.destroy()
+      if(pdf)await destroyArtistPdf(pdf)
       setBusy(false);setProgress('')
     }
   }

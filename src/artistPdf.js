@@ -68,6 +68,18 @@ export async function loadPdfBytes(file){
   const task=engine.getDocument({data:bytes,verbosity:0})
   return task.promise
 }
+/**
+ * PDF.js v6: destroy() was removed from PDFDocumentProxy. The loading task
+ * owns worker teardown. Await it before releasing the document reference.
+ */
+export async function destroyArtistPdf(pdf) {
+  if (!pdf) return
+  const loadingTask = pdf.loadingTask
+  if (loadingTask && typeof loadingTask.destroy === 'function') {
+    await loadingTask.destroy()
+  }
+}
+
 export async function extractArtistPdf(file,onProgress=()=>{}){
   const pdf=await loadPdfBytes(file)
   try{
@@ -100,7 +112,7 @@ export async function extractArtistPdf(file,onProgress=()=>{}){
       sections,
       extractedChars:total
     }
-  }finally{pdf.destroy()}
+  }finally{await destroyArtistPdf(pdf)}
 }
 export async function renderPdfPage(page,{maxWidth=1180,quality=.8}={}){
   const viewportBase=page.getViewport({scale:1})
