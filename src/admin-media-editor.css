@@ -67,47 +67,52 @@
 }
 .admin-media-workspace-link:hover{color:#008f91}
 
-/* Hero: six independent image bundles, each with four editable cards. */
-.admin-hero-sets{display:grid;gap:20px}
-.admin-hero-sets-toolbar{display:flex;align-items:center;justify-content:space-between;gap:25px;
-  padding:18px 20px;border:1px solid #d9e4e8;border-radius:13px;background:#f8fbfc}
-.admin-hero-sets-toolbar strong{font-size:15px}
-.admin-hero-sets-toolbar p{font-size:11px;color:#6e8090;line-height:1.8;margin:6px 0 0;max-width:730px}
-.admin-hero-sets-toolbar>button{border:0;background:#182238;color:#fff;border-radius:8px;
-  padding:14px 19px;white-space:nowrap;font:750 11px/1.2 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer}
-.admin-hero-sets-toolbar>button:disabled{opacity:.42;cursor:not-allowed}
-.admin-hero-set{background:#fff;border:1px solid #d9e4e8;border-radius:15px;padding:22px;min-width:0}
-.admin-hero-set-heading{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:18px}
-.admin-hero-set-heading>div:first-child>span{font-size:9px;font-weight:850;letter-spacing:.14em;color:#008f91}
-.admin-hero-set-heading h3{font-size:20px;line-height:1.4;margin:6px 0}
-.admin-hero-set-heading p{margin:0;color:#6d8290;font-size:11px;line-height:1.7}
-.admin-hero-set-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
-.admin-hero-set-actions .admin-upload{font-size:10px;white-space:nowrap;min-height:40px}
-.admin-hero-set-delete,.admin-hero-set-remove{
-  border:1px solid #dbe2e7;background:transparent;color:#9d3144;border-radius:7px;
-  padding:10px 12px;font-size:10px;font-weight:750;cursor:pointer
+/* Four independent Hero cards, each with up to six photos. */
+.admin-hero-cards{display:flex;flex-direction:column;gap:23px;min-width:0}
+.admin-hero-cards-note{margin:0;padding:15px 19px;font-size:12px;line-height:1.9;
+  color:#567083;background:#f8fbfc;border:1px solid #e0ebee;border-radius:12px}
+.admin-hero-card-panel{min-width:0;padding:24px;background:white;border:1px solid #d9e5e9;border-radius:16px}
+.admin-hero-card-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:18px}
+.admin-hero-card-heading>div{min-width:0}
+.admin-hero-card-heading>div>span{font-size:10px;font-weight:850;letter-spacing:.13em;color:#008f91}
+.admin-hero-card-heading h3{font-size:clamp(19px,2.6vw,29px);letter-spacing:-.035em;color:#182238;margin:8px 0}
+.admin-hero-card-heading p{margin:0;font-size:11px;color:#657e8d}
+.admin-hero-card-upload{flex-shrink:0;min-height:44px;white-space:nowrap;font-size:11px}
+.admin-hero-card-empty{min-height:140px;border:1px dashed #c5d7dd;border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;gap:10px;color:#647d8e;padding:22px}
+.admin-hero-card-empty strong{font-size:14px;color:#182238}
+.admin-hero-card-empty span{font-size:11px;line-height:1.7;max-width:360px}
+.admin-hero-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;align-items:start;margin-top:18px}
+.admin-hero-photo{min-width:0;display:flex;flex-direction:column;gap:11px;
+  padding:13px;border:1px solid #e1eaee;border-radius:12px;background:#fbfcfd}
+.admin-hero-photo-preview{aspect-ratio:4/5;position:relative;overflow:hidden;
+  background:linear-gradient(125deg,#d5eaef,#f4e0d5);border-radius:8px}
+.admin-hero-photo-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.admin-hero-photo-preview>span{position:absolute;top:9px;left:9px;padding:6px 9px;
+  background:#f9fcf8ef;border-radius:5px;color:#182238;font-size:9px;font-weight:850;letter-spacing:.08em}
+.admin-hero-photo-actions{display:grid;grid-template-columns:1fr auto;gap:8px}
+.admin-hero-photo-actions .admin-upload{padding:10px 12px;font-size:10px;min-height:40px}
+.admin-hero-set-remove{border:1px solid #ead2d9;background:transparent;color:#a32c44;
+  border-radius:7px;padding:10px 12px;font-size:10px;font-weight:750;cursor:pointer}
+.admin-hero-set-remove:disabled{opacity:.45;cursor:not-allowed}
+.admin-hero-set-progress{padding:10px 0;color:#315e76;font-size:11px}
+.admin-hero-photo .admin-copy-editor{margin:0}
+.admin-hero-photo .admin-copy-editor-toggle{padding:13px 12px}
+.admin-hero-photo .admin-copy-editor-toggle strong{font-size:11px}
+.admin-hero-photo .admin-copy-body{padding:12px}
+.admin-hero-photo .admin-copy-field-grid{grid-template-columns:1fr}
+@media(max-width:1020px){
+  .admin-hero-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-.admin-hero-set-delete:disabled,.admin-hero-set-remove:disabled{opacity:.4;cursor:not-allowed}
-.admin-hero-set-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
-.admin-hero-set-card{display:flex;flex-direction:column;align-items:stretch;min-width:0;
-  border:1px solid #e5ecef;border-radius:11px;padding:12px;gap:10px;background:#fbfcfd}
-.admin-hero-set-preview{aspect-ratio:4/5;border-radius:7px;overflow:hidden;position:relative;
-  display:grid;place-items:center;background:linear-gradient(125deg,#d5eaef,#f4e0d5);
-  font-size:13px;font-weight:800;color:#718995}
-.admin-hero-set-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.admin-hero-set-card>strong{font-size:11px;line-height:1.5;min-height:32px}
-.admin-hero-set-card .admin-upload{align-self:stretch;min-height:40px;font-size:9px;padding:10px;
-  text-align:center;white-space:normal}
-.admin-hero-set-remove{align-self:stretch}
-.admin-hero-set-progress{font-size:11px;color:#315e76}
-@media(max-width:900px){
-  .admin-hero-set-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .admin-hero-sets-toolbar,.admin-hero-set-heading{align-items:flex-start;flex-direction:column}
+@media(max-width:650px){
+  .admin-hero-card-panel{padding:15px;border-radius:12px}
+  .admin-hero-card-heading{flex-direction:column;align-items:stretch;gap:12px}
+  .admin-hero-card-upload{align-self:flex-start}
+  .admin-hero-photo-grid{gap:9px}
+  .admin-hero-photo{padding:9px;border-radius:9px;gap:9px}
+  .admin-hero-photo-actions{grid-template-columns:1fr}
+  .admin-hero-photo-actions .admin-upload{font-size:9px}
+  .admin-hero-cards-note{padding:12px;font-size:11px}
 }
-@media(max-width:480px){
-  .admin-hero-set{padding:12px}
-  .admin-hero-set-grid{gap:8px}
-  .admin-hero-set-card{padding:8px;gap:8px}
-  .admin-hero-set-card>strong{font-size:10px}
-  .admin-hero-sets-toolbar{padding:14px}
-}
+@media(max-width:410px){.admin-hero-photo-grid{grid-template-columns:1fr}}

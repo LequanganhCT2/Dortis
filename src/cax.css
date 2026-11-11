@@ -328,23 +328,8 @@ body{overflow-x:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif;font-optica
   .cax-deck-card{will-change:auto}
 }
 
-/* Each Hero bundle contains four independent images. The whole bundle crossfades together. */
-.cax-hero-set-images{display:block;overflow:hidden;pointer-events:none}
-.cax-hero-set-images img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  opacity:0;transition:opacity 850ms ease;pointer-events:none
+/* Hero cards now rotate their own image collections independently. */
+.cax-hero-deck .dortis-rotating-media.cax-deck-custom-image{opacity:.24}
+@media(prefers-reduced-motion:reduce){
+  .cax-hero-deck .dortis-rotating-media.cax-deck-custom-image .current{animation:none}
 }
-.cax-hero-set-images img.is-current{opacity:1}
-.cax-hero-set-switcher{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
-  margin-right:8px;font-size:9px;font-weight:750;letter-spacing:.06em;color:#42687b}
-.cax-deck-arrows .cax-hero-set-switcher button{
-  width:28px;height:28px;border:0;border-radius:50%;background:transparent;
-  font-size:20px;color:#315e76;box-shadow:none
-}
-.cax-deck-arrows .cax-hero-set-switcher button:hover{background:#e8f0f2}
-@media(max-width:650px){
-  .cax-deck-controls{flex-wrap:wrap}
-  .cax-hero-set-switcher{font-size:8px;margin-right:2px}
-  .cax-deck-arrows .cax-hero-set-switcher button{width:24px;height:26px}
-}
-@media(prefers-reduced-motion:reduce){.cax-hero-set-images img{transition:none}}

@@ -16,10 +16,12 @@ export function getMediaUrls(primary = {}, gallery = {}, slot) {
 }
 
 /** CSS crossfade; no canvas and no full-page reload. */
-export function RotatingImage({ urls = [], className = '', alt = '', interval = 5800, offset = 0, loading = 'lazy' }) {
+export function RotatingImage({ urls = [], className = '', alt = '', interval = 5800, offset = 0, loading = 'lazy', onIndexChange = null }) {
   const validUrls = useMemo(() => [...new Set(urls.filter(url => typeof url === 'string' && url.startsWith('https://')))], [urls])
   const [step, setStep] = useState(0)
   const holder = useRef(null)
+  const onIndexChangeRef=useRef(onIndexChange)
+  useEffect(()=>{onIndexChangeRef.current=onIndexChange},[onIndexChange])
   const [visible,setVisible] = useState(false)
   const [pageVisible,setPageVisible] = useState(true)
   useEffect(()=>{
@@ -42,8 +44,9 @@ export function RotatingImage({ urls = [], className = '', alt = '', interval = 
     const timer = window.setInterval(() => setStep(prev => (prev + 1) % validUrls.length), interval)
     return () => window.clearInterval(timer)
   }, [validUrls.length, interval, visible, pageVisible])
+  const active = validUrls.length ? (step + offset) % validUrls.length : 0
+  useEffect(()=>{onIndexChangeRef.current?.(active)},[active])
   if (!validUrls.length) return null
-  const active = (step + offset) % validUrls.length
   const prev = (active - 1 + validUrls.length) % validUrls.length
   return <span ref={holder} className={'dortis-rotating-media ' + className} aria-hidden={!alt}>
     {validUrls.length > 1 && <img className="dortis-media-layer dormant" src={validUrls[prev]} alt="" loading="lazy" decoding="async" />}

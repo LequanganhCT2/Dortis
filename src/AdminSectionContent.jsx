@@ -8,9 +8,11 @@ const failText=(error)=>{
 }
 
 /** Editable page copy, scoped to one homepage section or image slot. */
-export default function AdminSectionContent({supabase,user,contentKey,label}){
+export default function AdminSectionContent({supabase,user,contentKey,label,fieldKeys=null}){
   const defaults=SITE_CONTENT_DEFAULTS[contentKey]||{}
-  const schema=SITE_CONTENT_SCHEMAS[contentKey]||[]
+  const allSchema=SITE_CONTENT_SCHEMAS[contentKey]||[]
+  const schema=fieldKeys ? allSchema.map(group=>({...group,fields:group.fields.filter(field=>fieldKeys.includes(field.key))}))
+    .filter(group=>group.fields.length) : allSchema
   const [draft,setDraft]=useState(defaults)
   const [lastSaved,setLastSaved]=useState(defaults)
   const [loading,setLoading]=useState(true)
@@ -40,33 +42,48 @@ export default function AdminSectionContent({supabase,user,contentKey,label}){
     setDraft(prev=>({...prev,[key]:value}))
     setError('');setSuccess('')
   }
+  // Read the current JSON before each patch: all four cards and image editors
+  // share one Supabase site_content row and must not overwrite each other's keys.
+  const writePatch=async(patch)=>{
+    const {data:current,error:readError}=await supabase.from('site_content')
+      .select('content').eq('key',contentKey).maybeSingle()
+    if(readError)throw readError
+    const merged={...(current?.content||{}),...patch}
+    const {data,error:e}=await supabase.from('site_content').upsert({
+      key:contentKey,content:merged,updated_by:user.id,updated_at:new Date().toISOString()
+    },{onConflict:'key'}).select('key').single()
+    if(e||!data)throw e||new Error('Supabase chưa xác nhận bản ghi đã lưu.')
+    const snapshot={...defaults,...merged}
+    setDraft(snapshot);setLastSaved(snapshot)
+  }
   const save=async(event)=>{
     event?.preventDefault()
     if(!changed||busy)return
     setError('');setSuccess('');setBusy(true)
     try{
-      const safe={}
+      const patch={}
       for(const group of schema)for(const field of group.fields){
         const value=String(draft[field.key]??'').trim()
         if(value.length>field.max)throw new Error('Nội dung "'+field.label+'" vượt quá '+field.max+' ký tự.')
-        safe[field.key]=value
+        patch[field.key]=value
       }
-      const {data,error:e}=await supabase.from('site_content').upsert({
-        key:contentKey,content:safe,updated_by:user.id,updated_at:new Date().toISOString()
-      },{onConflict:'key'}).select('key').single()
-      if(e||!data)throw e||new Error('Supabase chưa xác nhận bản ghi đã lưu.')
-      setDraft(safe);setLastSaved(safe)
-      setSuccess('Đã lưu nội dung. Trang chủ sẽ tự cập nhật mà không tải lại toàn bộ.')
+      await writePatch(patch)
+      setSuccess('Đã lưu chữ. Homepage sẽ tự cập nhật.')
     }catch(e){setError(failText(e))}
     finally{setBusy(false)}
   }
   const restore=async()=>{
-    if(!window.confirm('Khôi phục nội dung mặc định của "'+label+'"? Nội dung bạn đã thay đổi sẽ bị mất.'))return
+    if(!window.confirm('Khôi phục nội dung mặc định của "'+label+'"?'))return
     setBusy(true);setError('');setSuccess('')
     try{
-      const {error:e}=await supabase.from('site_content').delete().eq('key',contentKey)
-      if(e)throw e
-      setDraft(defaults);setLastSaved(defaults)
+      if(fieldKeys){
+        const patch=Object.fromEntries(fieldKeys.map(key=>[key,defaults[key]??'']))
+        await writePatch(patch)
+      }else{
+        const {error:e}=await supabase.from('site_content').delete().eq('key',contentKey)
+        if(e)throw e
+        setDraft(defaults);setLastSaved(defaults)
+      }
       setSuccess('Đã khôi phục nội dung mặc định.')
     }catch(e){setError(failText(e))}
     finally{setBusy(false)}

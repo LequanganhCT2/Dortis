@@ -60,8 +60,16 @@ const schemas={
       field('card'+(i+1)+'Title','Thẻ '+(i+1)+' · Tên',title),
       field('card'+(i+1)+'Line1','Thẻ '+(i+1)+' · Chữ lớn dòng 1',['CV &','Artist','Visual','Artist'][i]),
       field('card'+(i+1)+'Line2','Thẻ '+(i+1)+' · Chữ lớn dòng 2',['Portfolio','Branding','Campaign','Website'][i]),
+      field('card'+(i+1)+'Eyebrow','Thẻ '+(i+1)+' · Dòng nhỏ trên ảnh','DORTIS STUDIO / '+String(i+1).padStart(2,'0')),
+      field('card'+(i+1)+'Footer','Thẻ '+(i+1)+' · Dòng dưới ảnh',['HỒ SƠ NGHỆ SĨ','THƯƠNG HIỆU NGHỆ SĨ','THỊ GIÁC TRUYỀN THÔNG','KHÔNG GIAN SỐ'][i]),
     ])
-  ])],
+  ]),...Array.from({length:4},(_,cardIndex)=>section('Chữ riêng trên từng ảnh · Thẻ '+(cardIndex+1),
+    Array.from({length:6},(_,photoIndex)=>[
+      field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Eyebrow','Ảnh '+(photoIndex+1)+' · Dòng nhỏ',''),
+      field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Line1','Ảnh '+(photoIndex+1)+' · Chữ lớn dòng 1',''),
+      field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Line2','Ảnh '+(photoIndex+1)+' · Chữ lớn dòng 2',''),
+      field('card'+(cardIndex+1)+'Image'+(photoIndex+1)+'Footer','Ảnh '+(photoIndex+1)+' · Dòng dưới','')
+    ]).flat()))],
   services:[section('Tiêu đề khu vực dịch vụ',[
     field('kicker','Dòng đánh dấu','02 / OUR EXPERTISE'),
     field('heading','Tiêu đề dòng 1','Mỗi câu chuyện.'),

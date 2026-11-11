@@ -1,26 +1,27 @@
-export const HERO_SET_LIMIT = 6
-export const HERO_CARD_COUNT = 4
+/** Four independent Hero cards. Each card has six image slots, in display order. */
+export const HERO_CARD_COUNT=4
+export const HERO_IMAGES_PER_CARD=6
 
-// Set and card numbers are 1-based, so slots are stable across editor and homepage.
-export function heroImageSlot(setNumber, cardNumber) {
-  if (!Number.isInteger(setNumber) || setNumber < 1 || setNumber > HERO_SET_LIMIT ||
-      !Number.isInteger(cardNumber) || cardNumber < 1 || cardNumber > HERO_CARD_COUNT) {
-    throw new RangeError('Invalid Dortis hero image set or card')
-  }
-  return 'hero-set-' + String(setNumber).padStart(2, '0') +
-    '-card-' + String(cardNumber).padStart(2, '0')
+// Historical storage slot names are retained so previously uploaded photos survive.
+export function heroImageSlot(imageNumber,cardNumber){
+  if(!Number.isInteger(imageNumber)||imageNumber<1||imageNumber>HERO_IMAGES_PER_CARD||
+     !Number.isInteger(cardNumber)||cardNumber<1||cardNumber>HERO_CARD_COUNT)
+    throw new RangeError('Invalid Dortis Hero image/card number')
+  return 'hero-set-'+String(imageNumber).padStart(2,'0')+'-card-'+String(cardNumber).padStart(2,'0')
 }
 
-export function completeHeroImageSets(primary = {}) {
-  const sets = []
-  for (let setNumber = 1; setNumber <= HERO_SET_LIMIT; setNumber++) {
-    const urls = Array.from({ length: HERO_CARD_COUNT }, (_, index) =>
-      primary[heroImageSlot(setNumber, index + 1)]
-    )
-    // Incomplete drafts stay in Admin, not on the public homepage.
-    if (urls.every(url => typeof url === 'string' && url.startsWith('https://'))) {
-      sets.push({ setNumber, urls })
-    }
-  }
-  return sets
+export function getHeroCardPhotos(primary={}){
+  return Array.from({length:HERO_CARD_COUNT},(_,cardIndex)=>{
+    const cardNumber=cardIndex+1
+    const photos=Array.from({length:HERO_IMAGES_PER_CARD},(_,index)=>({
+      imageNumber:index+1,url:primary[heroImageSlot(index+1,cardNumber)]
+    })).filter(photo=>typeof photo.url==='string'&&photo.url.startsWith('https://'))
+    // Legacy shared 'hero' is shown on first card only, never replicated.
+    if(!photos.length&&cardNumber===1&&typeof primary.hero==='string'&&primary.hero.startsWith('https://'))
+      photos.push({imageNumber:1,url:primary.hero})
+    return photos.filter((photo,index,all)=>all.findIndex(other=>other.url===photo.url)===index)
+  })
+}
+export function getHeroCardImages(primary={}){
+  return getHeroCardPhotos(primary).map(photos=>photos.map(photo=>photo.url))
 }

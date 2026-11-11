@@ -1,14 +1,17 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import './admin-media-editor.css'
 import AdminSectionContent from './AdminSectionContent'
-import { HERO_SET_LIMIT, HERO_CARD_COUNT, heroImageSlot } from './heroImageSets'
+import { HERO_IMAGES_PER_CARD, HERO_CARD_COUNT, heroImageSlot } from './heroImageSets'
 
 const MB5 = 5 * 1024 * 1024
 const MAX_GALLERY = 24
 const HERO_CARD_LABELS = ['CV & Portfolio', 'Artist Branding', 'Thiết kế truyền thông', 'Website nghệ sĩ']
+const HERO_INTRO_FIELDS = ['kicker','before','artist','action','quality','tail','impact','description','primaryButton','secondaryButton','signature']
+const heroCardFields=card=>['Title','Eyebrow','Line1','Line2','Footer'].map(field=>'card'+card+field)
+const heroImageFields=(card,image)=>['Eyebrow','Line1','Line2','Footer'].map(field=>'card'+card+'Image'+image+field)
 const MIME = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp', 'image/avif':'avif' }
 const GROUPS = [
-  { id:'hero', title:'Trang đầu / Hero', note:'Tối đa 6 bộ ảnh, mỗi bộ có 4 ảnh riêng tương ứng 4 thẻ 3D', slots:[]},
+  { id:'hero', title:'Trang đầu / Hero', note:'4 thẻ 3D độc lập, mỗi thẻ tối đa 6 ảnh và mỗi ảnh có chữ riêng', slots:[]},
   { id:'services', title:'Dịch vụ', note:'10 vị trí thẻ, mỗi vị trí có thư viện ảnh riêng', slots:[
     {id:'service-cv',title:'CV & Portfolio'}, {id:'service-brand',title:'Thương hiệu nghệ sĩ'},
     {id:'service-visual',title:'Thiết kế truyền thông'}, {id:'service-web',title:'Website nghệ sĩ'},
@@ -48,7 +51,6 @@ export default function AdminMediaEditor({ user, supabase }) {
   const [notice,setNotice]=useState('')
   const [confirm,setConfirm]=useState(null)
   const [loading,setLoading]=useState(true)
-  const [heroSetCount,setHeroSetCount]=useState(1)
   const activeGroup = GROUPS.find(group=>group.id===groupId)||GROUPS[0]
 
   const reload = useCallback(async () => {
@@ -62,10 +64,6 @@ export default function AdminMediaEditor({ user, supabase }) {
       return
     }
     setPrimary(Object.fromEntries((first.data||[]).map(row=>[row.slot,row])))
-    const highestHeroSet = Math.max(1,...(first.data||[]).filter(row=>row.image_url)
-      .map(row=>row.slot.match(/^hero-set-(0[1-6])-card-(0[1-4])$/))
-      .filter(Boolean).map(match=>Number(match[1])))
-    setHeroSetCount(count=>Math.max(count,highestHeroSet))
     const groups={}
     for(const row of second.data||[]) (groups[row.slot]??=[]).push(row)
     setGallery(groups)
@@ -90,25 +88,29 @@ export default function AdminMediaEditor({ user, supabase }) {
     return {path,url:data.publicUrl}
   }
 
-  // Upload a complete four-card bundle atomically to the media table. New files are
-  // removed if storage or the database fails, leaving the previous bundle in place.
-  async function uploadHeroSet(setNumber,files){
+  // Upload photos into the available positions of one Hero card (1..6).
+  // Storage uploads finish before the database batch is committed.
+  async function uploadHeroCard(cardNumber,files){
     const chosen=Array.from(files||[])
     if(!chosen.length)return
-    if(chosen.length!==HERO_CARD_COUNT){
-      setError('Mỗi bộ cần đúng 4 ảnh, lần lượt cho 4 thẻ Hero.');return
+    const slots=Array.from({length:HERO_IMAGES_PER_CARD},(_,i)=>heroImageSlot(i+1,cardNumber))
+    const available=slots.filter(slot=>!primary[slot]?.image_url)
+    if(chosen.length>available.length){
+      setError('Thẻ '+cardNumber+' chỉ còn '+available.length+' vị trí trống (tối đa 6 ảnh/thẻ).')
+      return
     }
     const invalid=chosen.map(checkImage).find(Boolean)
     if(invalid){setError(invalid);return}
-    setBusy('hero-set-'+setNumber);setProgress({done:0,total:HERO_CARD_COUNT})
+    const busyKey='hero-card-'+cardNumber
+    setBusy(busyKey);setProgress({done:0,total:chosen.length})
     setError('');setNotice('')
     const uploaded=[]
     try{
-      for(let i=0;i<HERO_CARD_COUNT;i++){
-        const slot=heroImageSlot(setNumber,i+1)
+      for(let i=0;i<chosen.length;i++){
+        const slot=available[i]
         const item=await addStorage(slot,chosen[i])
         uploaded.push({slot,...item})
-        setProgress({done:i+1,total:HERO_CARD_COUNT})
+        setProgress({done:i+1,total:chosen.length})
       }
       const {error:dbError}=await supabase.from('site_images').upsert(
         uploaded.map(item=>({
@@ -116,16 +118,11 @@ export default function AdminMediaEditor({ user, supabase }) {
           updated_by:user.id,updated_at:new Date().toISOString()
         })),{onConflict:'slot'})
       if(dbError)throw dbError
-      const previousPaths=uploaded.map(item=>primary[item.slot]?.storage_path).filter(Boolean)
-      if(previousPaths.length){
-        const {error:cleanupError}=await supabase.storage.from('dortis-media').remove(previousPaths)
-        if(cleanupError)setError('Bộ ảnh đã lưu nhưng một số file cũ chưa được dọn khỏi Storage.')
-      }
-      setNotice('Đã lưu đủ 4 ảnh cho bộ '+String(setNumber).padStart(2,'0')+'. Website sẽ tự cập nhật.')
+      setNotice('Đã thêm '+uploaded.length+' ảnh riêng vào thẻ '+cardNumber+'.')
       await reload()
     }catch(err){
       if(uploaded.length)await supabase.storage.from('dortis-media').remove(uploaded.map(item=>item.path))
-      setError(errorText(err,'Không thể tải đủ 4 ảnh của bộ Hero.'))
+      setError(errorText(err,'Không thể tải ảnh của thẻ '+cardNumber+'.'))
     }finally{setBusy('');setProgress(null)}
   }
 
@@ -189,24 +186,8 @@ export default function AdminMediaEditor({ user, supabase }) {
   async function deleteSelected(){
     if(!confirm)return
     const target=confirm
-    setBusy(target.slot||'hero-set-'+target.setNumber);setError('');setNotice('')
+    setBusy(target.slot);setError('');setNotice('')
     try{
-      if(target.kind==='hero-set'){
-        const slots=Array.from({length:HERO_CARD_COUNT},(_,i)=>heroImageSlot(target.setNumber,i+1))
-        const {error:dbError}=await supabase.from('site_images').upsert(slots.map(slot=>({
-          slot,image_url:null,storage_path:null,updated_by:user.id,updated_at:new Date().toISOString()
-        })),{onConflict:'slot'})
-        if(dbError)throw dbError
-        const oldFiles=slots.map(slot=>primary[slot]?.storage_path).filter(Boolean)
-        if(oldFiles.length){
-          const {error:storageError}=await supabase.storage.from('dortis-media').remove(oldFiles)
-          if(storageError)setError('Đã xóa bộ khỏi website nhưng chưa dọn được một số file cũ.')
-        }
-        setHeroSetCount(count=>Math.min(count,Math.max(1,target.setNumber-1)))
-        setNotice('Đã xóa bộ ảnh Hero '+String(target.setNumber).padStart(2,'0')+'.')
-        await reload()
-        return
-      }
       let dbError
       if(target.kind==='primary'){
         const r=await supabase.from('site_images').upsert({
@@ -254,7 +235,7 @@ export default function AdminMediaEditor({ user, supabase }) {
   }
 
   const allSlots=[
-    ...Array.from({length:HERO_SET_LIMIT*HERO_CARD_COUNT},(_,i)=>({
+    ...Array.from({length:HERO_IMAGES_PER_CARD*HERO_CARD_COUNT},(_,i)=>({
       id:heroImageSlot(Math.floor(i/HERO_CARD_COUNT)+1,i%HERO_CARD_COUNT+1)
     })),
     ...GROUPS.flatMap(group=>group.slots)
@@ -276,70 +257,71 @@ export default function AdminMediaEditor({ user, supabase }) {
         onClick={()=>{setGroupId(group.id);setError('');setNotice('')}}>{group.title}</button>)}
     </div>
     <section className="admin-media-section">
-      <div className="admin-media-section-title"><div><small>{activeGroup.id.toUpperCase()} / MEDIA</small><h2>{activeGroup.title}</h2><p>{activeGroup.note}</p></div><span>{groupId==='hero'?'6 BỘ × 4 ẢNH':activeGroup.slots.length+' VỊ TRÍ'}</span></div>
+      <div className="admin-media-section-title"><div><small>{activeGroup.id.toUpperCase()} / MEDIA</small><h2>{activeGroup.title}</h2><p>{activeGroup.note}</p></div><span>{groupId==='hero'?'4 THẺ × 6 ẢNH':activeGroup.slots.length+' VỊ TRÍ'}</span></div>
       <AdminSectionContent key={'group-'+groupId} supabase={supabase} user={user}
-        contentKey={groupId==='artist'?'artist-experience':groupId} label={activeGroup.title}/>
+        contentKey={groupId==='artist'?'artist-experience':groupId} label={groupId==='hero'?'Hero · Tiêu đề & mô tả bên trái':activeGroup.title}
+        fieldKeys={groupId==='hero'?HERO_INTRO_FIELDS:null}/>
       {loading?<p className="admin-media-loading">Đang tải thư viện ảnh...</p>:
-      groupId==='hero'?<div className="admin-hero-sets">
-        <div className="admin-hero-sets-toolbar">
-          <div><strong>Bộ ảnh cho 4 thẻ Hero</strong>
-            <p>Mỗi bộ có 4 ảnh độc lập. Chỉ những bộ đã đủ 4 ảnh mới được hiển thị trên Homepage; có thể chuyển giữa các bộ và tự đổi sau 12 giây.</p></div>
-          <button type="button" disabled={!!busy||heroSetCount>=HERO_SET_LIMIT}
-            onClick={()=>{setHeroSetCount(count=>Math.min(count+1,HERO_SET_LIMIT));setError('');setNotice('')}}>
-            {heroSetCount>=HERO_SET_LIMIT?'ĐÃ ĐỦ 6 BỘ':'+ THÊM BỘ ẢNH'}
-          </button>
-        </div>
-        {Array.from({length:heroSetCount},(_,index)=>index+1).map(setNumber=>{
-          const imageSlots=Array.from({length:HERO_CARD_COUNT},(_,i)=>heroImageSlot(setNumber,i+1))
-          const imageCount=imageSlots.filter(slot=>!!primary[slot]?.image_url).length
-          const uploading=busy==='hero-set-'+setNumber
-          return <article key={setNumber} className="admin-hero-set">
-            <div className="admin-hero-set-heading">
-              <div><span>BỘ {String(setNumber).padStart(2,'0')} / 06</span>
-                <h3>4 ảnh cho 4 thẻ riêng biệt</h3>
-                <p>{imageCount===HERO_CARD_COUNT?'Đủ 4 ảnh — đang hiển thị trên Homepage.':
-                  'Đã có '+imageCount+'/4 ảnh — hoàn thiện để hiển thị công khai.'}</p></div>
-              <div className="admin-hero-set-actions">
-                <label className={'admin-upload'+(busy?' disabled':'')}>
-                  <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"
-                    disabled={!!busy} onChange={event=>{
-                      const files=Array.from(event.target.files||[])
-                      event.target.value=''
-                      uploadHeroSet(setNumber,files)
-                    }}/>
-                  {uploading?'ĐANG LƯU...':'TẢI 4 ẢNH CÙNG LÚC'}
-                </label>
-                {setNumber===heroSetCount&&setNumber>1&&<button className="admin-hero-set-delete" type="button"
-                  disabled={!!busy} onClick={()=>{
-                    if(imageCount)setConfirm({kind:'hero-set',setNumber})
-                    else setHeroSetCount(count=>count-1)
-                  }}>XÓA BỘ</button>}
+      groupId==='hero'?<div className="admin-hero-cards">
+        <p className="admin-hero-cards-note">Mỗi thẻ có thư viện tối đa 6 ảnh độc lập. Ảnh sẽ tự chuyển trong chính thẻ đó.
+          Bạn có thể chỉnh nội dung chung của thẻ hoặc tùy chỉnh riêng chữ trên từng ảnh.</p>
+        {Array.from({length:HERO_CARD_COUNT},(_,i)=>i+1).map(cardNumber=>{
+          const slots=Array.from({length:HERO_IMAGES_PER_CARD},(_,i)=>heroImageSlot(i+1,cardNumber))
+          const filled=slots.filter(slot=>!!primary[slot]?.image_url)
+          const cardBusy=busy==='hero-card-'+cardNumber
+          return <article key={cardNumber} className="admin-hero-card-panel">
+            <div className="admin-hero-card-heading">
+              <div><span>HERO / THẺ {String(cardNumber).padStart(2,'0')}</span>
+                <h3>{HERO_CARD_LABELS[cardNumber-1]}</h3>
+                <p>Thư viện riêng: {filled.length} / {HERO_IMAGES_PER_CARD} ảnh</p>
               </div>
+              <label className={'admin-upload admin-hero-card-upload'+(busy||filled.length>=HERO_IMAGES_PER_CARD?' disabled':'')}>
+                <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"
+                  disabled={!!busy||filled.length>=HERO_IMAGES_PER_CARD}
+                  onChange={event=>{
+                    const files=Array.from(event.target.files||[])
+                    event.target.value=''
+                    uploadHeroCard(cardNumber,files)
+                  }}/>
+                {filled.length>=HERO_IMAGES_PER_CARD?'ĐÃ ĐỦ 6 ẢNH':cardBusy?'ĐANG TẢI...':'+ THÊM ẢNH'}
+              </label>
             </div>
-            {uploading&&progress&&<p className="admin-hero-set-progress" role="status">Đang tải {progress.done}/{progress.total} ảnh...</p>}
-            <div className="admin-hero-set-grid">{imageSlots.map((slot,i)=>{
-              const image=primary[slot]?.image_url
-              return <div className="admin-hero-set-card" key={slot}>
-                <div className="admin-hero-set-preview">
-                  {image?<img src={image} alt={'Bộ '+setNumber+' thẻ '+(i+1)} loading="lazy"/>:
-                  <span>ẢNH {String(i+1).padStart(2,'0')}</span>}
+            <AdminSectionContent key={'hero-card-copy-'+cardNumber}
+              supabase={supabase} user={user} contentKey="hero"
+              label={'mặc định của thẻ '+cardNumber} fieldKeys={heroCardFields(cardNumber)}/>
+            {cardBusy&&progress&&<p className="admin-hero-set-progress" role="status">
+              Đang tải {progress.done}/{progress.total} ảnh...</p>}
+            {filled.length===0?<div className="admin-hero-card-empty">
+              <strong>Thẻ {cardNumber} chưa có ảnh.</strong>
+              <span>Thêm 1–6 ảnh để hiển thị riêng trong thẻ này. Các thẻ khác không bị ảnh hưởng.</span>
+            </div>:
+            <div className="admin-hero-photo-grid">{slots.map((slot,imageIndex)=>{
+              const photo=primary[slot]
+              if(!photo?.image_url)return null
+              return <section className="admin-hero-photo" key={slot}>
+                <div className="admin-hero-photo-preview">
+                  <img src={photo.image_url} alt={'Ảnh '+(imageIndex+1)+' của thẻ '+cardNumber} loading="lazy"/>
+                  <span>ẢNH {String(imageIndex+1).padStart(2,'0')}</span>
                 </div>
-                <strong>{String(i+1).padStart(2,'0')} · {HERO_CARD_LABELS[i]}</strong>
-                <label className={'admin-upload'+(busy?' disabled':'')}>
-                  <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
-                    disabled={!!busy} onChange={event=>{
-                      const file=event.target.files?.[0]
-                      event.target.value=''
-                      replacePrimary(slot,file)
-                    }}/>
-                  {busy===slot?'ĐANG LƯU...':image?'THAY ẢNH':'CHỌN ẢNH'}
-                </label>
-                {image&&<button className="admin-hero-set-remove" type="button"
-                  disabled={!!busy} onClick={()=>setConfirm({
-                    slot,kind:'primary',storage_path:primary[slot]?.storage_path
-                  })}>GỠ ẢNH</button>}
-              </div>
-            })}</div>
+                <div className="admin-hero-photo-actions">
+                  <label className={'admin-upload'+(busy?' disabled':'')}>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
+                      disabled={!!busy} onChange={event=>{
+                        const file=event.target.files?.[0]
+                        event.target.value=''
+                        replacePrimary(slot,file)
+                      }}/>
+                    {busy===slot?'ĐANG LƯU...':'THAY ẢNH'}
+                  </label>
+                  <button type="button" disabled={!!busy} className="admin-hero-set-remove"
+                    onClick={()=>setConfirm({slot,kind:'primary',storage_path:photo.storage_path})}>XÓA</button>
+                </div>
+                <AdminSectionContent key={'hero-image-copy-'+slot}
+                  supabase={supabase} user={user} contentKey="hero"
+                  label={'chữ trên ảnh '+(imageIndex+1)+' · thẻ '+cardNumber}
+                  fieldKeys={heroImageFields(cardNumber,imageIndex+1)}/>
+              </section>
+            })}</div>}
           </article>
         })}
       </div>:
@@ -400,10 +382,7 @@ export default function AdminMediaEditor({ user, supabase }) {
     </section>
     <p className="admin-media-disclaimer">Chỉ tải hình ảnh đã được phép công bố. Ảnh khu vực Dự án sẽ xuất hiện công khai sau khi bạn tải lên. Không tải PDF hoặc ảnh chứa thông tin riêng tư.</p>
     {confirm&&<div className="admin-confirm-backdrop"><section className="admin-confirm" role="dialog" aria-modal="true" aria-label="Xác nhận xóa ảnh">
-      <h2>{confirm.kind==='hero-set'?'Xóa toàn bộ bộ ảnh?':'Xóa ảnh này?'}</h2>
-      <p>{confirm.kind==='hero-set'
-        ?'Cả 4 ảnh trong bộ sẽ bị xóa khỏi Homepage và Storage. Các bộ khác không bị ảnh hưởng.'
-        :'Ảnh sẽ bị gỡ khỏi website và Storage. Các ảnh khác trong khu vực vẫn được giữ nguyên.'}</p>
+      <h2>Xóa ảnh này?</h2><p>Ảnh sẽ bị gỡ khỏi thẻ và Storage. Các ảnh còn lại không bị ảnh hưởng.</p>
       <div><button type="button" onClick={()=>setConfirm(null)} disabled={!!busy}>HỦY</button>
       <button type="button" disabled={!!busy} onClick={deleteSelected}>{busy?'ĐANG XÓA...':'XÓA ẢNH'}</button></div>
     </section></div>}
