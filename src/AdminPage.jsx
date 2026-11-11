@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import './admin.css'
+import SiteHeader from './SiteHeader'
 import AdminMediaEditor from './AdminMediaEditor'
 import AdminArtistProfiles from './AdminArtistProfiles'
 
@@ -128,11 +129,16 @@ export default function AdminPage() {
     await supabase?.auth.signOut()
   }
 
-  if (checking) return <main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>
-  if (!supabase) return <main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>
-  if (user && !authorized) return <main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Không có quyền quản trị.</h1><p>Tài khoản hiện tại chưa được cấp vai trò admin trong Supabase Auth. Không thể chỉnh sửa ảnh.</p><button onClick={signOut}>Đăng xuất</button></div></main>
-  if (authorized) return location.pathname.startsWith('/admin/artists') ? <AdminArtistProfiles user={user} signOut={signOut} supabase={supabase}/> : <AdminMediaEditor user={user} signOut={signOut} supabase={supabase}/>
-  return <main className="admin-auth"><form className="admin-login" onSubmit={signIn}>
+  const withHeader = content => <div className="dortis-page-under-header dortis-admin-shell">
+    <SiteHeader adminUser={authorized ? user : null} onAdminSignOut={authorized ? signOut : null}/>
+    {content}
+  </div>
+
+  if (checking) return withHeader(<main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>)
+  if (!supabase) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>)
+  if (user && !authorized) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Không có quyền quản trị.</h1><p>Tài khoản hiện tại chưa được cấp vai trò admin trong Supabase Auth. Không thể chỉnh sửa ảnh.</p><button onClick={signOut}>Đăng xuất</button></div></main>)
+  if (authorized) return withHeader(location.pathname.startsWith('/admin/artists') ? <AdminArtistProfiles user={user} supabase={supabase}/> : <AdminMediaEditor user={user} supabase={supabase}/>)
+  return withHeader(<main className="admin-auth"><form className="admin-login" onSubmit={signIn}>
     <a href="/" className="admin-back">← TRỞ VỀ TRANG CHỦ</a><span>DORTIS / PRIVATE ACCESS</span><h1>Quản trị<br/><em>Dortis.</em></h1>
     <p>Đăng nhập để chỉnh sửa hình ảnh trang chủ và hồ sơ dự án.</p>
     <label>TÀI KHOẢN ADMIN<input type="text" required autoComplete="username" value={loginName} placeholder="admin" onChange={e=>setLoginName(e.target.value)}/></label>
@@ -140,5 +146,5 @@ export default function AdminPage() {
     {error && <p role="alert" className="admin-auth-error">{error}</p>}
     <button disabled={busy || !loginName} type="submit">{busy ? 'ĐANG ĐĂNG NHẬP...' : 'ĐĂNG NHẬP →'}</button>
     <small>Tài khoản “admin” được ánh xạ sang email đã khai báo trong môi trường Supabase. Bạn cũng có thể nhập email trực tiếp. Mật khẩu không lưu trong mã nguồn.</small>
-  </form></main>
+  </form></main>)
 }

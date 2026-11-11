@@ -52,3 +52,17 @@
 @media(max-width:650px){.admin-media-v2 .admin-intro{margin:35px 0 24px}.admin-media-tabs{margin:0 -16px;padding:12px 16px 15px}.admin-media-section-title h2{font-size:28px}.admin-media-slot{padding:15px;border-radius:12px}.admin-media-primary{gap:10px;grid-template-columns:1fr 1fr}.admin-media-primary-thumb{min-height:126px}.admin-media-v2 .admin-upload{font-size:9px;padding:10px 12px}.admin-media-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-media-stat b{font-size:20px}.admin-media-stat span{font-size:9px;margin-right:10px}}
 @media(max-width:390px){.admin-media-primary{grid-template-columns:1fr}.admin-media-primary-thumb{max-height:190px;aspect-ratio:16/10}}
 @media(prefers-reduced-motion:reduce){.admin-media-v2 *{animation:none!important;transition:none!important}}
+
+/* Workspace links are content actions, not duplicate header navigation. */
+.admin-media-workspace-link{
+  display:inline-block;
+  margin:14px 0 5px;
+  color:#182238;
+  font-size:11px;
+  font-weight:750;
+  letter-spacing:.06em;
+  text-decoration:underline;
+  text-decoration-color:#008f91;
+  text-underline-offset:5px;
+}
+.admin-media-workspace-link:hover{color:#008f91}

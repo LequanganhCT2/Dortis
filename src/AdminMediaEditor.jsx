@@ -37,7 +37,7 @@ function checkImage(file) {
   if (!file.size) return 'Ảnh '+file.name+' rỗng.'
   return null
 }
-export default function AdminMediaEditor({ user, signOut, supabase }) {
+export default function AdminMediaEditor({ user, supabase }) {
   const [groupId,setGroupId]=useState('hero')
   const [primary,setPrimary]=useState({})
   const [gallery,setGallery]=useState({})
@@ -197,9 +197,9 @@ export default function AdminMediaEditor({ user, signOut, supabase }) {
     count+(primary[slot.id]?.image_url?1:0)+(gallery[slot.id]?.length||0),0),[primary,gallery])
 
   return <main className="admin-dashboard admin-media-v2">
-    <nav className="admin-topline"><a href="/" className="admin-home">← TRANG CHỦ DORTIS</a><a href="/admin/artists" className="admin-home">HỒ SƠ CA SĨ (PDF) ↗</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></nav>
     <header className="admin-intro"><span>DORTIS / ADMIN / MEDIA LIBRARY</span><h1>Thư viện hình ảnh.</h1>
       <p>Chỉnh sửa cả nội dung chữ và ảnh theo từng khu vực. Mở “Chỉnh nội dung” để sửa tiêu đề, mô tả, chữ trên thẻ; bấm “Lưu nội dung” để cập nhật website. Vẫn hỗ trợ tải nhiều ảnh, đổi thứ tự và xóa ảnh.</p>
+      <a className="admin-media-workspace-link" href="/admin/artists">QUẢN LÝ HỒ SƠ NGHỆ SĨ ↗</a>
       <div className="admin-media-stat"><b>{totalImages}</b><span>ẢNH ĐANG QUẢN LÝ</span><b>{allSlots.length}</b><span>VỊ TRÍ TRÊN WEBSITE</span></div>
     </header>
     {error&&<p role="alert" className="admin-alert error">{error}</p>}

@@ -22,7 +22,7 @@ const allPhotoPaths=sections=>[...new Set((sections||[]).flatMap(s=>[
   ...(Array.isArray(s.media)?s.media.map(x=>x.path):[])
 ]).filter(Boolean))]
 
-export default function AdminArtistProfiles({user,signOut,supabase}){
+export default function AdminArtistProfiles({user,supabase}){
   const [profiles,setProfiles]=useState([])
   const [sources,setSources]=useState({})
   const [selected,setSelected]=useState(null)
@@ -392,7 +392,6 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
 
   return <div className="artist-admin-wrapper">
     <div className="admin-dashboard artist-admin">
-      <div className="admin-topline"><a href="/admin" className="admin-home">← QUẢN LÝ HÌNH ẢNH</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></div>
       <header className="artist-admin-intro"><span>DORTIS / ARTIST PROFILE CMS</span>
         <h1>Hồ sơ <em>nghệ sĩ.</em></h1>
         <p>Mỗi PDF tạo một trang nghệ sĩ riêng. Chọn chế độ <strong>Giữ nguyên PDF</strong> để giữ đúng vị trí chữ, màu và ảnh trên từng trang. Hoặc chọn HTML/CSS để tự thiết kế nội dung.</p>

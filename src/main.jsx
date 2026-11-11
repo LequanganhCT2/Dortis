@@ -157,4 +157,4 @@ function App() {
 
   </div>
 }
-createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <div className="dortis-page-under-header dortis-admin-shell"><SiteHeader/><AdminPage/></div> : location.pathname.startsWith('/artists') ? <ArtistPages /> : <App />)
+createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage/> : location.pathname.startsWith('/artists') ? <ArtistPages /> : <App />)

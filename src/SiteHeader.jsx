@@ -50,7 +50,8 @@ export function Brand({ dark = false }) {
   </span>
 }
 
-export default function SiteHeader() {
+export default function SiteHeader({ adminUser = null, onAdminSignOut = null }) {
+  const isAdmin = window.location.pathname.startsWith('/admin')
   const isHome=window.location.pathname==='/' || window.location.pathname==='/index.html'
   const [menuOpen,setMenuOpen]=useState(false)
   const [active,setActive]=useState(isHome?'top':window.location.pathname.startsWith('/artists')?'artists':'admin')
@@ -83,6 +84,19 @@ export default function SiteHeader() {
   },[])
   const href=id=>isHome?'#'+id:'/#'+id
   const close=()=>setMenuOpen(false)
+  // The admin header is a compact account bar, not public-site navigation.
+  if (isAdmin) return <header className="site-header dortis-shared-header dortis-admin-header" aria-label="Thanh công cụ quản trị">
+    <a href="/" className="brand-link" aria-label="Dortis – về trang chủ"><Brand/></a>
+    <div className="dortis-admin-account">
+      {adminUser ? <>
+        <div className="dortis-admin-identity">
+          <span>QUẢN TRỊ VIÊN</span>
+          <strong title={adminUser.email||'Admin'}>{adminUser.email||'Admin'}</strong>
+        </div>
+        <button type="button" className="dortis-admin-logout" onClick={onAdminSignOut}>ĐĂNG XUẤT <span aria-hidden="true">↗</span></button>
+      </> : <span className="dortis-admin-signin">KHU VỰC QUẢN TRỊ</span>}
+    </div>
+  </header>
   return <header className="site-header dortis-shared-header">
     <a href={href('top')} className="brand-link" onClick={close} aria-label="Dortis – về trang chủ">
       <Brand/>
