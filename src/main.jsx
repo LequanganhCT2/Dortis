@@ -4,6 +4,7 @@ import LiquidRibbons from './LiquidRibbons'
 import AdminPage, { useSiteImages } from './AdminPage'
 import './style.css'
 import './cax.css'
+import './philosophy.css'
 import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from './CaxExperience'
 import CircularServiceCarousel from './CircularServiceCarousel'
 
@@ -150,9 +151,35 @@ function App() {
 
       <CaxArtistExperience />
 
-      <section id="ve-dortis" className="manifesto-section scene-section">
-        <div className="manifesto-halo" aria-hidden="true"/>{siteImages.about ? <img className="about-custom-image" src={siteImages.about} alt="" loading="lazy"/> : <div className="manifesto-glass" aria-hidden="true"/>}
-        <div className="manifesto-content section-shell" data-reveal><SectionMark number="05" label="THE DORTIS PHILOSOPHY"/><p className="manifesto-kicker">ĐẰNG SAU MỌI ÁNH ĐÈN SÂN KHẤU</p><h2>Một nghệ sĩ không chỉ có <em>âm nhạc.</em><br/>Họ có một <strong>câu chuyện</strong> xứng đáng được nhìn thấy.</h2><div className="manifesto-bottom"><p>Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p><span>CREATIVITY WITH PURPOSE / DORTIS</span></div></div>
+      <section id="ve-dortis" className="dortis-philosophy scene-section" aria-labelledby="dortis-philosophy-heading">
+        <div className="dortis-philosophy-inner section-shell">
+          <div className="dortis-philosophy-intro">
+            <div className="dortis-philosophy-index"><span>05</span><span className="dortis-philosophy-index-line" aria-hidden="true" /><span>THE DORTIS PHILOSOPHY</span></div>
+            <p className="dortis-philosophy-eyebrow">ĐẰNG SAU MỌI ÁNH ĐÈN SÂN KHẤU</p>
+          </div>
+          <div className="dortis-philosophy-main">
+            <div className="dortis-philosophy-quote">
+              <h2 id="dortis-philosophy-heading">
+                Một nghệ sĩ không chỉ có <em>âm nhạc.</em>
+                <span className="dortis-philosophy-break" aria-hidden="true" />
+                Họ có một <strong>câu chuyện</strong> xứng đáng được nhìn thấy.
+              </h2>
+              <p className="dortis-philosophy-lead">Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p>
+              <a className="dortis-philosophy-cta" href="#gia-tri">KHÁM PHÁ GIÁ TRỊ DORTIS <span aria-hidden="true">↗</span></a>
+            </div>
+            <aside className="dortis-philosophy-card" aria-label="Bản sắc Dortis">
+              {siteImages.about ? <img className="dortis-philosophy-photo" src={siteImages.about} alt="Hình ảnh nhận diện Dortis" loading="lazy" /> : null}
+              <span className="dortis-philosophy-card-top">DORTIS / ARTIST IDENTITY</span>
+              <div className="dortis-philosophy-symbol" aria-hidden="true"><span>D</span><span>T</span></div>
+              <div className="dortis-philosophy-card-bottom">
+                <span>ART</span>
+                <span>IDENTITY</span>
+                <span>EMOTION</span>
+              </div>
+            </aside>
+          </div>
+          <div className="dortis-philosophy-footer"><span>CREATIVITY WITH PURPOSE</span><span>EVERY ARTIST HAS A STORY.</span><span>DORTIS © 2026</span></div>
+        </div>
       </section>
 
       <CaxBrandValues />
