@@ -32,29 +32,116 @@ function useTouchSwipe(left,right){
   }
 }
 export function CaxHeroDeck({images={}}){
-  const [index,setIndex]=useState(0),reduce=useReducedMotion()
-  const shift=step=>setIndex(i=>(i+step+4)%4),s=showcases[index]
-  const touch=useTouchSwipe(()=>shift(1),()=>shift(-1))
-  return <div className={'cax-hero-deck tone-'+index} aria-label="Giới thiệu bốn nhóm dịch vụ Dortis">
-    <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(index+1).padStart(2,'0')} / 04</span></div>
-    <div className="cax-deck-stage" tabIndex={0} {...touch}
-      onKeyDown={e=>{if(e.key==='ArrowRight'){e.preventDefault();shift(1)}if(e.key==='ArrowLeft'){e.preventDefault();shift(-1)}}}
-      aria-roledescription="carousel" aria-label={'Dịch vụ: '+s.label}>
-      <span className="cax-deck-glow"/>
-      <span className="cax-deck-sheet cax-sheet-back" aria-hidden="true"/>
-      <span className="cax-deck-sheet cax-sheet-middle" aria-hidden="true"/>
-      <span key={index} className={'cax-deck-sheet cax-sheet-front'+(reduce?' cax-no-anim':'')}>
-        {images.hero&&<img src={images.hero} alt="" className="cax-deck-custom-image" loading="eager"/>}
-        <span className="cax-sheet-eyebrow">DORTIS STUDIO / {s.code}</span>
-        <strong className="cax-sheet-headline">{s.lines[0]}<span>{s.lines[1]}</span></strong>
-        <span className="cax-sheet-footer">{s.kind}<span>↗</span></span>
-      </span>
+  const [selected,setSelected]=useState(0)
+  const [expanded,setExpanded]=useState(false)
+  const reduce=useReducedMotion()
+  const drag=useRef(null)
+  const ignoreClickUntil=useRef(0)
+  const stageRef=useRef(null)
+  const shift=step=>{setExpanded(true);setSelected(i=>(i+step+showcases.length)%showcases.length)}
+  const toggleCard=i=>{
+    if(Date.now()<ignoreClickUntil.current)return
+    if(!expanded){setSelected(i);setExpanded(true)}
+    else if(i===selected)setExpanded(false)
+    else setSelected(i)
+  }
+  const pointerDown=e=>{
+    if(e.pointerType==='mouse'&&e.button!==0)return
+    drag.current={x:e.clientX,y:e.clientY,pointerId:e.pointerId}
+  }
+  const pointerUp=e=>{
+    const start=drag.current
+    drag.current=null
+    stageRef.current?.style.setProperty('--cax-drag-shift','0px')
+    stageRef.current?.classList.remove('is-dragging')
+    if(!start||start.pointerId!==e.pointerId)return
+    const dx=e.clientX-start.x,dy=e.clientY-start.y
+    if(Math.abs(dx)>42&&Math.abs(dx)>Math.abs(dy)*1.25){
+      ignoreClickUntil.current=Date.now()+380
+      shift(dx<0?1:-1)
+    }
+  }
+  const pointerMove=e=>{
+    if(drag.current&&drag.current.pointerId===e.pointerId){
+      const dx=e.clientX-drag.current.x,dy=e.clientY-drag.current.y
+      if(Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)*1.1){
+        stageRef.current?.style.setProperty('--cax-drag-shift',Math.max(-48,Math.min(48,dx*.32)).toFixed(1)+'px')
+        stageRef.current?.classList.add('is-dragging')
+      }
+      return
+    }
+    if(!stageRef.current||reduce||expanded||e.pointerType==='touch')return
+    const r=e.currentTarget.getBoundingClientRect()
+    const x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5
+    stageRef.current.style.setProperty('--cax-look-x',(-y*3).toFixed(2)+'deg')
+    stageRef.current.style.setProperty('--cax-look-y',(x*4).toFixed(2)+'deg')
+  }
+  const pointerLeave=()=>{
+    if(stageRef.current){
+      stageRef.current.style.setProperty('--cax-look-x','0deg')
+      stageRef.current.style.setProperty('--cax-look-y','0deg')
+    }
+    drag.current=null
+    stageRef.current?.style.setProperty('--cax-drag-shift','0px')
+    stageRef.current?.classList.remove('is-dragging')
+  }
+  const current=showcases[selected]
+  return <div className={'cax-hero-deck tone-'+selected+(expanded?' cax-deck-expanded':'')} aria-label="Giới thiệu bốn nhóm dịch vụ Dortis">
+    <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(selected+1).padStart(2,'0')} / 04</span></div>
+    <div className="cax-deck-stage" ref={stageRef} tabIndex={0} aria-roledescription="carousel"
+      aria-label={expanded?'Bốn thẻ dịch vụ đã mở. Kéo trái phải hoặc chọn thẻ để xem':'Các thẻ dịch vụ đang xếp chồng. Nhấn thẻ để mở'}
+      onPointerDown={pointerDown} onPointerUp={pointerUp} onPointerCancel={()=>{drag.current=null}}
+      onPointerMove={pointerMove} onPointerLeave={pointerLeave}
+      onKeyDown={e=>{
+        if(e.key==='ArrowRight'){e.preventDefault();shift(1)}
+        if(e.key==='ArrowLeft'){e.preventDefault();shift(-1)}
+        if(e.key==='Escape'&&expanded){e.preventDefault();setExpanded(false)}
+      }}>
+      <span className="cax-deck-glow" aria-hidden="true"/>
+      <span className="cax-deck-ambient-text" aria-hidden="true">DORTIS / CREATIVE MOTION</span>
+      {showcases.map((s,i)=>{
+        const active=i===selected
+        const behind=(i-selected+showcases.length)%showcases.length
+        const collapsedX=[0,-8,9,3][behind]
+        const collapsedY=[0,3,2,-7][behind]
+        const collapsedAngle=[2,-12,13,6][behind]
+        const collapsedScale=[1.18,1.08,1.05,.99][behind]
+        const fanX=[-62,-21,21,62][i]
+        const fanAngle=[-12,-5,5,12][i]
+        const cssVars={
+          '--cax-fan-x':fanX+'%',
+          '--cax-fan-angle':fanAngle+'deg',
+          '--cax-stack-x':collapsedX+'%',
+          '--cax-stack-y':collapsedY+'%',
+          '--cax-stack-angle':collapsedAngle+'deg',
+          '--cax-stack-scale':collapsedScale,
+          zIndex:active?10:1+(showcases.length-behind),
+        }
+        return <button type="button" className={'cax-deck-card cax-card-'+i+(active?' is-active':'')}
+          key={s.code} style={cssVars} aria-pressed={active}
+          aria-label={s.label+(active&&expanded?' – nhấn lại để thu gọn':' – chọn thẻ')}
+          onClick={()=>toggleCard(i)}>
+          {images.hero&&<img src={images.hero} alt="" className="cax-deck-custom-image" loading="eager"/>}
+          <span className="cax-sheet-eyebrow">DORTIS STUDIO / {s.code}</span>
+          <strong className="cax-sheet-headline">{s.lines[0]}<span>{s.lines[1]}</span></strong>
+          <span className="cax-sheet-footer">{s.kind}<span aria-hidden="true">↗</span></span>
+        </button>
+      })}
+      <span className="cax-deck-interaction-hint">{expanded?'CHỌN THẺ · KÉO TRÁI/PHẢI':'NHẤN THẺ ĐỂ BUNG MỞ'} <span aria-hidden="true">↗</span></span>
     </div>
     <div className="cax-deck-controls">
-      <span className="cax-deck-dots" aria-hidden="true">{showcases.map((_,i)=><i key={i} className={i===index?'active':''}/>)}</span>
-      <span className="cax-deck-arrows"><button type="button" onClick={()=>shift(-1)} aria-label="Dịch vụ trước">←</button><button type="button" onClick={()=>shift(1)} aria-label="Dịch vụ tiếp theo">→</button></span>
+      <span className="cax-deck-dots" aria-label={'Đang chọn '+current.label}>{showcases.map((s,i)=><button type="button" key={s.code} aria-label={'Chọn '+s.label}
+        aria-current={i===selected?'true':undefined} className={i===selected?'active':''}
+        onClick={()=>{setExpanded(true);setSelected(i)}}/>)}</span>
+      <span className="cax-deck-arrows">
+        {expanded&&<button className="cax-deck-collapse" type="button" onClick={()=>setExpanded(false)} aria-label="Thu gọn bốn thẻ">×</button>}
+        <button type="button" onClick={()=>shift(-1)} aria-label="Dịch vụ trước">←</button>
+        <button type="button" onClick={()=>shift(1)} aria-label="Dịch vụ tiếp theo">→</button>
+      </span>
     </div>
-    <a className="cax-deck-link" href="#dich-vu">KHÁM PHÁ DỊCH VỤ {s.code} ↗</a>
+    <div className="cax-deck-bottom-row"><span className="cax-deck-status" aria-live="polite">{expanded?'04 THẺ ĐANG MỞ · NHẤN THẺ ĐƯỢC CHỌN ĐỂ THU GỌN':'MỞ THẺ ĐỂ KHÁM PHÁ 4 DỊCH VỤ'}</span>
+      <a className="cax-deck-link" href="#dich-vu">KHÁM PHÁ DỊCH VỤ {current.code} ↗</a>
+    </div>
   </div>
 }
 export function CaxServicePanels({services,images={}}){
