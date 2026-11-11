@@ -396,3 +396,21 @@ body{overflow-x:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif;font-optica
   }
   .cax-hero-deck .cax-deck-top-copy{gap:6px}
 }
+
+/* Hero: photographs have almost no white veil; headline is a single horizontal line. */
+.cax-hero-deck .cax-deck-card::before{
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05) 34%,
+    transparent 65%,rgba(255,255,255,.18));
+}
+.cax-hero-deck .cax-deck-card .cax-sheet-headline{
+  display:block;width:100%;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  overflow-wrap:normal;word-break:normal;
+  font-size:clamp(18px,1.9vw,29px);
+  letter-spacing:-.045em;
+  text-shadow:0 1px 8px rgba(255,255,255,.46);
+}
+.cax-hero-deck .cax-deck-top-copy{gap:0}
+@media(max-width:640px){
+  .cax-hero-deck .cax-deck-card .cax-sheet-headline{font-size:clamp(17px,4.5vw,24px)}
+}

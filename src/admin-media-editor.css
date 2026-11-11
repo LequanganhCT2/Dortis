@@ -162,3 +162,28 @@
     padding:10px var(--admin-side-gutter);
   }
 }
+
+/* Per-photo opacity in Hero and every Media editor, adjustable without reloading. */
+.media-opacity-control{
+  display:flex;flex-direction:column;gap:10px;
+  border:1px solid #c9e0e6;background:#f4fafb;
+  border-radius:10px;padding:15px;margin-top:4px;min-width:0;
+}
+.media-opacity-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.media-opacity-top label{font-size:10px;font-weight:850;letter-spacing:.075em;color:#426477}
+.media-opacity-top output{font-size:15px;font-weight:850;font-variant-numeric:tabular-nums;color:#008f91}
+.media-opacity-control input[type="range"]{
+  display:block;appearance:auto;-webkit-appearance:auto;
+  width:100%;height:22px;min-height:22px;margin:0;padding:0;
+  accent-color:#008f91;cursor:pointer;background:transparent;
+}
+.media-opacity-control input[type="range"]:disabled{opacity:.45;cursor:not-allowed}
+.media-opacity-actions{display:flex;gap:8px;flex-wrap:wrap}
+.media-opacity-actions button{
+  border:1px solid #162439;border-radius:7px;background:#162439;color:#fff;
+  padding:10px 13px;font:750 10px/1.5 'Be Vietnam Pro',system-ui,sans-serif;
+  cursor:pointer;white-space:nowrap;
+}
+.media-opacity-actions button+button{background:white;border-color:#cbdde2;color:#4c6677}
+.media-opacity-actions button:disabled{opacity:.45;cursor:not-allowed}
+.media-opacity-control>small{font-size:10px;color:#607d8d;line-height:1.75}

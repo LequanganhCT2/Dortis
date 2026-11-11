@@ -13,13 +13,14 @@ const PREVIEW_TEXT={
   about:['heading1','accent1','description'],values:['heading','accent','description'],
   faq:['heading','accent','description'],contact:['heading','accent','description'],
 }
-function MediaPreview({group,draft,image,slot}){
+function MediaPreview({group,draft,image,slot,opacity}){
   const keys=PREVIEW_TEXT[group.id]||['title','description','']
   const headline=String(draft[keys[0]]||slot.title||'')
   const accent=String(draft[keys[1]]||'')
   const desc=String(draft[keys[2]]||'')
   return <div className={'media-v3-preview-media media-v3-preview-'+group.id}>
-    {image&&<img src={image.image_url} alt="" aria-hidden="true"/>}
+    {image&&<img src={image.image_url} alt="" aria-hidden="true"
+      style={opacity==null?undefined:{opacity:Number(opacity)/100}}/>}
     <div className="media-v3-preview-overlay">
       <span>DORTIS / {slot.title}</span>
       <strong>{headline}<em>{accent}</em></strong>
@@ -39,6 +40,7 @@ export default function AdminMediaSlots({group,supabase,user,primary,gallery,
   const [feedback,setFeedback]=useState('')
   const [localError,setLocalError]=useState('')
   const [initialized,setInitialized]=useState(false)
+  const [opacityDraft,setOpacityDraft]=useState({})
   const keys=useMemo(()=>[...new Set(group.slots.map(slot=>editKey(group,slot)))],[group.id])
   useEffect(()=>{
     let alive=true
@@ -87,6 +89,28 @@ export default function AdminMediaSlots({group,supabase,user,primary,gallery,
     if(error||!data)throw error||new Error('Supabase chưa xác nhận bản ghi.')
     setRecords(old=>({...old,[key]:merged}))
     return merged
+  }
+  const saveOpacity=async(photo,slot,value)=>{
+    if(!photo||busy||pending)return
+    const percent=value===null?null:Math.max(0,Math.min(100,Math.round(Number(value))))
+    const photoKey=photo.kind==='primary'?'primary:'+slot.id:'gallery:'+photo.id
+    setPending('opacity-'+photoKey);setLocalError('');setFeedback('')
+    try{
+      const query=photo.kind==='primary'
+        ?supabase.from('site_images')
+          .update({opacity_percent:percent,updated_by:user.id,updated_at:new Date().toISOString()})
+          .eq('slot',slot.id).select('slot').single()
+        :supabase.from('site_image_gallery')
+          .update({opacity_percent:percent,updated_by:user.id})
+          .eq('id',photo.id).eq('slot',slot.id).select('id').single()
+      const {error,data}=await query
+      if(error||!data)throw error||new Error('Không thể lưu độ mờ cho ảnh đã chọn.')
+      setOpacityDraft(old=>{const next={...old};delete next[photoKey];return next})
+      await reload()
+      setFeedback(percent===null?'Đã khôi phục độ mờ mặc định.':'Đã lưu độ hiển thị '+percent+'% cho ảnh.')
+      onNotice('Đã lưu độ mờ riêng cho '+slot.title+'.')
+    }catch(error){setLocalError(errMsg(error));onError(errMsg(error))}
+    finally{setPending('')}
   }
   const save=async slot=>{
     if(pending||busy)return
@@ -179,6 +203,10 @@ export default function AdminMediaSlots({group,supabase,user,primary,gallery,
       const allPhotos=[...(primaryPhoto?[primaryPhoto]:[]),...photos]
       const selectedId=selected[slot.id]
       const photo=allPhotos.find(item=>item.kind==='primary'?(selectedId==='primary'):(selectedId===item.id))||allPhotos[0]
+      const opacityKey=photo?.kind==='primary'?'primary:'+slot.id:'gallery:'+photo?.id
+      const storedOpacity=photo?.opacity_percent
+      const photoOpacity=opacityDraft[opacityKey]??storedOpacity??100
+      const opacityDirty=storedOpacity==null||Number(photoOpacity)!==Number(storedOpacity)
       const slotBusy=busy===slot.id
       const fields=SITE_CONTENT_SCHEMAS[key]||[]
       const cardText=expanded?draft:getDraft(slot)
@@ -278,11 +306,25 @@ export default function AdminMediaSlots({group,supabase,user,primary,gallery,
                   </>}
                 </div>
               </div>}
+              {photo&&<div className="media-opacity-control">
+                <div className="media-opacity-top"><label htmlFor={'media-opacity-'+slot.id}>
+                  ĐỘ HIỂN THỊ ẢNH</label><output>{photoOpacity}%</output></div>
+                <input id={'media-opacity-'+slot.id} type="range" min="0" max="100" step="1"
+                  value={photoOpacity} disabled={!!busy||!!pending}
+                  onChange={event=>setOpacityDraft(old=>({...old,[opacityKey]:Number(event.target.value)}))}/>
+                <div className="media-opacity-actions">
+                  <button type="button" disabled={!!busy||!!pending||!opacityDirty}
+                    onClick={()=>saveOpacity(photo,slot,photoOpacity)}>LƯU ĐỘ MỜ</button>
+                  <button type="button" disabled={!!busy||!!pending||storedOpacity==null}
+                    onClick={()=>saveOpacity(photo,slot,null)}>MẶC ĐỊNH</button>
+                </div>
+                <small>Độ mờ được lưu riêng cho ảnh đang chọn, không ảnh hưởng các ảnh khác.</small>
+              </div>}
             </div>
             <div className="hero-editor-col hero-editor-preview">
               <h4>03 / XEM TRƯỚC HTML/CSS</h4>
               <p>Chữ cập nhật tức thì khi chỉnh sửa.</p>
-              <MediaPreview group={group} slot={slot} draft={cardText} image={photo}/>
+              <MediaPreview group={group} slot={slot} draft={cardText} image={photo} opacity={photoOpacity}/>
               <a href="/" target="_blank" rel="noreferrer" className="hero-live-site-link">
                 XEM TRÊN WEBSITE ↗</a>
             </div>

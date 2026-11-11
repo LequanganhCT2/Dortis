@@ -12,7 +12,7 @@ import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from '.
 import CircularServiceCarousel from './CircularServiceCarousel'
 import PhilosophyStoryCard from './PhilosophyStoryCard'
 import DortisFAQ from './DortisFAQ'
-import { getMediaUrls, RotatingImage } from './SiteMedia'
+import { getMediaUrls, RotatingImage, MediaOpacityProvider } from './SiteMedia'
 import CaxHeroCopy from './CaxHeroCopy'
 import ArtistPages from './ArtistPages'
 
@@ -49,7 +49,7 @@ function useReveals(dep) {
   }, [dep])
 }
 function App() {
-  const { siteImages, siteGalleries } = useSiteImages()
+  const { siteImages, siteGalleries, siteOpacities } = useSiteImages()
   const siteContent=useSiteContent(supabase)
   const heroCopy=copyFor(siteContent,'hero')
   const servicesCopy=copyFor(siteContent,'services')
@@ -82,7 +82,7 @@ function App() {
     return () => { window.removeEventListener('scroll', handle); window.removeEventListener('resize', handle); cancelAnimationFrame(frame) }
   }, [])
 
-  return <div className="dortis-site">
+  return <MediaOpacityProvider opacities={siteOpacities}><div className="dortis-site">
     <div className="scroll-progress" style={{ transform: 'scaleX(' + scrollRatio + ')' }} aria-hidden="true" />
     <SiteHeader />
 
@@ -157,6 +157,6 @@ function App() {
           </main>
     <footer className="footer section-shell"><div className="footer-top"><a href="#top"><Brand /></a><p>{contactCopy.footerDescription}</p><a href="#top" className="back-to-top">VỀ ĐẦU TRANG ↑</a></div><div className="footer-bottom"><span>© 2026 DORTIS. MADE FOR ARTISTS.</span><span>ART · IDENTITY · EMOTION</span><a href="/admin" aria-label="Đăng nhập quản trị Dortis">QUẢN TRỊ</a></div></footer>
 
-  </div>
+  </div></MediaOpacityProvider>
 }
 createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage/> : location.pathname.startsWith('/artists') ? <ArtistPages /> : <App />)

@@ -8,13 +8,11 @@ const MAX_FILE=5*1024*1024
 const FILE_TYPES={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif'}
 const FIELDS=[
   ['Title','Tên thẻ','Tên thẻ hiển thị trong quản trị'],
-  ['Eyebrow','Dòng chữ nhỏ','DORTIS STUDIO / 01'],
   ['Line1','Tiêu đề – dòng 1','CV &'],
   ['Line2','Tiêu đề – dòng 2','Portfolio'],
   ['Footer','Chữ chân thẻ','HỒ SƠ NGHỆ SĨ'],
 ]
 const PHOTO_FIELDS=[
-  ['Eyebrow','Dòng nhỏ trên ảnh'],
   ['Line1','Chữ lớn – dòng 1'],
   ['Line2','Chữ lớn – dòng 2'],
   ['Footer','Chữ chân ảnh'],
@@ -44,6 +42,7 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
   const [progress,setProgress]=useState(null)
   const [localError,setLocalError]=useState('')
   const [localSuccess,setLocalSuccess]=useState('')
+  const [opacityDraft,setOpacityDraft]=useState({})
   const activeCards=getActiveHeroCardIds(saved)
   const cardCount=activeCards.length
   const counts=useMemo(()=>activeCards.map(card=>{
@@ -95,6 +94,22 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
     setSaved({...defaults,...content})
     setDraft({...defaults,...content})
   }
+  const savePhotoOpacity=async(item,percent)=>{
+    if(busy||!item.image?.image_url)return
+    const value=percent===null?null:Math.max(0,Math.min(100,Math.round(Number(percent))))
+    setBusy('opacity-'+item.slot);setLocalError('');setLocalSuccess('')
+    try{
+      const {data,error}=await supabase.from('site_images')
+        .update({opacity_percent:value,updated_by:user.id,updated_at:new Date().toISOString()})
+        .eq('slot',item.slot).select('slot').single()
+      if(error||!data)throw error||new Error('Không lưu được độ mờ của ảnh.')
+      setOpacityDraft(old=>{const next={...old};delete next[item.slot];return next})
+      await onMediaUpdated()
+      setLocalSuccess(value===null?'Đã trở về độ mờ mặc định.':'Đã lưu độ hiển thị '+value+'% cho ảnh '+item.number+'.')
+      onNotice('Đã lưu độ mờ riêng cho ảnh Hero.')
+    }catch(error){setLocalError(fail(error));onError(fail(error))}
+    finally{setBusy('')}
+  }
   const addCard=async()=>{
     if(busy)return
     setBusy('adding');clearMessages()
@@ -120,7 +135,8 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
       const existing=counts.find((_,index)=>activeCards[index]===card)||[]
       const paths=existing.map(item=>item.image?.storage_path).filter(Boolean)
       const {error:imageError}=await supabase.from('site_images').upsert(slots.map(slot=>({
-        slot,image_url:null,storage_path:null,updated_by:user.id,updated_at:new Date().toISOString()
+        slot,image_url:null,storage_path:null,opacity_percent:null,
+        updated_by:user.id,updated_at:new Date().toISOString()
       })),{onConflict:'slot'})
       if(imageError)throw imageError
       const current=await readRaw()
@@ -255,6 +271,9 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
       const currentPhoto=items.find(item=>item.number===selected[card]&&item.image?.image_url)
         ||items.find(item=>item.image?.image_url)||items[0]
       const photoNumber=currentPhoto.number
+      const savedOpacity=currentPhoto.image?.opacity_percent
+      const photoOpacity=opacityDraft[currentPhoto.slot]??savedOpacity??100
+      const opacityDirty=savedOpacity==null||Number(photoOpacity)!==Number(savedOpacity)
       const txt=field=>String(draft[cardKey(card,field)]??'')
       const photoText=field=>String(draft[photoKey(card,photoNumber,field)]??'')
       const display=field=>photoText(field)||txt(field)
@@ -329,16 +348,29 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
                     disabled={!!busy} onClick={()=>remove(currentPhoto)}>XÓA ẢNH</button>
                 </div>}
               </div>
+              {currentPhoto.image?.image_url&&<div className="media-opacity-control">
+                <div className="media-opacity-top"><label htmlFor={'hero-opacity-'+card}>
+                  ĐỘ HIỂN THỊ ẢNH</label><output>{photoOpacity}%</output></div>
+                <input id={'hero-opacity-'+card} type="range" min="0" max="100" step="1"
+                  value={photoOpacity} disabled={!!busy}
+                  onChange={event=>setOpacityDraft(old=>({...old,[currentPhoto.slot]:Number(event.target.value)}))}/>
+                <div className="media-opacity-actions">
+                  <button type="button" disabled={!!busy||!opacityDirty}
+                    onClick={()=>savePhotoOpacity(currentPhoto,photoOpacity)}>LƯU ĐỘ MỜ</button>
+                  <button type="button" disabled={!!busy||savedOpacity==null}
+                    onClick={()=>savePhotoOpacity(currentPhoto,null)}>MẶC ĐỊNH</button>
+                </div>
+                <small>0%: ẩn ảnh · 100%: ảnh rõ hoàn toàn. Nhấn Lưu để áp dụng riêng cho ảnh này.</small>
+              </div>}
             </div>
             <div className="hero-editor-col hero-editor-preview">
               <h4>03 / XEM TRƯỚC HTML/CSS</h4>
               <p>Nội dung thay đổi trực tiếp khi bạn nhập.</p>
               <div className="hero-card-live-preview" aria-label={'Bản xem trước thẻ '+card}>
                 {currentPhoto.image?.image_url&&<img src={currentPhoto.image.image_url} alt=""
-                  aria-hidden="true"/>}
+                  style={{opacity:Number(photoOpacity)/100}} aria-hidden="true"/>}
                 <div className="hero-card-live-content">
-                  <span>{display('Eyebrow')}</span>
-                  <strong>{display('Line1')}<em>{display('Line2')}</em></strong>
+                  <strong>{display('Line1')}{' '}{display('Line2')}</strong>
                   <small>{display('Footer')} <b aria-hidden="true">↗</b></small>
                 </div>
               </div>

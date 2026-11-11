@@ -1,5 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import './site-media.css'
+
+const MediaOpacityContext=createContext({})
+export function MediaOpacityProvider({opacities={},children}){
+  return <MediaOpacityContext.Provider value={opacities}>{children}</MediaOpacityContext.Provider>
+}
 
 /** Existing primary image first, then additional images in the admin-defined order. */
 export function getMediaUrls(primary = {}, gallery = {}, slot) {
@@ -19,6 +24,7 @@ export function getMediaUrls(primary = {}, gallery = {}, slot) {
 export function RotatingImage({ urls = [], className = '', alt = '', interval = 5800, offset = 0, loading = 'lazy', onIndexChange = null }) {
   const validUrls = useMemo(() => [...new Set(urls.filter(url => typeof url === 'string' && url.startsWith('https://')))], [urls])
   const [step, setStep] = useState(0)
+  const opacityByUrl=useContext(MediaOpacityContext)
   const holder = useRef(null)
   const onIndexChangeRef=useRef(onIndexChange)
   useEffect(()=>{onIndexChangeRef.current=onIndexChange},[onIndexChange])
@@ -48,7 +54,12 @@ export function RotatingImage({ urls = [], className = '', alt = '', interval = 
   useEffect(()=>{onIndexChangeRef.current?.(active)},[active])
   if (!validUrls.length) return null
   const prev = (active - 1 + validUrls.length) % validUrls.length
-  return <span ref={holder} className={'dortis-rotating-media ' + className} aria-hidden={!alt}>
+  const savedOpacity=opacityByUrl[validUrls[active]]
+  const mediaStyle=Number.isFinite(savedOpacity)
+    ? {opacity:Math.min(100,Math.max(0,savedOpacity))/100}
+    : undefined
+  return <span ref={holder} className={'dortis-rotating-media ' + className}
+    style={mediaStyle} aria-hidden={!alt}>
     {validUrls.length > 1 && <img className="dortis-media-layer dormant" src={validUrls[prev]} alt="" loading="lazy" decoding="async" />}
     <img key={validUrls[active]} className="dortis-media-layer current" src={validUrls[active]} alt={alt} loading={loading} decoding="async" />
   </span>

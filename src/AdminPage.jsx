@@ -21,6 +21,7 @@ const getReadableError = (error, fallback = 'Không thể hoàn tất thao tác'
 export function useSiteImages() {
   const [siteImages,setSiteImages]=useState({})
   const [siteGalleries,setSiteGalleries]=useState({})
+  const [siteOpacities,setSiteOpacities]=useState({})
   const [mediaReady,setMediaReady]=useState(false)
 
   useEffect(()=>{
@@ -28,8 +29,8 @@ export function useSiteImages() {
     let live=true
     async function read(){
       const [primary,gallery]=await Promise.all([
-        supabase.from('site_images').select('slot,image_url'),
-        supabase.from('site_image_gallery').select('slot,image_url,position,created_at').order('position').order('created_at'),
+        supabase.from('site_images').select('slot,image_url,opacity_percent'),
+        supabase.from('site_image_gallery').select('slot,image_url,opacity_percent,position,created_at').order('position').order('created_at'),
       ])
       if(!live)return
       if(!primary.error){
@@ -40,6 +41,12 @@ export function useSiteImages() {
         for(const item of gallery.data||[]) (groups[item.slot]??=[]).push(item.image_url)
         setSiteGalleries(groups)
       }
+      if(!primary.error&&!gallery.error){
+        const rows=[...(primary.data||[]),...(gallery.data||[])]
+        setSiteOpacities(Object.fromEntries(rows.filter(row=>
+          row.image_url&&row.opacity_percent!==null&&row.opacity_percent!==undefined)
+          .map(row=>[row.image_url,Number(row.opacity_percent)])))
+      }
       setMediaReady(true)
     }
     read()
@@ -49,7 +56,7 @@ export function useSiteImages() {
       .subscribe()
     return ()=>{live=false;supabase.removeChannel(subscription)}
   },[])
-  return {siteImages,siteGalleries,mediaReady}
+  return {siteImages,siteGalleries,siteOpacities,mediaReady}
 }
 
 

@@ -69,8 +69,8 @@ export default function AdminMediaEditor({ user, supabase }) {
 
   const reload = useCallback(async () => {
     const [first,second] = await Promise.all([
-      supabase.from('site_images').select('slot,image_url,storage_path'),
-      supabase.from('site_image_gallery').select('id,slot,image_url,storage_path,position,created_at').order('position').order('created_at'),
+      supabase.from('site_images').select('slot,image_url,storage_path,opacity_percent'),
+      supabase.from('site_image_gallery').select('id,slot,image_url,storage_path,opacity_percent,position,created_at').order('position').order('created_at'),
     ])
     if (first.error || second.error) {
       setError(errorText(first.error||second.error,'Không tải được thư viện ảnh Supabase.'))

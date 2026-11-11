@@ -134,3 +134,16 @@
 @media(max-width:600px){
   .hero-card-live-content>strong{font-size:clamp(20px,6vw,29px)}
 }
+
+/* The editor matches the published single-line, title-only Hero. */
+.hero-card-live-preview:before{
+  background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,.05) 34%,
+    transparent 65%,rgba(255,255,255,.18));
+}
+.hero-card-live-content>span{display:none}
+.hero-card-live-content>strong{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+  overflow-wrap:normal;font-size:clamp(18px,1.8vw,27px);
+  text-shadow:0 1px 8px rgba(255,255,255,.46);
+}
+.hero-card-live-content>strong em{display:inline;margin-left:.35em}
