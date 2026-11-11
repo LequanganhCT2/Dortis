@@ -1,6 +1,6 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import {copyFor} from './siteContent'
-import { getHeroCardPhotos, getActiveHeroCardCount } from './heroImageSets'
+import { getHeroCardPhotos, getActiveHeroCardIds } from './heroImageSets'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -39,10 +39,11 @@ function useTouchSwipe(left,right){
 export function CaxHeroDeck({images={},galleries={},content={}}){
   const copy=copyFor(content,'hero')
   const heroCardPhotos=getHeroCardPhotos(images)
-  const cardCount=getActiveHeroCardCount(copy)
-  const displayShowcases=showcases.slice(0,cardCount).map((item,i)=>({...item,
-    label:copy['card'+(i+1)+'Title'],
-    lines:[copy['card'+(i+1)+'Line1'],copy['card'+(i+1)+'Line2']]
+  const activeCards=getActiveHeroCardIds(copy)
+  const cardCount=activeCards.length
+  const displayShowcases=activeCards.map(id=>({...showcases[id-1],cardId:id,
+    label:copy['card'+id+'Title'],
+    lines:[copy['card'+id+'Line1'],copy['card'+id+'Line2']]
   }))
   const [selected,setSelected]=useState(0)
   const [expanded,setExpanded]=useState(false)
@@ -114,8 +115,9 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
       <span className="cax-deck-glow" aria-hidden="true"/>
       <span className="cax-deck-ambient-text" aria-hidden="true">DORTIS / CREATIVE MOTION</span>
       {displayShowcases.map((s,i)=>{
-        const imageNumber=heroCardPhotos[i][heroImageIndices[i]||0]?.imageNumber||1
-        const imageCopyKey='card'+(i+1)+'Image'+imageNumber
+        const cardId=s.cardId
+        const imageNumber=heroCardPhotos[cardId-1][heroImageIndices[cardId-1]||0]?.imageNumber||1
+        const imageCopyKey='card'+cardId+'Image'+imageNumber
         const imageText=(field,fallback)=>copy[imageCopyKey+field]||fallback
         const active=i===selected
         const behind=(i-selected+displayShowcases.length)%displayShowcases.length
@@ -138,14 +140,14 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
           key={s.code} style={cssVars} aria-pressed={active}
           aria-label={s.label+(active&&expanded?' – nhấn lại để thu gọn':' – chọn thẻ')}
           onClick={()=>toggleCard(i)}>
-          <RotatingImage urls={heroCardPhotos[i].map(photo=>photo.url)} className="cax-deck-custom-image"
+          <RotatingImage urls={heroCardPhotos[cardId-1].map(photo=>photo.url)} className="cax-deck-custom-image"
             interval={5800+i*550} loading="eager"
-            onIndexChange={index=>setHeroImageIndices(old=>old[i]===index?old:
-              old.map((v,j)=>j===i?index:v))}/>
-          <span className="cax-sheet-eyebrow">{imageText('Eyebrow',copy['card'+(i+1)+'Eyebrow']||'DORTIS STUDIO / '+s.code)}</span>
+            onIndexChange={index=>setHeroImageIndices(old=>old[cardId-1]===index?old:
+              old.map((v,j)=>j===cardId-1?index:v))}/>
+          <span className="cax-sheet-eyebrow">{imageText('Eyebrow',copy['card'+cardId+'Eyebrow']||'DORTIS STUDIO / '+s.code)}</span>
           <strong className="cax-sheet-headline">{imageText('Line1',s.lines[0])}
             <span>{imageText('Line2',s.lines[1])}</span></strong>
-          <span className="cax-sheet-footer">{imageText('Footer',copy['card'+(i+1)+'Footer']||s.kind)}<span aria-hidden="true">↗</span></span>
+          <span className="cax-sheet-footer">{imageText('Footer',copy['card'+cardId+'Footer']||s.kind)}<span aria-hidden="true">↗</span></span>
         </button>
       })}
       <span className="cax-deck-interaction-hint">{expanded?'CHỌN THẺ · KÉO TRÁI/PHẢI':'NHẤN THẺ ĐỂ BUNG MỞ'} <span aria-hidden="true">↗</span></span>

@@ -29,7 +29,7 @@ export default function CircularServiceCarousel({ services = [], images = {}, ga
   const [dragging, setDragging] = useState(false)
 
   const items = useMemo(() => {
-    const core = services.slice(0, 4).map((service, index) => {
+    const core = services.filter(service=>!service.archived).slice(0, 4).map((service, index) => {
       const copy=copyFor(content,'service-'+service.style)
       return ({
       key: 'service-' + service.style,
@@ -49,7 +49,7 @@ export default function CircularServiceCarousel({ services = [], images = {}, ga
       const media = getMediaUrls(images,galleries,'service-gallery-' + label)
       const copy=copyFor(content,'service-gallery-'+label)
       const image = media[0]
-      return image ? {
+      return image && copy.archived!==true ? {
         key: 'service-gallery-' + label,
         number: label,
         title: copy.title,
@@ -166,7 +166,7 @@ export default function CircularServiceCarousel({ services = [], images = {}, ga
           aria-label={'Chọn ' + item.title}
           className={'cax-circle-card ' + item.className + (index === active ? ' is-active' : '')}
           onClick={() => select(index)}>
-          <span className="cax-circle-card-top"><span>{item.number} / {index < 4 ? 'SERVICE' : 'GALLERY'}</span><span aria-hidden="true">↗</span></span>
+          <span className="cax-circle-card-top"><span>{item.number} / {item.key.startsWith('service-gallery-') ? 'GALLERY' : 'SERVICE'}</span><span aria-hidden="true">↗</span></span>
           <span className="cax-circle-media">
             {item.image ? <RotatingImage urls={item.imageUrls} className="cax-circle-photo" loading={abs <= 1 ? 'eager' : 'lazy'}/> :
               <span className="cax-circle-paper" aria-hidden="true">

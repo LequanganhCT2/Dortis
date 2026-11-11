@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { SITE_CONTENT_DEFAULTS } from './siteContent'
-import { HERO_CARD_LIMIT, HERO_IMAGES_PER_CARD, getActiveHeroCardCount, heroImageSlot } from './heroImageSets'
+import { HERO_CARD_LIMIT, HERO_IMAGES_PER_CARD, getActiveHeroCardIds, heroImageSlot } from './heroImageSets'
 import './admin-hero-cards.css'
 
 const BUCKET='dortis-media'
@@ -44,14 +44,14 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
   const [progress,setProgress]=useState(null)
   const [localError,setLocalError]=useState('')
   const [localSuccess,setLocalSuccess]=useState('')
-  const cardCount=getActiveHeroCardCount(saved)
-  const counts=useMemo(()=>Array.from({length:cardCount},(_,i)=>{
-    const card=i+1
+  const activeCards=getActiveHeroCardIds(saved)
+  const cardCount=activeCards.length
+  const counts=useMemo(()=>activeCards.map(card=>{
     return Array.from({length:HERO_IMAGES_PER_CARD},(_,j)=>({
       number:j+1,slot:heroImageSlot(j+1,card),
       image:primary[heroImageSlot(j+1,card)]||null
     }))
-  }),[cardCount,primary])
+  }),[saved.activeCards,saved.cardCount,primary])
 
   useEffect(()=>{
     let active=true
@@ -100,12 +100,42 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
     setBusy('adding');clearMessages()
     try{
       const current=await readRaw()
-      const count=getActiveHeroCardCount(current)
-      if(count>=HERO_CARD_LIMIT)throw new Error('Hero đã đủ 6 thẻ.')
-      await writeRaw({...current,cardCount:String(count+1)})
-      setOpen(count+1)
-      setLocalSuccess('Đã thêm thẻ '+(count+1)+'. Chỉnh nội dung và nhấn Lưu để thu gọn.')
-      onNotice('Đã thêm thẻ Hero '+(count+1)+'.')
+      const ids=getActiveHeroCardIds(current)
+      if(ids.length>=HERO_CARD_LIMIT)throw new Error('Hero đã đủ 6 thẻ.')
+      const next=Array.from({length:HERO_CARD_LIMIT},(_,i)=>i+1).find(id=>!ids.includes(id))
+      await writeRaw({...current,activeCards:[...ids,next]})
+      setOpen(next)
+      setLocalSuccess('Đã thêm thẻ '+next+'. Chỉnh nội dung và nhấn Lưu để thu gọn.')
+      onNotice('Đã thêm thẻ Hero '+next+'.')
+    }catch(error){setLocalError(fail(error));onError(fail(error))}
+    finally{setBusy('')}
+  }
+  const deleteCard=async card=>{
+    if(busy)return
+    if(cardCount<=1){setLocalError('Hero cần ít nhất một thẻ để hiển thị.');return}
+    if(!window.confirm('Xóa thẻ '+card+' khỏi Hero? Toàn bộ ảnh và chữ đã tùy chỉnh trên thẻ sẽ bị xóa.'))return
+    setBusy('delete-card-'+card);clearMessages()
+    try{
+      const slots=Array.from({length:HERO_IMAGES_PER_CARD},(_,i)=>heroImageSlot(i+1,card))
+      const existing=counts.find((_,index)=>activeCards[index]===card)||[]
+      const paths=existing.map(item=>item.image?.storage_path).filter(Boolean)
+      const {error:imageError}=await supabase.from('site_images').upsert(slots.map(slot=>({
+        slot,image_url:null,storage_path:null,updated_by:user.id,updated_at:new Date().toISOString()
+      })),{onConflict:'slot'})
+      if(imageError)throw imageError
+      const current=await readRaw()
+      const ids=getActiveHeroCardIds(current).filter(id=>id!==card)
+      if(!ids.length)throw new Error('Không thể xóa thẻ cuối cùng.')
+      const clean={...current,activeCards:ids}
+      for(const key of cardKeys(card))delete clean[key]
+      await writeRaw(clean)
+      setOpen(null)
+      if(paths.length){
+        const {error:storageError}=await supabase.storage.from(BUCKET).remove(paths)
+        if(storageError)setLocalError('Đã xóa thẻ khỏi website, nhưng chưa dọn hết file ảnh cũ.')
+      }
+      await onMediaUpdated()
+      onNotice('Đã xóa thẻ '+card+' khỏi Hero.')
     }catch(error){setLocalError(fail(error));onError(fail(error))}
     finally{setBusy('')}
   }
@@ -220,7 +250,7 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
     {localError&&<p className="hero-editor-error" role="alert">{localError}</p>}
     {localSuccess&&<p className="hero-editor-success" role="status">{localSuccess}</p>}
     <div className="hero-editor-stack">{counts.map((items,index)=>{
-      const card=index+1
+      const card=activeCards[index]
       const isOpen=open===card
       const currentPhoto=items.find(item=>item.number===selected[card]&&item.image?.image_url)
         ||items.find(item=>item.image?.image_url)||items[0]
@@ -236,9 +266,13 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
             <div><strong>{saved[cardKey(card,'Title')]||'Thẻ '+card}</strong>
               <small>{items.filter(item=>item.image?.image_url).length} / 6 ảnh · {isOpen?'ĐANG CHỈNH SỬA':'ĐÃ THU GỌN'}</small></div>
           </div>
-          <button type="button" className="hero-editor-edit-button" onClick={()=>chooseCard(card)} disabled={!!busy}>
-            {isOpen?'THU GỌN':'✎ SỬA THẺ'}
-          </button>
+          <div className="hero-editor-head-actions">
+            <button type="button" className="hero-editor-delete-button" onClick={()=>deleteCard(card)}
+              disabled={!!busy||cardCount<=1}>XÓA THẺ</button>
+            <button type="button" className="hero-editor-edit-button" onClick={()=>chooseCard(card)} disabled={!!busy}>
+              {isOpen?'THU GỌN':'✎ SỬA THẺ'}
+            </button>
+          </div>
         </div>
         {isOpen&&<>
           <div className="hero-editor-columns">

@@ -1,0 +1,65 @@
+/* Shared three-column admin workstation for every media section. */
+.media-v3-group{display:flex;flex-direction:column;gap:13px;min-width:0;margin-top:16px}
+.media-v3-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  background:#f8fbfc;border:1px solid #dbe6ea;border-radius:13px;padding:17px 20px}
+.media-v3-toolbar>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.media-v3-toolbar strong{font-size:16px;color:#172337}
+.media-v3-toolbar p{margin:0;color:#6d8190;font-size:11px;line-height:1.75}
+.media-v3-card{border:1px solid #dce6ea;background:#fff;border-radius:13px;
+  min-width:0;overflow:hidden;box-shadow:0 5px 18px #162d4710}
+.media-v3-card.is-open{border-color:#a4ced0;box-shadow:0 18px 45px #1a546414}
+.media-v3-card-heading{display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:16px 19px}
+.media-v3-card .hero-editor-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.media-v3-card .hero-editor-columns{background:#fcfdfd}
+.media-v3-fieldset{border:0;border-top:1px solid #e3ecef;margin:7px 0 8px;padding:12px 0 0;
+  display:flex;flex-direction:column;gap:10px;min-width:0}
+.media-v3-fieldset legend{font-size:11px;font-weight:800;color:#516d7d;
+  padding:0 7px 0 0;line-height:1.6}
+.media-v3-fieldset textarea{display:block;width:100%;box-sizing:border-box;resize:vertical;
+  border:1px solid #d9e3ea;border-radius:7px;padding:11px 12px;font:500 12px/1.65 'Be Vietnam Pro',system-ui,sans-serif;
+  background:#fff;outline:none;color:#162439}
+.media-v3-fieldset textarea:focus{border-color:#039397;box-shadow:0 0 0 3px #059b9a15}
+.media-v3-image-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.media-v3-image-tools .hero-photo-upload{min-height:88px;min-width:0;padding:9px}
+.media-v3-image-tools .hero-photo-upload span{font-size:10px}
+.media-v3-image-tools .hero-photo-upload small{font-size:9px}
+.media-v3-progress{font-size:11px;color:#315e76;margin:0}
+.media-v3-empty{font-size:11px;color:#7b91a1;padding:14px;
+  border:1px dashed #cddde3;border-radius:8px}
+.media-v3-card .hero-photo-selected-actions>div{display:flex;flex-wrap:wrap;gap:7px}
+.media-v3-move{border:1px solid #cfdde4;border-radius:7px;background:white;color:#516a7d;
+  font-size:10px;font-weight:800;padding:10px;cursor:pointer}
+.media-v3-move:disabled{opacity:.4;cursor:not-allowed}
+.media-v3-preview-media{position:relative;aspect-ratio:4/5;overflow:hidden;
+  background:linear-gradient(145deg,#fbfcff,#dfecf0);border:1px solid #e0e9ed;
+  border-radius:11px;box-shadow:0 15px 34px #163c5120;isolation:isolate}
+.media-v3-preview-media>img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;opacity:.58}
+.media-v3-preview-media:before{content:'';position:absolute;z-index:1;inset:0;
+  background:linear-gradient(140deg,#ffffffc7 0%,#ffffffe2 12%,#ffffff8f 78%)}
+.media-v3-preview-overlay{position:absolute;z-index:2;inset:0;padding:clamp(15px,2vw,26px);
+  display:flex;flex-direction:column;justify-content:space-between;gap:16px}
+.media-v3-preview-overlay>span{font-size:9px;letter-spacing:.08em;font-weight:850;
+  color:#008f91;line-height:1.6}
+.media-v3-preview-overlay strong{font-size:clamp(21px,2.2vw,36px);line-height:1.2;
+  color:#182238;overflow-wrap:anywhere;letter-spacing:-.05em}
+.media-v3-preview-overlay strong em{display:block;font-style:normal;color:#008f91}
+.media-v3-preview-overlay small{font-size:11px;line-height:1.7;font-weight:650;
+  color:#526a7e;overflow-wrap:anywhere;max-height:35%;overflow:auto}
+@media(max-width:1100px){
+  .media-v3-card .hero-editor-columns{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .media-v3-card .hero-editor-preview{grid-column:1/-1;margin-inline:auto}
+}
+@media(max-width:720px){
+  .media-v3-toolbar{flex-direction:column;align-items:stretch}
+  .media-v3-toolbar .hero-add-card{align-self:flex-start}
+  .media-v3-card .hero-editor-columns{grid-template-columns:minmax(0,1fr)}
+  .media-v3-card .hero-editor-preview{grid-column:auto}
+  .media-v3-card-heading{padding:13px}
+  .media-v3-card .hero-editor-head-actions{justify-content:flex-end}
+}
+@media(max-width:420px){
+  .media-v3-image-tools{grid-template-columns:minmax(0,1fr)}
+  .media-v3-card-heading .hero-card-sequence{width:33px;height:33px}
+}

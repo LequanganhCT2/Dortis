@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import './admin-media-editor.css'
 import AdminSectionContent from './AdminSectionContent'
 import AdminHeroCards from './AdminHeroCards'
+import AdminMediaSlots from './AdminMediaSlots'
 import { HERO_IMAGES_PER_CARD, HERO_CARD_LIMIT, heroImageSlot } from './heroImageSets'
 
 const MB5 = 5 * 1024 * 1024
@@ -106,6 +107,32 @@ export default function AdminMediaEditor({ user, supabase }) {
     }catch(err){
       if(filePath)await supabase.storage.from('dortis-media').remove([filePath])
       setError(errorText(err,'Lỗi tải ảnh chính.'))
+    }finally{setBusy('')}
+  }
+
+  async function replaceGallery(slot,photo,file){
+    if(!photo||!file||busy)return
+    const issue=checkImage(file)
+    if(issue){setError(issue);return}
+    setBusy(slot);setError('');setNotice('')
+    let newPath=null,committed=false
+    try{
+      const {path,url}=await addStorage(slot,file)
+      newPath=path
+      const {error:dbError}=await supabase.from('site_image_gallery')
+        .update({image_url:url,storage_path:path,updated_by:user.id})
+        .eq('id',photo.id).eq('slot',slot)
+      if(dbError)throw dbError
+      committed=true
+      if(photo.storage_path&&photo.storage_path!==path){
+        const {error:cleanupError}=await supabase.storage.from('dortis-media').remove([photo.storage_path])
+        if(cleanupError)setError('Ảnh đã cập nhật nhưng file cũ chưa được dọn khỏi Storage.')
+      }
+      setNotice('Đã cập nhật ảnh bổ sung.')
+      await reload()
+    }catch(err){
+      if(newPath&&!committed)await supabase.storage.from('dortis-media').remove([newPath])
+      setError(errorText(err,'Không thay được ảnh bổ sung.'))
     }finally{setBusy('')}
   }
 
@@ -224,60 +251,12 @@ export default function AdminMediaEditor({ user, supabase }) {
       {loading?<p className="admin-media-loading">Đang tải thư viện ảnh...</p>:
       groupId==='hero'?<AdminHeroCards supabase={supabase} user={user}
         primary={primary} onMediaUpdated={reload} onNotice={setNotice} onError={setError}/>:
-      <div className="admin-media-slots">{activeGroup.slots.map(slot=>{
-        const main=primary[slot.id]?.image_url
-        const photos=gallery[slot.id]||[]
-        const slotBusy=busy===slot.id
-        return <article key={slot.id} className="admin-media-slot">
-          <div className="admin-media-slot-head">
-            <div><small>{slot.id.toUpperCase()}</small><h3>{slot.title}</h3><p>{slot.note||'Thêm nhiều ảnh trong cùng một khu vực; ảnh sẽ tự chuyển trên website.'}</p></div>
-            <span>{photos.length+(main?1:0)} ẢNH</span>
-          </div>
-          {(slot.id.startsWith('service-')||slot.id.startsWith('project-approved-'))&&
-            <AdminSectionContent key={slot.id} supabase={supabase} user={user}
-              contentKey={slot.id} label={slot.title}/>}
-          <div className="admin-media-primary">
-            <div className="admin-media-primary-thumb">{main?<img src={main} alt={'Ảnh chính '+slot.title} loading="lazy"/>:<span>CHƯA CÓ ẢNH CHÍNH</span>}</div>
-            <div className="admin-media-primary-actions">
-              <strong>Ảnh chính</strong><span>Ảnh hiện có được ưu tiên hiển thị đầu tiên.</span>
-              <label className={'admin-upload'+(busy?' disabled':'')}>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif"
-                  disabled={!!busy} onChange={event=>{const file=event.target.files?.[0];event.target.value='';replacePrimary(slot.id,file)}}/>
-                {slotBusy?'ĐANG LƯU...':main?'THAY ẢNH CHÍNH':'TẢI ẢNH CHÍNH'}
-              </label>
-              {main&&<button className="admin-media-remove" type="button" disabled={!!busy}
-                onClick={()=>setConfirm({slot:slot.id,kind:'primary',storage_path:primary[slot.id]?.storage_path})}>GỠ ẢNH CHÍNH</button>}
-            </div>
-          </div>
-          <div className="admin-media-gallery-head">
-            <div><strong>Album ảnh bổ sung</strong><span>{photos.length} / {MAX_GALLERY} ảnh</span></div>
-            <label className={'admin-upload admin-media-multiple'+(busy?' disabled':'')}>
-              <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"
-                disabled={!!busy} onChange={event=>{const files=Array.from(event.target.files||[]);event.target.value='';uploadBatch(slot.id,files)}}/>
-              + THÊM NHIỀU ẢNH
-            </label>
-          </div>
-          {slotBusy&&progress&&<div className="admin-media-progress" role="status">
-            <span>Đang tải {progress.done}/{progress.total} ảnh...</span>
-            <div><i style={{width:Math.round(100*progress.done/Math.max(progress.total,1))+'%'}}/></div>
-          </div>}
-          {!photos.length?<p className="admin-media-gallery-empty">Chưa có ảnh bổ sung. Chọn nhiều ảnh cùng lúc để tạo album.</p>:
-          <div className="admin-media-photo-grid">
-            {photos.map((photo,index)=><div className="admin-media-photo" key={photo.id}>
-              <img src={photo.image_url} alt={'Ảnh '+(index+1)+' của '+slot.title} loading="lazy"/>
-              <div className="admin-media-photo-footer">
-                <span>#{String(index+1).padStart(2,'0')}</span>
-                <div>
-                  <button type="button" aria-label="Đưa ảnh lên trước" title="Lên trước" disabled={!!busy||index===0} onClick={()=>move(slot.id,index,-1)}>←</button>
-                  <button type="button" aria-label="Đưa ảnh xuống sau" title="Xuống sau" disabled={!!busy||index===photos.length-1} onClick={()=>move(slot.id,index,1)}>→</button>
-                  <button type="button" className="danger" aria-label="Xóa ảnh này" title="Xóa ảnh" disabled={!!busy}
-                    onClick={()=>setConfirm({slot:slot.id,kind:'gallery',id:photo.id,storage_path:photo.storage_path})}>×</button>
-                </div>
-              </div>
-            </div>)}
-          </div>}
-        </article>
-      })}</div>}
+      <AdminMediaSlots key={groupId} group={activeGroup} supabase={supabase} user={user}
+        primary={primary} gallery={gallery} busy={busy} progress={progress}
+        replacePrimary={replacePrimary} replaceGallery={replaceGallery}
+        uploadBatch={uploadBatch} move={move} requestDelete={setConfirm}
+        reload={reload} onNotice={setNotice} onError={setError}/>}
+
     </section>
     <p className="admin-media-disclaimer">Chỉ tải hình ảnh đã được phép công bố. Ảnh khu vực Dự án sẽ xuất hiện công khai sau khi bạn tải lên. Không tải PDF hoặc ảnh chứa thông tin riêng tư.</p>
     {confirm&&<div className="admin-confirm-backdrop"><section className="admin-confirm" role="dialog" aria-modal="true" aria-label="Xác nhận xóa ảnh">

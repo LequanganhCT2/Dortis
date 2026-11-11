@@ -99,3 +99,7 @@
   .dortis-shared-header{gap:7px}
   .dortis-shared-header .header-contact{gap:5px;padding:9px}
 }
+
+/* Admin Header is transparent and never blocks the controls underneath it. */
+.site-header.dortis-admin-header{pointer-events:none}
+.site-header.dortis-admin-header .dortis-admin-logout{pointer-events:auto}

@@ -103,3 +103,11 @@
   .hero-editor-footer>div{justify-content:flex-start}
 }
 @media(prefers-reduced-motion:reduce){.hero-editor-root *{transition:none!important}}
+
+.hero-editor-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.hero-editor-delete-button{border:1px solid #f0c9d0;color:#a63145;background:transparent;
+ border-radius:8px;padding:10px 14px;font-size:10px;font-weight:800;cursor:pointer}
+.hero-editor-delete-button:hover{background:#fff3f5}
+.hero-editor-delete-button:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:600px){.hero-editor-head-actions{gap:5px}
+.hero-editor-delete-button{padding:9px 8px;font-size:9px}}

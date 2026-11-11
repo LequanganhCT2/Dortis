@@ -58,8 +58,10 @@ function App() {
   const contactCopy=copyFor(siteContent,'contact')
   const shownServices=services.map(service=>{
     const copy=copyFor(siteContent,'service-'+service.style)
-    return {...service,title:copy.title,english:copy.subtitle,description:copy.description}
-  })
+    return {...service,title:copy.title,english:copy.subtitle,description:copy.description,archived:copy.archived===true}
+  }).filter(service=>!service.archived)
+  const visibleProjects=['project-approved-01','project-approved-02','project-approved-03']
+    .filter(slot=>copyFor(siteContent,slot).archived!==true)
   const shownFaqs=faqs.map(([q,a],i)=>{
     const copy=copyFor(siteContent,'faq')
     return [copy['question'+(i+1)]??q,copy['answer'+(i+1)]??a]
@@ -102,9 +104,9 @@ function App() {
       <section id="du-an" className="cax-selected-work scene-section">
         <div className="section-shell">
           <header className="cax-section-head"><div><p className="cax-kicker">{projectsCopy.kicker}</p><h2>{projectsCopy.heading} <em>{projectsCopy.accent}</em></h2></div><p>{projectsCopy.description}</p></header>
-          {['project-approved-01','project-approved-02','project-approved-03'].some(slot=>getMediaUrls(siteImages,siteGalleries,slot).length) ?
+          {visibleProjects.some(slot=>getMediaUrls(siteImages,siteGalleries,slot).length) ?
             <div className="dortis-public-projects">
-              {['project-approved-01','project-approved-02','project-approved-03'].map((slot,i)=>{
+              {visibleProjects.map((slot,i)=>{
                 const sources=getMediaUrls(siteImages,siteGalleries,slot)
                 return sources.length ? <article className="dortis-public-project" key={slot}>
                   <div className="dortis-public-project-preview"><RotatingImage urls={sources}/></div>

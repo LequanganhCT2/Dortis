@@ -116,3 +116,14 @@
   .admin-hero-cards-note{padding:12px;font-size:11px}
 }
 @media(max-width:410px){.admin-hero-photo-grid{grid-template-columns:1fr}}
+
+/* Keep sticky media tabs below the fixed transparent Admin Header. */
+.admin-media-v2 .admin-media-tabs{
+  top:84px;
+  z-index:45;
+  scroll-margin-top:84px;
+}
+.admin-media-v2 .admin-media-tabs button{pointer-events:auto;cursor:pointer}
+.admin-media-v2 .admin-media-section{position:relative;z-index:1}
+@media(max-width:900px){.admin-media-v2 .admin-media-tabs{top:74px;scroll-margin-top:74px}}
+@media(max-width:650px){.admin-media-v2 .admin-media-tabs{top:68px;scroll-margin-top:68px}}

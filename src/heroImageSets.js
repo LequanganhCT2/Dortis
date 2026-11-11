@@ -27,7 +27,14 @@ export function getHeroCardImages(primary={}){
   return getHeroCardPhotos(primary).map(photos=>photos.map(photo=>photo.url))
 }
 
-export function getActiveHeroCardCount(content={}){
+export function getActiveHeroCardIds(content={}){
+  if(Array.isArray(content.activeCards)){
+    const ids=[...new Set(content.activeCards.map(Number).filter(id=>
+      Number.isInteger(id)&&id>=1&&id<=HERO_CARD_LIMIT))]
+    if(ids.length)return ids
+  }
   const requested=Number.parseInt(content.cardCount,10)
-  return Number.isInteger(requested)?Math.max(HERO_CARD_COUNT,Math.min(HERO_CARD_LIMIT,requested)):HERO_CARD_COUNT
+  const count=Number.isInteger(requested)?Math.max(1,Math.min(HERO_CARD_LIMIT,requested)):HERO_CARD_COUNT
+  return Array.from({length:count},(_,index)=>index+1)
 }
+export function getActiveHeroCardCount(content={}){return getActiveHeroCardIds(content).length}
