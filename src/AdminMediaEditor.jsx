@@ -196,7 +196,7 @@ export default function AdminMediaEditor({ user, signOut, supabase }) {
     count+(primary[slot.id]?.image_url?1:0)+(gallery[slot.id]?.length||0),0),[primary,gallery])
 
   return <main className="admin-dashboard admin-media-v2">
-    <nav className="admin-topline"><a href="/" className="admin-home">← TRANG CHỦ DORTIS</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></nav>
+    <nav className="admin-topline"><a href="/" className="admin-home">← TRANG CHỦ DORTIS</a><a href="/admin/artists" className="admin-home">HỒ SƠ CA SĨ (PDF) ↗</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></nav>
     <header className="admin-intro"><span>DORTIS / ADMIN / MEDIA LIBRARY</span><h1>Thư viện hình ảnh.</h1>
       <p>Chỉnh sửa ảnh theo từng khu vực. Tải nhiều ảnh cùng lúc, quản lý ảnh chính, đổi thứ tự và xóa từng ảnh. Ảnh cũ vẫn được giữ nguyên cho đến khi bạn thay hoặc xóa.</p>
       <div className="admin-media-stat"><b>{totalImages}</b><span>ẢNH ĐANG QUẢN LÝ</span><b>{allSlots.length}</b><span>VỊ TRÍ TRÊN WEBSITE</span></div>

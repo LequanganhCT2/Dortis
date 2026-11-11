@@ -1,0 +1,78 @@
+/* DORTIS | Independent responsive singer portfolio pages */
+.artist-page{min-height:100svh;background:#f4f8f8;color:#19283b;font-family:'Be Vietnam Pro',system-ui,sans-serif;overflow-x:clip}
+.artist-page-header{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:21px clamp(22px,5vw,88px);border-bottom:1px solid #dbe6eb;background:#ffffffd6;backdrop-filter:blur(20px);position:sticky;top:0;z-index:40}
+.artist-brand-link{display:inline-flex;align-items:center;gap:11px;color:#182238;font-size:22px;font-weight:830;letter-spacing:-.055em;white-space:nowrap}
+.artist-brand-mark{font-family:'Noto Serif',Georgia,serif;font-style:italic;color:#315be8;font-size:28px;letter-spacing:-.19em;padding-right:9px}
+.artist-brand-dot{color:#f17b48}
+.artist-page-header nav{display:flex;align-items:center;gap:clamp(14px,3vw,40px)}
+.artist-page-header nav a{font-size:10px;font-weight:850;letter-spacing:.08em;color:#557080}
+.artist-page-header nav a:hover{color:#008f91}
+.artist-page-footer{margin:80px clamp(20px,5vw,90px) 0;padding:28px 0 40px;border-top:1px solid #d4e3e9;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.artist-page-footer>span,.artist-page-footer>a:last-child{font-size:10px;color:#627c88;font-weight:800;letter-spacing:.07em}
+.artist-loading{min-height:66svh;display:flex;align-items:flex-start;justify-content:center;flex-direction:column;gap:17px;max-width:1120px;padding:85px 30px;margin:0 auto;color:#607989;line-height:1.9}
+.artist-loading h1{font-size:clamp(36px,5vw,62px);letter-spacing:-.04em;color:#19283b;margin:0}
+.artist-loading p{font-size:14px}
+.artist-loading a{font-size:12px;font-weight:800;color:#008f91}
+.artist-kicker{font-size:10px;font-weight:830;letter-spacing:.13em;color:#008f91;line-height:1.6}
+.artist-list-main{max-width:1480px;margin:0 auto;padding:clamp(65px,9vw,128px) clamp(22px,5vw,85px) 20px}
+.artist-list-header{max-width:1000px;margin-bottom:clamp(32px,5vw,68px)}
+.artist-list-header h1{font-size:clamp(44px,6.2vw,88px);letter-spacing:-.052em;line-height:1.26;font-weight:770;margin:23px 0}
+.artist-list-header h1 em{font-family:'Noto Serif',Georgia,serif;color:#008f91;font-weight:550;font-style:italic;line-height:1.48;letter-spacing:-.02em}
+.artist-list-header>p{color:#647b89;line-height:1.95;font-size:14px;max-width:640px}
+.artist-index-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:19px}
+.artist-index-card{min-width:0;display:block;background:#fff;border:1px solid #d4e5e7;border-radius:20px;overflow:hidden;transition:transform .45s cubic-bezier(.22,1,.36,1),box-shadow .4s}
+.artist-index-card:hover{transform:translateY(-9px);box-shadow:0 24px 50px #1a51621b}
+.artist-index-visual{position:relative;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(138deg,#c9e9e5,#dce4f7);display:grid;place-items:center}
+.artist-index-card-1 .artist-index-visual{background:linear-gradient(135deg,#d4e0f8,#eae6f1)}
+.artist-index-card-2 .artist-index-visual{background:linear-gradient(135deg,#f6d9cb,#dcebe9)}
+.artist-index-visual img{width:100%;height:100%;object-fit:cover;transition:transform .7s cubic-bezier(.22,1,.36,1)}
+.artist-index-card:hover .artist-index-visual img{transform:scale(1.04)}
+.artist-index-symbol{font-family:'Noto Serif',serif;font-weight:550;font-style:italic;font-size:clamp(65px,9vw,138px);color:#315be8}
+.artist-index-number,.artist-index-arrow{position:absolute;z-index:2;top:18px;color:#21465c;font-size:10px;font-weight:850;letter-spacing:.08em}
+.artist-index-number{left:19px;background:#ffffffda;padding:9px 12px;border-radius:30px}
+.artist-index-arrow{right:17px;width:37px;height:37px;display:grid;place-items:center;border-radius:50%;background:#ffffffde;font-size:19px}
+.artist-index-info{padding:26px}
+.artist-index-info>span{font-size:10px;color:#008f91;font-weight:830;letter-spacing:.09em;text-transform:uppercase}
+.artist-index-info h2{font-size:clamp(21px,2.4vw,31px);line-height:1.4;letter-spacing:-.04em;margin:9px 0;color:#19283b}
+.artist-index-info p{font-size:12px;color:#617987;line-height:1.9;margin:0}
+.artist-list-empty{border:1px solid #d3e4e5;border-radius:18px;padding:clamp(32px,5vw,70px);background:#fff;display:flex;flex-direction:column;gap:14px}
+.artist-list-empty strong{font-size:clamp(23px,3vw,37px);letter-spacing:-.03em}
+.artist-list-empty p{font-size:13px;color:#758a97}
+.artist-list-empty a{font-size:11px;color:#008f91;font-weight:850}
+.artist-detail-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.95fr);gap:clamp(30px,5vw,86px);align-items:center;max-width:1480px;margin:auto;padding:clamp(55px,8vw,120px) clamp(22px,5vw,85px) clamp(80px,9vw,150px)}
+.artist-detail-hero-copy{min-width:0}
+.artist-detail-role{display:block;margin-top:30px;font-size:12px;color:#607d87;letter-spacing:.08em;text-transform:uppercase}
+.artist-detail-hero h1{font-size:clamp(55px,7.3vw,104px);font-weight:780;letter-spacing:-.072em;line-height:1.25;margin:15px 0;overflow-wrap:break-word}
+.artist-detail-hero h1 span{color:#f17b48}
+.artist-detail-lead{font-size:clamp(14px,1.4vw,19px);line-height:1.9;color:#5c7685;max-width:580px}
+.artist-detail-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px}
+.artist-detail-hero-actions a,.artist-detail-cta a{padding:17px 19px;background:#182238;color:#fff;border-radius:8px;font-size:10px;font-weight:820;letter-spacing:.07em;box-shadow:0 4px 0 #078a8a6b}
+.artist-detail-hero-actions a:last-child{border:1px solid #bfd5de;background:#fff;color:#19283b;box-shadow:none}
+.artist-detail-hero-art{position:relative;aspect-ratio:1/1;overflow:hidden;border-radius:24px;background:linear-gradient(145deg,#d2e9e6,#d7e6f4 65%,#f4dacf);box-shadow:0 26px 66px #235c671b;display:grid;place-items:center}
+.artist-detail-hero-art:before{content:"";position:absolute;inset:9%;border:1px solid #ffffff93;border-radius:50%;transform:rotate(-16deg) scaleX(1.22)}
+.artist-detail-hero-art>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.artist-detail-hero-art>span{position:absolute;left:22px;bottom:21px;font-size:9px;font-weight:850;letter-spacing:.14em;color:#3c7381;background:#ffffffd8;padding:10px;border-radius:18px}
+.artist-visual-monogram{font:italic 550 clamp(90px,12vw,180px)/1 'Noto Serif',serif;color:#315be8;z-index:2}
+.artist-intro-section{max-width:1350px;margin:0 auto 65px;padding:50px clamp(22px,5vw,85px);display:grid;grid-template-columns:.45fr 1fr;gap:25px;border-top:1px solid #d3e3e6;border-bottom:1px solid #d3e3e6}
+.artist-intro-section span{font-size:10px;color:#008f91;font-weight:850;letter-spacing:.12em}
+.artist-intro-section p{font-size:clamp(17px,2vw,26px);line-height:1.9;letter-spacing:-.025em;margin:0;white-space:pre-line}
+.artist-story{max-width:1480px;margin:0 auto;padding:0 clamp(22px,5vw,85px)}
+.artist-story-page{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(25px,6vw,90px);align-items:center;padding:clamp(45px,7vw,100px) 0;border-bottom:1px solid #d5e4e8;min-width:0}
+.artist-story-page:nth-child(even) .artist-story-media{order:2}
+.artist-story-page:nth-child(even) .artist-story-copy{order:1}
+.artist-story-media{position:relative;aspect-ratio:16/9;border-radius:17px;overflow:hidden;background:linear-gradient(125deg,#d5e9eb,#f0e1d9);box-shadow:0 21px 50px #274c641a}
+.artist-story-media img{display:block;width:100%;height:100%;object-fit:contain;background:#e5f0ef}
+.artist-story-media>span{position:absolute;left:18px;bottom:18px;padding:9px 11px;background:#ffffffde;border-radius:19px;font-size:9px;color:#427b7c;font-weight:850;letter-spacing:.12em}
+.artist-story-type-art{display:grid;place-items:center;height:100%;font:italic 500 150px 'Noto Serif',serif;color:#315be8}
+.artist-story-copy h2{font-size:clamp(29px,4vw,56px);line-height:1.38;letter-spacing:-.048em;font-weight:750;margin:19px 0;color:#19283b}
+.artist-story-text{font-size:clamp(12px,1.1vw,15px);line-height:2.04;color:#557180;white-space:pre-line;overflow-wrap:anywhere}
+.artist-story-caption{font-size:13px;color:#7792a2;line-height:1.85}
+.artist-story-page.is-visual{grid-template-columns:1.2fr .8fr}
+.artist-detail-cta{margin:90px auto 0;max-width:1350px;padding:clamp(50px,7vw,100px);border-radius:25px;background:linear-gradient(135deg,#d5eeea,#e8f2f7,#f5e8df)}
+.artist-detail-cta>span{font-size:10px;color:#008f91;letter-spacing:.13em;font-weight:800}
+.artist-detail-cta h2{font-size:clamp(34px,5vw,64px);line-height:1.4;margin:24px 0 35px;letter-spacing:-.05em}
+.artist-detail-cta h2 em{font-family:'Noto Serif',serif;color:#315be8;font-weight:500;font-style:italic;letter-spacing:-.01em}
+.artist-detail-cta a{display:inline-block}
+@media(max-width:920px){.artist-index-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.artist-detail-hero{gap:25px}.artist-detail-hero h1{font-size:clamp(48px,7vw,69px)}.artist-story-page{gap:25px}.artist-story-copy h2{font-size:35px}}
+@media(max-width:680px){.artist-page-header{padding:15px 19px}.artist-page-header nav{gap:15px}.artist-page-header nav a{font-size:9px}.artist-page-header nav a:last-child{display:none}.artist-brand-link{font-size:17px}.artist-brand-mark{font-size:23px}.artist-list-main{padding:60px 19px 10px}.artist-index-grid{grid-template-columns:1fr}.artist-detail-hero{grid-template-columns:1fr;padding:60px 19px 75px}.artist-detail-hero-art{max-height:400px;aspect-ratio:4/3}.artist-intro-section{display:block;padding:30px 20px}.artist-intro-section p{margin-top:17px}.artist-story{padding:0 18px}.artist-story-page,.artist-story-page.is-visual{grid-template-columns:1fr;gap:25px;padding:45px 0}.artist-story-page:nth-child(even) .artist-story-media,.artist-story-page:nth-child(even) .artist-story-copy{order:initial}.artist-story-copy h2{font-size:31px}.artist-detail-cta{border-radius:0;margin-top:45px;padding:45px 22px}.artist-page-footer{margin:50px 20px 0;gap:15px}.artist-list-header h1{font-size:clamp(38px,10vw,53px)}}
+@media(prefers-reduced-motion:reduce){.artist-index-card,.artist-index-visual img{transition:none!important}.artist-index-card:hover,.artist-index-card:hover .artist-index-visual img{transform:none!important}}

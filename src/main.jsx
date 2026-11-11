@@ -12,6 +12,7 @@ import PhilosophyStoryCard from './PhilosophyStoryCard'
 import DortisFAQ from './DortisFAQ'
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import CaxHeroCopy from './CaxHeroCopy'
+import ArtistPages from './ArtistPages'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
 const services = [
@@ -121,6 +122,7 @@ function App() {
       <a href="#top" className="brand-link" onClick={() => setMenuOpen(false)}><Brand /></a>
       <nav aria-label="Điều hướng chính" className={'main-nav ' + (menuOpen ? 'menu-open' : '')}>
         {navItems.map(([id, text]) => <a href={'#' + id} key={id} className={active === id ? 'active' : ''} onClick={() => setMenuOpen(false)}>{text}</a>)}
+        <a href="/artists" onClick={() => setMenuOpen(false)}>Nghệ sĩ</a>
       </nav>
       <a className="header-contact" href="/admin" onClick={() => setMenuOpen(false)} aria-label="Đăng nhập quản trị Dortis">ĐĂNG NHẬP <Arrow /></a>
       <button className="menu-toggle" aria-label={menuOpen ? 'Đóng menu' : 'Mở menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? '✕' : '☰'}</button>
@@ -199,4 +201,4 @@ function App() {
 
   </div>
 }
-createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage /> : <App />)
+createRoot(document.getElementById('root')).render(location.pathname.startsWith('/admin') ? <AdminPage /> : location.pathname.startsWith('/artists') ? <ArtistPages /> : <App />)

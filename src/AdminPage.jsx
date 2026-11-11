@@ -2,11 +2,12 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import './admin.css'
 import AdminMediaEditor from './AdminMediaEditor'
+import AdminArtistProfiles from './AdminArtistProfiles'
 
 const API_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://whkqdusoowrrhtvejrie.supabase.co').replace(/\/+$/, '')
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
 const ADMIN_EMAIL = import.meta.env.VITE_DORTIS_ADMIN_EMAIL || ''
-const supabase = API_KEY ? createClient(API_URL, API_KEY, {
+export const supabase = API_KEY ? createClient(API_URL, API_KEY, {
   auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
 }) : null
 
@@ -130,7 +131,7 @@ export default function AdminPage() {
   if (checking) return <main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>
   if (!supabase) return <main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>
   if (user && !authorized) return <main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Không có quyền quản trị.</h1><p>Tài khoản hiện tại chưa được cấp vai trò admin trong Supabase Auth. Không thể chỉnh sửa ảnh.</p><button onClick={signOut}>Đăng xuất</button></div></main>
-  if (authorized) return <AdminMediaEditor user={user} signOut={signOut} supabase={supabase}/>
+  if (authorized) return location.pathname.startsWith('/admin/artists') ? <AdminArtistProfiles user={user} signOut={signOut} supabase={supabase}/> : <AdminMediaEditor user={user} signOut={signOut} supabase={supabase}/>
   return <main className="admin-auth"><form className="admin-login" onSubmit={signIn}>
     <a href="/" className="admin-back">← TRỞ VỀ TRANG CHỦ</a><span>DORTIS / PRIVATE ACCESS</span><h1>Quản trị<br/><em>Dortis.</em></h1>
     <p>Đăng nhập để chỉnh sửa hình ảnh trang chủ và hồ sơ dự án.</p>
