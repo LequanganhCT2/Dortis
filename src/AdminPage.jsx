@@ -129,8 +129,8 @@ export default function AdminPage() {
     await supabase?.auth.signOut()
   }
 
-  const withHeader = content => <div className="dortis-page-under-header dortis-admin-shell">
-    <SiteHeader adminUser={authorized ? user : null} onAdminSignOut={authorized ? signOut : null}/>
+  const withHeader = content => <div className={authorized ? 'dortis-page-under-header dortis-admin-shell' : 'dortis-admin-shell'}>
+    <SiteHeader onAdminSignOut={authorized ? signOut : null}/>
     {content}
   </div>
 
