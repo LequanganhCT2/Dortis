@@ -1,4 +1,5 @@
 import { RotatingImage } from './SiteMedia'
+import {copyFor} from './siteContent'
 import React, { useState } from 'react'
 
 const chapters = [
@@ -16,16 +17,21 @@ const chapters = [
   },
 ]
 
-export default function PhilosophyStoryCard({ imageUrl, imageUrls = [] }) {
+export default function PhilosophyStoryCard({ imageUrl, imageUrls = [], content={} }) {
+  const copy=copyFor(content,'about')
+  const displayChapters=chapters.map((entry,i)=>({...entry,
+    title:copy['story'+(i+1)+'Title'],
+    description:copy['story'+(i+1)+'Description']
+  }))
   const [selected, setSelected] = useState(1)
   return <aside className="dortis-philosophy-card dortis-philosophy-story" aria-label="Ba lớp câu chuyện của Dortis">
     <RotatingImage urls={imageUrls.length?imageUrls:imageUrl?[imageUrl]:[]} className="dortis-philosophy-photo"/>
     <span className="dortis-philosophy-card-top">DORTIS / ARTIST IDENTITY</span>
     <div className="dortis-philosophy-symbol dortis-philosophy-watermark" aria-hidden="true"><span>D</span><span>T</span></div>
     <div className="dortis-philosophy-story-content">
-      <h3>Một dấu ấn được tạo nên <em>như thế nào?</em></h3>
+      <h3>{copy.storyHeading}</h3>
       <div className="dortis-philosophy-story-list" role="group" aria-label="Các yếu tố làm nên hình ảnh nghệ sĩ">
-        {chapters.map((chapter, index) => {
+        {displayChapters.map((chapter, index) => {
           const active = selected === index
           return <button type="button" key={chapter.number} className={'dortis-philosophy-story-item'+(active?' is-active':'')}
             aria-expanded={active} onClick={() => setSelected(index)}>

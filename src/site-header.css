@@ -1,0 +1,12 @@
+/* One header for Home, artist directory, artist profile and Admin.
+   Existing site-header and navigation styles remain the visual source of truth. */
+.dortis-shared-header{box-sizing:border-box}
+.dortis-shared-header .brand-link{flex-shrink:0}
+.dortis-shared-header .main-nav a[aria-current="page"]{background:#182238;color:#fff}
+.dortis-page-under-header{padding-top:84px}
+@media(max-width:900px){.dortis-page-under-header{padding-top:74px}}
+@media(max-width:650px){.dortis-page-under-header{padding-top:68px}}
+@media(max-width:380px){
+  .dortis-shared-header{gap:7px}
+  .dortis-shared-header .header-contact{gap:5px;font-size:8px;padding:9px}
+}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import SiteHeader from './SiteHeader'
 import { supabase } from './AdminPage'
 import './artist-pages.css'
 import ArtistPortfolioViewer from './ArtistPortfolioViewer'
@@ -8,10 +9,10 @@ import { designArtistPdf, identifyArtistLayout } from './artistLayouts'
 function ArtistBrand(){return <a className="artist-brand-link" href="/" aria-label="Dortis – về trang chủ">
   <span className="artist-brand-mark">DT</span><span>DORTIS<span className="artist-brand-dot">.</span></span>
 </a>}
-function ArtistFrame({children}){return <div className="artist-page">
-  <header className="artist-page-header"><ArtistBrand/><nav aria-label="Điều hướng hồ sơ">
-    <a href="/">TRANG CHỦ</a><a href="/artists">NGHỆ SĨ</a><a href="/#lien-he">HỢP TÁC ↗</a>
-  </nav></header>{children}<footer className="artist-page-footer"><ArtistBrand/><span>ART · IDENTITY · EMOTION</span><a href="/#lien-he">KẾT NỐI DORTIS ↗</a></footer>
+function ArtistFrame({children}){return <div className="artist-page dortis-page-under-header">
+  <SiteHeader/>
+  {children}
+  <footer className="artist-page-footer"><ArtistBrand/><span>ART · IDENTITY · EMOTION</span><a href="/#lien-he">KẾT NỐI DORTIS ↗</a></footer>
 </div>}
 function ProfileCard({profile,index}){return <a href={'/artists/'+encodeURIComponent(profile.slug)}
   className={'artist-index-card artist-index-card-'+index%3}>

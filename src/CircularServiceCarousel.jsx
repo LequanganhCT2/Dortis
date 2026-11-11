@@ -1,6 +1,7 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './circular-services.css'
+import {copyFor} from './siteContent'
 
 const MAX_ITEMS = 10
 const SHOWCASE_LABELS = ['HỒ SƠ NGHỆ SĨ', 'THƯƠNG HIỆU NGHỆ SĨ', 'THỊ GIÁC TRUYỀN THÔNG', 'KHÔNG GIAN SỐ']
@@ -19,7 +20,7 @@ function wrappedDistance(index, active, length) {
   return distance
 }
 
-export default function CircularServiceCarousel({ services = [], images = {}, galleries = {} }) {
+export default function CircularServiceCarousel({ services = [], images = {}, galleries = {}, content = {} }) {
   const stageRef = useRef(null)
   const pointerStart = useRef(null)
   const suppressClick = useRef(false)
@@ -28,39 +29,42 @@ export default function CircularServiceCarousel({ services = [], images = {}, ga
   const [dragging, setDragging] = useState(false)
 
   const items = useMemo(() => {
-    const core = services.slice(0, 4).map((service, index) => ({
+    const core = services.slice(0, 4).map((service, index) => {
+      const copy=copyFor(content,'service-'+service.style)
+      return ({
       key: 'service-' + service.style,
       number: service.number,
       title: service.title,
       subtitle: service.english,
       description: service.description,
-      category: SHOWCASE_LABELS[index],
-      lines: SHOWCASE_TITLES[index],
+      category: copy.category,
+      lines: [copy.line1,copy.line2],
       imageUrls: getMediaUrls(images,galleries,'service-' + service.style),
       image: getMediaUrls(images,galleries,'service-' + service.style)[0] || null,
-      details: details[index],
+      details: copy.details,
       className: 'cax-service-' + service.style,
-    }))
+    })})
     const extra = GALLERY_NUMBERS.map(number => {
       const label = String(number).padStart(2, '0')
       const media = getMediaUrls(images,galleries,'service-gallery-' + label)
+      const copy=copyFor(content,'service-gallery-'+label)
       const image = media[0]
       return image ? {
         key: 'service-gallery-' + label,
         number: label,
-        title: 'Thư viện thiết kế ' + label,
-        subtitle: 'DORTIS CREATIVE SHOWCASE',
-        description: 'Hình ảnh thiết kế được chọn và đăng bởi quản trị viên Dortis.',
-        category: 'CREATIVE GALLERY',
-        lines: ['Creative', 'Showcase'],
+        title: copy.title,
+        subtitle: copy.subtitle,
+        description: copy.description,
+        category: copy.category,
+        lines: [copy.line1,copy.line2],
         image,
         imageUrls: media,
-        details: 'Tài sản hình ảnh đã được cho phép giới thiệu công khai',
+        details: copy.details,
         className: 'cax-service-gallery',
       } : null
     }).filter(Boolean)
     return [...core, ...extra].slice(0, MAX_ITEMS)
-  }, [services, images, galleries])
+  }, [services, images, galleries, content])
 
   const total = items.length
   const current = items[Math.min(active, Math.max(total - 1, 0))]

@@ -1,8 +1,10 @@
 import { RotatingImage } from './SiteMedia'
+import {copyFor} from './siteContent'
 import React, { useState } from 'react'
 import './dortis-faq.css'
 
-export default function DortisFAQ({ items = [], media = [] }) {
+export default function DortisFAQ({ items = [], media = [], content={} }) {
+  const copy=copyFor(content,'faq')
   const [activeIndex, setActiveIndex] = useState(0)
 
   const tilt = event => {
@@ -26,14 +28,14 @@ export default function DortisFAQ({ items = [], media = [] }) {
         <div className="dortis-faq-section-mark">
           <span>07</span><i aria-hidden="true" /><span>FREQUENTLY ASKED QUESTIONS</span>
         </div>
-        <h2 id="dortis-faq-title">Một vài điều <em>bạn muốn biết.</em></h2>
-        <p className="dortis-faq-intro">Mỗi câu hỏi là điểm khởi đầu cho một câu chuyện sáng tạo. Khám phá cách Dortis đồng hành cùng nghệ sĩ.</p>
+        <h2 id="dortis-faq-title">{copy.heading} <em>{copy.accent}</em></h2>
+        <p className="dortis-faq-intro">{copy.description}</p>
         <div className="dortis-faq-orbit" aria-hidden="true">
           <span className="dortis-faq-orbit-ring ring-first" />
           <span className="dortis-faq-orbit-ring ring-second" />
           <strong>?</strong><span className="dortis-faq-orbit-sign">DORTIS / CURIOSITY IS CREATIVE</span>
         </div>
-        <a className="dortis-faq-discover" href="#dich-vu">KHÁM PHÁ DỊCH VỤ <span aria-hidden="true">↗</span></a>
+        <a className="dortis-faq-discover" href="#dich-vu">{copy.button} <span aria-hidden="true">↗</span></a>
       </header>
       <div className="dortis-faq-content">
         <div className="dortis-faq-content-top"><span>HỎI ĐÁP / DORTIS STUDIO</span><span>{String(items.length).padStart(2, '0')} CÂU HỎI</span></div>

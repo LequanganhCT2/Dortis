@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
 import './cax-hero-copy.css'
+import {copyFor} from './siteContent'
 
 /**
  * Dortis Hero — typographic 3D interaction.
  * Isolated from the adjacent CaxHeroDeck so its geometry and controls
  * stay exactly as they are. Uses only transform/opacity for motion.
  */
-export default function CaxHeroCopy() {
+export default function CaxHeroCopy({content={}}) {
+  const copyText=copyFor(content,'hero')
   const frame = useRef(0)
   const copy = useRef(null)
 
@@ -50,30 +52,29 @@ export default function CaxHeroCopy() {
       onPointerMove={handlePointerMove} onPointerLeave={resetDepth}>
     <p className="cax-kicker cax-hero-type__kicker">
       <span className="cax-hero-type__spark" aria-hidden="true">✳</span>
-      DORTIS — CREATIVE ARTIST STUDIO / EST. 2026
+      {copyText.kicker}
     </p>
     <h1 className="cax-hero-type__title">
-      Chúng tôi giúp <span className="cax-hero-type__accent cobalt">nghệ sĩ</span><br/>
-      xây dựng hình ảnh <span className="cax-hero-type__accent teal">chuyên nghiệp</span>{' '}
-      và lan tỏa <span className="cax-hero-type__accent ember">dấu ấn riêng.</span>
+      {copyText.before} <span className="cax-hero-type__accent cobalt">{copyText.artist}</span><br/>
+      {copyText.action} <span className="cax-hero-type__accent teal">{copyText.quality}</span>{' '}
+      {copyText.tail} <span className="cax-hero-type__accent ember">{copyText.impact}</span>
     </h1>
     <div className="cax-hero-type__rule" aria-hidden="true"><span/><span/><span/></div>
     <p className="cax-lead cax-hero-type__lead">
-      Nơi bản sắc được định hình, câu chuyện được kể bằng cảm xúc và mỗi nghệ sĩ
-      có một không gian riêng để tỏa sáng.
+      {copyText.description}
     </p>
     <div className="cax-hero-actions cax-hero-type__actions">
       <a href="#dich-vu" className="button-dark">
-        KHÁM PHÁ DỊCH VỤ <span className="cax-hero-type__button-arrow" aria-hidden="true">↗</span>
+        {copyText.primaryButton} <span className="cax-hero-type__button-arrow" aria-hidden="true">↗</span>
       </a>
       <a href="#trai-nghiem" className="button-outline">
-        TRẢI NGHIỆM THỬ <span className="cax-hero-type__button-arrow" aria-hidden="true">↗</span>
+        {copyText.secondaryButton} <span className="cax-hero-type__button-arrow" aria-hidden="true">↗</span>
       </a>
     </div>
     <p className="cax-hero-bottomline cax-hero-type__signature">
-      <span>ART. IDENTITY. EMOTION.</span>
+      <span>{copyText.signature.split(' — ')[0]}</span>
       <span className="cax-hero-type__signature-line" aria-hidden="true"/>
-      <span>EVERY ARTIST HAS A STORY.</span>
+      <span>{copyText.signature.split(' — ')[1]||''}</span>
     </p>
   </div>
 }

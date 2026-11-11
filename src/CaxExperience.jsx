@@ -1,4 +1,5 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
+import {copyFor} from './siteContent'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -32,14 +33,19 @@ function useTouchSwipe(left,right){
     onTouchEnd:e=>{if(!start.current)return;const dx=e.changedTouches[0].clientX-start.current[0],dy=e.changedTouches[0].clientY-start.current[1];start.current=null;if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.3)return;dx<0?left():right()},
   }
 }
-export function CaxHeroDeck({images={},galleries={}}){
+export function CaxHeroDeck({images={},galleries={},content={}}){
+  const copy=copyFor(content,'hero')
+  const displayShowcases=showcases.map((item,i)=>({...item,
+    label:copy['card'+(i+1)+'Title'],
+    lines:[copy['card'+(i+1)+'Line1'],copy['card'+(i+1)+'Line2']]
+  }))
   const [selected,setSelected]=useState(0)
   const [expanded,setExpanded]=useState(false)
   const reduce=useReducedMotion()
   const drag=useRef(null)
   const ignoreClickUntil=useRef(0)
   const stageRef=useRef(null)
-  const shift=step=>{setExpanded(true);setSelected(i=>(i+step+showcases.length)%showcases.length)}
+  const shift=step=>{setExpanded(true);setSelected(i=>(i+step+displayShowcases.length)%displayShowcases.length)}
   const toggleCard=i=>{
     if(Date.now()<ignoreClickUntil.current)return
     if(!expanded){setSelected(i);setExpanded(true)}
@@ -86,7 +92,7 @@ export function CaxHeroDeck({images={},galleries={}}){
     stageRef.current?.style.setProperty('--cax-drag-shift','0px')
     stageRef.current?.classList.remove('is-dragging')
   }
-  const current=showcases[selected]
+  const current=displayShowcases[selected]
   return <div className={'cax-hero-deck tone-'+selected+(expanded?' cax-deck-expanded':'')} aria-label="Giới thiệu bốn nhóm dịch vụ Dortis">
     <div className="cax-deck-top"><span>DORTIS / SERVICE SHOWCASE</span><span aria-live="polite">{String(selected+1).padStart(2,'0')} / 04</span></div>
     <div className="cax-deck-stage" ref={stageRef} tabIndex={0} aria-roledescription="carousel"
@@ -100,9 +106,9 @@ export function CaxHeroDeck({images={},galleries={}}){
       }}>
       <span className="cax-deck-glow" aria-hidden="true"/>
       <span className="cax-deck-ambient-text" aria-hidden="true">DORTIS / CREATIVE MOTION</span>
-      {showcases.map((s,i)=>{
+      {displayShowcases.map((s,i)=>{
         const active=i===selected
-        const behind=(i-selected+showcases.length)%showcases.length
+        const behind=(i-selected+displayShowcases.length)%displayShowcases.length
         const collapsedX=[0,-8,9,3][behind]
         const collapsedY=[0,3,2,-7][behind]
         const collapsedAngle=[2,-12,13,6][behind]
@@ -116,7 +122,7 @@ export function CaxHeroDeck({images={},galleries={}}){
           '--cax-stack-y':collapsedY+'%',
           '--cax-stack-angle':collapsedAngle+'deg',
           '--cax-stack-scale':collapsedScale,
-          zIndex:active?10:1+(showcases.length-behind),
+          zIndex:active?10:1+(displayShowcases.length-behind),
         }
         return <button type="button" className={'cax-deck-card cax-card-'+i+(active?' is-active':'')}
           key={s.code} style={cssVars} aria-pressed={active}
@@ -131,7 +137,7 @@ export function CaxHeroDeck({images={},galleries={}}){
       <span className="cax-deck-interaction-hint">{expanded?'CHỌN THẺ · KÉO TRÁI/PHẢI':'NHẤN THẺ ĐỂ BUNG MỞ'} <span aria-hidden="true">↗</span></span>
     </div>
     <div className="cax-deck-controls">
-      <span className="cax-deck-dots" aria-label={'Đang chọn '+current.label}>{showcases.map((s,i)=><button type="button" key={s.code} aria-label={'Chọn '+s.label}
+      <span className="cax-deck-dots" aria-label={'Đang chọn '+current.label}>{displayShowcases.map((s,i)=><button type="button" key={s.code} aria-label={'Chọn '+s.label}
         aria-current={i===selected?'true':undefined} className={i===selected?'active':''}
         onClick={()=>{setExpanded(true);setSelected(i)}}/>)}</span>
       <span className="cax-deck-arrows">
@@ -162,34 +168,42 @@ export function CaxServicePanels({services,images={}}){
     </button>)}
   </div>
 }
-export function CaxArtistExperience({images={},galleries={}}){
+export function CaxArtistExperience({images={},galleries={},content={}}){
+  const copy=copyFor(content,'artist-experience')
+  const displayChapters=chapters.map(([label,title,description],i)=>[
+    copy['chapter'+(i+1)+'Label'],copy['chapter'+(i+1)+'Title'],copy['chapter'+(i+1)+'Description']
+  ])
   const [mode,setMode]=useState('quick'),[index,setIndex]=useState(0)
-  const shift=n=>setIndex(x=>(x+n+3)%3),chapter=chapters[index]
+  const shift=n=>setIndex(x=>(x+n+3)%3),chapter=displayChapters[index]
   const touch=useTouchSwipe(()=>shift(1),()=>shift(-1))
   return <section className="cax-artist-experience scene-section" id="trai-nghiem"><div className="section-shell">
-    <div className="cax-artist-heading"><div><p className="cax-kicker">04 / CREATIVE ARTIST EXPERIENCE</p><h2>Một nghệ sĩ.<br/><em>Hai cách khám phá.</em></h2><p>Quick EPK để xem thông tin ngay. Explore Mode để bước vào một câu chuyện theo chương.</p></div>
+    <div className="cax-artist-heading"><div><p className="cax-kicker">{copy.kicker}</p><h2>{copy.heading}<br/><em>{copy.accent}</em></h2><p>{copy.description}</p></div>
     <div className="cax-mode-toggle" role="group" aria-label="Chọn chế độ trải nghiệm">
       <button type="button" className={mode==='quick'?'active':''} aria-pressed={mode==='quick'} onClick={()=>setMode('quick')}>QUICK EPK</button>
       <button type="button" className={mode==='explore'?'active':''} aria-pressed={mode==='explore'} onClick={()=>setMode('explore')}>EXPLORE</button>
     </div></div>
     <div className="cax-artist-frame"><div className="cax-artist-frame-label"><span>DORTIS / BẢN MẪU MINH HỌA</span><span>{mode==='quick'?'QUICK PORTFOLIO':'IMMERSIVE JOURNEY'}</span></div>
       {mode==='quick'?<div className="cax-quick">
-        <div className="cax-quick-cover"><RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo"/><small>FICTIONAL ARTIST / DEMO</small><strong>HẠ<br/>LAM.</strong><span>CONTEMPORARY POP</span></div>
-        <div className="cax-quick-info"><p className="cax-kicker">ARTIST / QUICK VIEW</p><h3>Hạ Lam <small>— nghệ sĩ giả lập</small></h3><p>Giới thiệu, video nổi bật, cột mốc và thông tin hợp tác luôn dễ tìm, không cần chờ 3D hay chuyển cảnh.</p>
+        <div className="cax-quick-cover"><RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo"/><small>FICTIONAL ARTIST / DEMO</small><strong>{copy.demoStageName}</strong><span>{copy.demoRole}</span></div>
+        <div className="cax-quick-info"><p className="cax-kicker">ARTIST / QUICK VIEW</p><h3>{copy.demoName} <small>{copy.demoSubtitle}</small></h3><p>{copy.demoDescription}</p>
         <div className="cax-quick-stats"><span><b>BIO</b>Giới thiệu</span><span><b>SHOWREEL</b>Video</span><span><b>CREDITS</b>Dấu mốc</span></div>
         <a href="#dich-vu">KHÁM PHÁ WEBSITE NGHỆ SĨ ↗</a></div>
       </div>:<div className="cax-explore">
         <div className={'cax-explore-screen chapter-'+index} {...touch} tabIndex={0}
           onKeyDown={e=>{if(e.key==='ArrowRight'){e.preventDefault();shift(1)}if(e.key==='ArrowLeft'){e.preventDefault();shift(-1)}}}>
-          <RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo" offset={index}/><span>CHAPTER 0{index+1} / 03 — {chapter[0]}</span><div><strong>{chapter[1]}</strong><p>{chapter[2]}</p></div><small>HẠ LAM / FICTIONAL ARTIST DEMO</small>
+          <RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo" offset={index}/><span>CHAPTER 0{index+1} / 03 — {chapter[0]}</span><div><strong>{chapter[1]}</strong><p>{chapter[2]}</p></div><small>{copy.demoStageName} / FICTIONAL ARTIST DEMO</small>
         </div>
-        <div className="cax-explore-chapters">{chapters.map((c,i)=><button key={c[0]} type="button" className={i===index?'active':''} aria-current={i===index?'step':undefined} onClick={()=>setIndex(i)}><b>0{i+1}</b>{c[0]}</button>)}</div>
+        <div className="cax-explore-chapters">{displayChapters.map((c,i)=><button key={c[0]} type="button" className={i===index?'active':''} aria-current={i===index?'step':undefined} onClick={()=>setIndex(i)}><b>0{i+1}</b>{c[0]}</button>)}</div>
         <div className="cax-explore-arrows"><button type="button" aria-label="Chương trước" onClick={()=>shift(-1)}>←</button><button type="button" aria-label="Chương tiếp theo" onClick={()=>shift(1)}>→</button></div>
       </div>}
     </div>
   </div></section>
 }
-export function CaxBrandValues({images={},galleries={}}){
+export function CaxBrandValues({images={},galleries={},content={}}){
+  const copy=copyFor(content,'values')
+  const displayValues=values.map(([initial,name,meaning,extra],i)=>[
+    initial,copy['value'+(i+1)+'Name'],copy['value'+(i+1)+'Meaning'],copy['value'+(i+1)+'Extra']
+  ])
   const [openValue,setOpenValue]=useState(null)
   const [isVisible,setIsVisible]=useState(false)
   const stageRef=useRef(null)
@@ -235,7 +249,7 @@ export function CaxBrandValues({images={},galleries={}}){
           <span className="cax-values-orbit orbit-one" aria-hidden="true" />
           <span className="cax-values-orbit orbit-two" aria-hidden="true" />
           <span className="cax-values-stage-glow" aria-hidden="true" />
-          {values.map(([initial,name,meaning,extra],index)=>{
+          {displayValues.map(([initial,name,meaning,extra],index)=>{
             const expanded=openValue===initial
             return <button type="button" key={initial}
               className={'cax-values-3d-card cax-value-position-'+index+' cax-value-tone-'+(index%3)+(expanded?' is-expanded':'')}
@@ -265,10 +279,10 @@ export function CaxBrandValues({images={},galleries={}}){
 
         <header className="cax-values-3d-editorial">
           <p className="cax-values-3d-kicker">06 / WHAT MAKES DORTIS</p>
-          <h2 id="cax-values-heading">Điều tạo nên <em>DORTIS.</em></h2>
+          <h2 id="cax-values-heading">{copy.heading} <em>{copy.accent}</em></h2>
           <span className="cax-values-3d-rule" aria-hidden="true"/>
-          <p className="cax-values-3d-lead">Sáu chữ cái. Sáu giá trị tạo nên bản sắc và cách Dortis sáng tạo.</p>
-          <div className="cax-values-3d-instruction"><span className="cax-values-3d-instruction-icon" aria-hidden="true">↗</span><span>Rê chuột để cảm nhận chiều sâu.<br/>Chạm vào từng khối để khám phá giá trị.</span></div>
+          <p className="cax-values-3d-lead">{copy.description}</p>
+          <div className="cax-values-3d-instruction"><span className="cax-values-3d-instruction-icon" aria-hidden="true">↗</span><span>{copy.instruction1}<br/>{copy.instruction2}</span></div>
           <p className="cax-values-3d-signature">CREATIVE THINKING, DISTINCTIVE IDENTITY.</p>
         </header>
       </div>
@@ -276,9 +290,10 @@ export function CaxBrandValues({images={},galleries={}}){
   </section>
 }
 
-export function CaxFinalFan({imageUrl,imageUrls=[]}){
+export function CaxFinalFan({imageUrl,imageUrls=[],content={}}){
+  const copy=copyFor(content,'contact')
   const [front,setFront]=useState(0)
-  const cards=[['PORTFOLIO','CREATIVE IDENTITY.'],['ARTIST BRAND','YOUR STORY.'],['DIGITAL','BEYOND THE STAGE.']]
+  const cards=[1,2,3].map(i=>[copy['card'+i+'Label'],copy['card'+i+'Title']])
   return <div className="cax-fan-deck" aria-label="Giới thiệu ba hướng sáng tạo">
     <div className="cax-fan-stack">{cards.map(([type,title],i)=><div key={type} className={'cax-fan-card position-'+((i-front+3)%3)}>
       <RotatingImage urls={imageUrls.length?imageUrls:imageUrl?[imageUrl]:[]} offset={i} className="cax-fan-photo"/><span>0{i+1} / {type}</span><strong>{title}</strong><small>DORTIS CREATIVE CONCEPT</small>

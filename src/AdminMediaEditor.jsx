@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import './admin-media-editor.css'
+import AdminSectionContent from './AdminSectionContent'
 
 const MB5 = 5 * 1024 * 1024
 const MAX_GALLERY = 24
@@ -198,7 +199,7 @@ export default function AdminMediaEditor({ user, signOut, supabase }) {
   return <main className="admin-dashboard admin-media-v2">
     <nav className="admin-topline"><a href="/" className="admin-home">← TRANG CHỦ DORTIS</a><a href="/admin/artists" className="admin-home">HỒ SƠ CA SĨ (PDF) ↗</a><button type="button" onClick={signOut}>ĐĂNG XUẤT ↗</button></nav>
     <header className="admin-intro"><span>DORTIS / ADMIN / MEDIA LIBRARY</span><h1>Thư viện hình ảnh.</h1>
-      <p>Chỉnh sửa ảnh theo từng khu vực. Tải nhiều ảnh cùng lúc, quản lý ảnh chính, đổi thứ tự và xóa từng ảnh. Ảnh cũ vẫn được giữ nguyên cho đến khi bạn thay hoặc xóa.</p>
+      <p>Chỉnh sửa cả nội dung chữ và ảnh theo từng khu vực. Mở “Chỉnh nội dung” để sửa tiêu đề, mô tả, chữ trên thẻ; bấm “Lưu nội dung” để cập nhật website. Vẫn hỗ trợ tải nhiều ảnh, đổi thứ tự và xóa ảnh.</p>
       <div className="admin-media-stat"><b>{totalImages}</b><span>ẢNH ĐANG QUẢN LÝ</span><b>{allSlots.length}</b><span>VỊ TRÍ TRÊN WEBSITE</span></div>
     </header>
     {error&&<p role="alert" className="admin-alert error">{error}</p>}
@@ -210,6 +211,8 @@ export default function AdminMediaEditor({ user, signOut, supabase }) {
     </div>
     <section className="admin-media-section">
       <div className="admin-media-section-title"><div><small>{activeGroup.id.toUpperCase()} / MEDIA</small><h2>{activeGroup.title}</h2><p>{activeGroup.note}</p></div><span>{activeGroup.slots.length} VỊ TRÍ</span></div>
+      <AdminSectionContent key={'group-'+groupId} supabase={supabase} user={user}
+        contentKey={groupId==='artist'?'artist-experience':groupId} label={activeGroup.title}/>
       {loading?<p className="admin-media-loading">Đang tải thư viện ảnh...</p>:
       <div className="admin-media-slots">{activeGroup.slots.map(slot=>{
         const main=primary[slot.id]?.image_url
@@ -220,6 +223,9 @@ export default function AdminMediaEditor({ user, signOut, supabase }) {
             <div><small>{slot.id.toUpperCase()}</small><h3>{slot.title}</h3><p>{slot.note||'Thêm nhiều ảnh trong cùng một khu vực; ảnh sẽ tự chuyển trên website.'}</p></div>
             <span>{photos.length+(main?1:0)} ẢNH</span>
           </div>
+          {(slot.id.startsWith('service-')||slot.id.startsWith('project-approved-'))&&
+            <AdminSectionContent key={slot.id} supabase={supabase} user={user}
+              contentKey={slot.id} label={slot.title}/>}
           <div className="admin-media-primary">
             <div className="admin-media-primary-thumb">{main?<img src={main} alt={'Ảnh chính '+slot.title} loading="lazy"/>:<span>CHƯA CÓ ẢNH CHÍNH</span>}</div>
             <div className="admin-media-primary-actions">
