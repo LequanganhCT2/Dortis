@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import './admin.css'
-import SiteHeader from './SiteHeader'
 import AdminMediaEditor from './AdminMediaEditor'
 import AdminArtistProfiles from './AdminArtistProfiles'
 
@@ -140,10 +139,9 @@ export default function AdminPage() {
     }
   }
 
-  const withHeader = content => <div className={authorized ? 'dortis-page-under-header dortis-admin-shell' : 'dortis-admin-shell'}>
-    <SiteHeader onAdminSignOut={authorized ? signOut : null}/>
-    {content}
-  </div>
+  // Admin is a dedicated workspace. Its Media tabs provide the only top navigation,
+  // so there is no fixed public header or reserved empty space above the editor.
+  const withHeader = content => <div className="dortis-admin-shell">{content}</div>
 
   if (checking) return withHeader(<main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>)
   if (!supabase) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>)

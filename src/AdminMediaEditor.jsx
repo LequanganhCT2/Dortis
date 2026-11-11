@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './admin-media-editor.css'
 import AdminSectionContent from './AdminSectionContent'
 import AdminHeroCards from './AdminHeroCards'
@@ -42,6 +42,7 @@ function checkImage(file) {
 }
 export default function AdminMediaEditor({ user, supabase }) {
   const [groupId,setGroupId]=useState('hero')
+  const tabsAnchorRef=useRef(null)
   const [primary,setPrimary]=useState({})
   const [gallery,setGallery]=useState({})
   const [busy,setBusy]=useState('')
@@ -51,6 +52,20 @@ export default function AdminMediaEditor({ user, supabase }) {
   const [confirm,setConfirm]=useState(null)
   const [loading,setLoading]=useState(true)
   const activeGroup = GROUPS.find(group=>group.id===groupId)||GROUPS[0]
+  const selectGroup=nextId=>{
+    if(nextId===groupId||busy)return
+    // Swapping a tall editor for a shorter one can clamp scrollY and look like
+    // a full page reload. Reposition to the ORIGINAL tab location first.
+    const anchor=tabsAnchorRef.current
+    if(anchor){
+      const originalTop=window.scrollY+anchor.getBoundingClientRect().top
+      if(window.scrollY>originalTop+8)
+        window.scrollTo({top:Math.max(0,originalTop),behavior:'instant'})
+    }
+    setGroupId(nextId)
+    setError('')
+    setNotice('')
+  }
 
   const reload = useCallback(async () => {
     const [first,second] = await Promise.all([
@@ -238,10 +253,11 @@ export default function AdminMediaEditor({ user, supabase }) {
     </header>
     {error&&<p role="alert" className="admin-alert error">{error}</p>}
     {notice&&<p role="status" className="admin-alert success">{notice}</p>}
+    <div className="admin-media-tabs-anchor" ref={tabsAnchorRef} aria-hidden="true"/>
     <div className="admin-media-tabs" role="tablist" aria-label="Các khu vực của Dortis">
       {GROUPS.map(group=><button type="button" role="tab" aria-selected={groupId===group.id}
         className={groupId===group.id?'active':''} key={group.id} disabled={!!busy}
-        onClick={()=>{setGroupId(group.id);setError('');setNotice('')}}>{group.title}</button>)}
+        onClick={()=>selectGroup(group.id)}>{group.title}</button>)}
     </div>
     <section className="admin-media-section">
       <div className="admin-media-section-title"><div><small>{activeGroup.id.toUpperCase()} / MEDIA</small><h2>{activeGroup.title}</h2><p>{activeGroup.note}</p></div><span>{groupId==='hero'?'TỐI ĐA 6 THẺ × 6 ẢNH':activeGroup.slots.length+' VỊ TRÍ'}</span></div>

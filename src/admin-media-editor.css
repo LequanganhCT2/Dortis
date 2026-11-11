@@ -117,13 +117,48 @@
 }
 @media(max-width:410px){.admin-hero-photo-grid{grid-template-columns:1fr}}
 
-/* Keep sticky media tabs below the fixed transparent Admin Header. */
-.admin-media-v2 .admin-media-tabs{
-  top:84px;
-  z-index:45;
-  scroll-margin-top:84px;
+/* The Media navigation remains in normal document flow.
+   It sticks ONLY after scrolling past its original position and automatically
+   returns there on upward scroll. No fixed admin header or overlay. */
+.admin-media-v2{
+  --admin-side-gutter:max(24px,5vw);
+  padding-top:0;
 }
-.admin-media-v2 .admin-media-tabs button{pointer-events:auto;cursor:pointer}
-.admin-media-v2 .admin-media-section{position:relative;z-index:1}
-@media(max-width:900px){.admin-media-v2 .admin-media-tabs{top:74px;scroll-margin-top:74px}}
-@media(max-width:650px){.admin-media-v2 .admin-media-tabs{top:68px;scroll-margin-top:68px}}
+.admin-media-v2 .admin-intro{
+  margin:0 0 22px;
+}
+.admin-media-tabs-anchor{
+  height:0;
+  display:block;
+  pointer-events:none;
+}
+.admin-media-v2 .admin-media-tabs{
+  position:sticky;
+  top:0;
+  z-index:65;
+  margin-inline:calc(-1 * var(--admin-side-gutter));
+  padding:12px var(--admin-side-gutter);
+  background:rgba(243,247,248,.97);
+  border-bottom:1px solid #d8e5e9;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  overscroll-behavior-inline:contain;
+}
+.admin-media-v2 .admin-media-tabs button{
+  pointer-events:auto;
+  cursor:pointer;
+}
+.admin-media-v2 .admin-media-section{
+  position:relative;
+  z-index:1;
+  min-height:55vh;
+}
+@media(max-width:650px){
+  .admin-media-v2{--admin-side-gutter:16px}
+  .admin-media-v2 .admin-intro{margin:0 0 18px}
+  .admin-media-v2 .admin-media-tabs{
+    top:0;
+    margin-inline:calc(-1 * var(--admin-side-gutter));
+    padding:10px var(--admin-side-gutter);
+  }
+}
