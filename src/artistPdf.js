@@ -1,7 +1,8 @@
 /**
  * In-browser PDF import for Dortis artist portfolios.
  * Extracts selectable text, page boundaries and rough headings; does not use OCR.
- * Page snapshots are created only when an admin chooses Publish.
+ * Full-page PDF snapshots are never published. Individual photo crops
+ * are rendered by artistPhotoCrops.js and page layouts use HTML/CSS.
  */
 let cachedPdfJs
 async function pdfEngine() {
@@ -113,29 +114,6 @@ export async function extractArtistPdf(file,onProgress=()=>{}){
       extractedChars:total
     }
   }finally{await destroyArtistPdf(pdf)}
-}
-export async function renderPdfPage(page,{maxWidth=1180,quality=.8}={}){
-  const viewportBase=page.getViewport({scale:1})
-  const scale=Math.min(1.5,maxWidth/viewportBase.width)
-  const viewport=page.getViewport({scale})
-  const canvas=document.createElement('canvas')
-  canvas.width=Math.round(viewport.width)
-  canvas.height=Math.round(viewport.height)
-  const ctx=canvas.getContext('2d',{alpha:false})
-  ctx.fillStyle='#ffffff'
-  ctx.fillRect(0,0,canvas.width,canvas.height)
-  await page.render({canvasContext:ctx,canvas,viewport}).promise
-  const toBlob=(type,q)=>new Promise(resolve=>canvas.toBlob(resolve,type,q))
-  let blob=await toBlob('image/webp',quality)
-  let extension='webp'
-  if(!blob||blob.type!=='image/webp'){
-    blob=await toBlob('image/jpeg',quality)
-    extension='jpg'
-  }
-  canvas.width=0
-  canvas.height=0
-  if(!blob)throw new Error('Không thể kết xuất ảnh trang PDF.')
-  return {blob,extension,type:blob.type}
 }
 export async function renderPagesFromPdf(pdfBlob,onProgress=()=>{}){
   const source=pdfBlob instanceof File?pdfBlob:new File([pdfBlob],'portfolio.pdf',{type:'application/pdf'})

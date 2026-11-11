@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from './AdminPage'
 import './artist-pages.css'
+import ArtistPortfolioSections from './ArtistPortfolioSections'
 
 function ArtistBrand(){return <a className="artist-brand-link" href="/" aria-label="Dortis – về trang chủ">
   <span className="artist-brand-mark">DT</span><span>DORTIS<span className="artist-brand-dot">.</span></span>
@@ -50,45 +51,7 @@ export default function ArtistPages(){
     {loading?<main className="artist-loading" role="status">Đang tải hồ sơ nghệ sĩ...</main>:
     error?<main className="artist-loading" role="alert">{error}</main>:
     slug?(!profile?<main className="artist-loading"><h1>Hồ sơ chưa công khai.</h1><p>Trang này chưa được xuất bản hoặc không tồn tại.</p><a href="/artists">← TẤT CẢ NGHỆ SĨ</a></main>:
-      <main>
-        <section className="artist-detail-hero">
-          <div className="artist-detail-hero-copy">
-            <p className="artist-kicker">DORTIS / ARTIST PORTFOLIO</p>
-            <span className="artist-detail-role">{profile.role}</span>
-            <h1>{profile.name}<span>.</span></h1>
-            <p className="artist-detail-lead">{profile.tagline||'Bản sắc, nghệ thuật và hành trình riêng.'}</p>
-            <div className="artist-detail-hero-actions"><a href="#artist-story">KHÁM PHÁ HỒ SƠ ↓</a><a href="/#lien-he">LIÊN HỆ HỢP TÁC ↗</a></div>
-          </div>
-          <div className="artist-detail-hero-art">
-            {profile.cover_image_url?<img src={profile.cover_image_url} alt={'Ảnh bìa hồ sơ '+profile.name}/>:
-              <div className="artist-visual-monogram" aria-hidden="true">{profile.name.slice(0,2).toUpperCase()}</div>}
-            <span>DORTIS / VISUAL STORYTELLING</span>
-          </div>
-        </section>
-        {profile.intro&&<section className="artist-intro-section"><span>01 / THE ARTIST</span><p>{profile.intro}</p></section>}
-        <div id="artist-story" className="artist-story">
-          {(Array.isArray(profile.sections)?profile.sections:[]).map((section,index)=>{
-            if(index===0 && !section.body?.trim() && profile.cover_image_url)return null
-            const isVisual=!section.body?.trim()
-            const visual=Boolean(section.image_url)
-            return <section className={'artist-story-page artist-story-page-'+(index%3)+(isVisual?' is-visual':'')} key={section.page??index}>
-              <div className="artist-story-media">
-                {visual?<img src={section.image_url} alt={'Trang minh họa '+(section.page||index+1)+' trong hồ sơ '+profile.name} loading="lazy"/>:
-                  <div className="artist-story-type-art" aria-hidden="true">{String(section.page||index+1).padStart(2,'0')}</div>}
-                <span>PAGE {String(section.page||index+1).padStart(2,'0')}</span>
-              </div>
-              <div className="artist-story-copy">
-                <span className="artist-kicker">CHAPTER {String(section.page||index+1).padStart(2,'0')} / {profile.name.toUpperCase()}</span>
-                <h2>{section.title||'Hành trình nghệ thuật'}</h2>
-                {section.body?.trim()?<div className="artist-story-text">{section.body}</div>:
-                  <p className="artist-story-caption">Khoảnh khắc và dấu ấn trong hành trình sáng tạo.</p>}
-              </div>
-            </section>
-          })}
-        </div>
-        <section className="artist-detail-cta"><span>DORTIS / EVERY ARTIST HAS A STORY</span><h2>Mỗi hành trình,<br/><em>một dấu ấn riêng.</em></h2><a href="/#lien-he">CÙNG TẠO NÊN CÂU CHUYỆN MỚI ↗</a></section>
-      </main>
-    ):
+      <ArtistPortfolioSections profile={profile} sections={profile.sections}/>    ):
     <main className="artist-list-main">
       <section className="artist-list-header"><span className="artist-kicker">DORTIS / ARTIST STORIES</span>
         <h1>Những gương mặt.<br/><em>Những câu chuyện riêng.</em></h1>
