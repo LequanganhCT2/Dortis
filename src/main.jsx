@@ -10,6 +10,7 @@ import { CaxHeroDeck, CaxArtistExperience, CaxBrandValues, CaxFinalFan } from '.
 import CircularServiceCarousel from './CircularServiceCarousel'
 import PhilosophyStoryCard from './PhilosophyStoryCard'
 import DortisFAQ from './DortisFAQ'
+import { getMediaUrls, RotatingImage } from './SiteMedia'
 import CaxHeroCopy from './CaxHeroCopy'
 
 const navItems = [['top', 'Trang chủ'], ['dich-vu', 'Dịch vụ'], ['du-an', 'Dự án'], ['trai-nghiem', 'Trải nghiệm'], ['ve-dortis', 'Về DORTIS'], ['lien-he', 'Liên hệ']]
@@ -89,7 +90,7 @@ function useReveals(dep) {
   }, [dep])
 }
 function App() {
-  const { siteImages } = useSiteImages()
+  const { siteImages, siteGalleries } = useSiteImages()
   const [menuOpen, setMenuOpen] = useState(false)
   const [active, setActive] = useState('top')
   const [scrollRatio, setScrollRatio] = useState(0)
@@ -130,24 +131,35 @@ function App() {
         <div className="hero-rainbow" aria-hidden="true"/>
         <LiquidRibbons className="hero-liquid"/>
         <div className="cax-hero-grid">
-          <CaxHeroCopy /><CaxHeroDeck images={siteImages}/>
+          <CaxHeroCopy /><CaxHeroDeck images={siteImages} galleries={siteGalleries}/>
         </div>
       </section>
 
       <section id="dich-vu" className="cax-services-section section-shell scene-section">
         <header className="cax-section-head"><div><p className="cax-kicker">02 / OUR EXPERTISE</p><h2>Mỗi câu chuyện.<br/><em>Một ngôn ngữ riêng.</em></h2></div><p>Từ bước định hình bản sắc đến những điểm chạm truyền thông, Dortis biến ý tưởng thành trải nghiệm sáng tạo có chiều sâu.</p></header>
-        <CircularServiceCarousel services={services} images={siteImages} />
+        <CircularServiceCarousel services={services} images={siteImages} galleries={siteGalleries} />
         <p className="cax-service-hint">Kéo trái/phải để xoay vòng liên tục. Tối đa 5 thẻ hiển thị trên desktop và 10 ảnh có thể được quản lý trong Admin. Thẻ không có ảnh sử dụng bản mô phỏng giao diện.</p>
       </section>
 
       <section id="du-an" className="cax-selected-work scene-section">
         <div className="section-shell">
           <header className="cax-section-head"><div><p className="cax-kicker">03 / SELECTED CREATIVE WORK</p><h2>Cảm hứng <em>thành hình.</em></h2></div><p>Những dự án sáng tạo được chọn lọc và cho phép công bố sẽ xuất hiện tại đây.</p></header>
-          <div className="cax-project-placeholder"><div><strong>Những câu chuyện<br/>đang được chọn lọc.</strong><p>Các hồ sơ và PDF gốc của khách hàng không được công khai khi chưa có quyền sử dụng rõ ràng. Dự án sẽ được giới thiệu bằng ảnh bìa và nội dung đã duyệt.</p></div><span>PUBLIC GALLERY / COMING SOON</span></div>
+          {['project-approved-01','project-approved-02','project-approved-03'].some(slot=>getMediaUrls(siteImages,siteGalleries,slot).length) ?
+            <div className="dortis-public-projects">
+              {['project-approved-01','project-approved-02','project-approved-03'].map((slot,i)=>{
+                const sources=getMediaUrls(siteImages,siteGalleries,slot)
+                return sources.length ? <article className="dortis-public-project" key={slot}>
+                  <div className="dortis-public-project-preview"><RotatingImage urls={sources}/></div>
+                  <div className="dortis-public-project-body"><strong>Dự án công khai {String(i+1).padStart(2,'0')}</strong>
+                    <p>Bộ hình ảnh được duyệt để giới thiệu trên Dortis.</p></div>
+                </article> : null
+              })}
+            </div> :
+            <div className="cax-project-placeholder"><div><strong>Những câu chuyện<br/>đang được chọn lọc.</strong><p>Các hồ sơ và PDF gốc của khách hàng không được công khai khi chưa có quyền sử dụng rõ ràng. Dự án sẽ được giới thiệu bằng ảnh bìa và nội dung đã duyệt.</p></div><span>PUBLIC GALLERY / COMING SOON</span></div>}
         </div>
       </section>
 
-      <CaxArtistExperience />
+      <CaxArtistExperience images={siteImages} galleries={siteGalleries} />
 
       <section id="ve-dortis" className="dortis-philosophy scene-section" aria-labelledby="dortis-philosophy-heading">
         <div className="dortis-philosophy-inner section-shell">
@@ -165,20 +177,20 @@ function App() {
               <p className="dortis-philosophy-lead">Chúng tôi tin rằng một hình ảnh đẹp bắt đầu bằng sự thấu hiểu. Dortis giúp biến tinh thần và câu chuyện riêng của mỗi nghệ sĩ thành dấu ấn bền vững.</p>
               <a className="dortis-philosophy-cta" href="#gia-tri">KHÁM PHÁ GIÁ TRỊ DORTIS <span aria-hidden="true">↗</span></a>
             </div>
-            <PhilosophyStoryCard imageUrl={siteImages.about} />
+            <PhilosophyStoryCard imageUrls={getMediaUrls(siteImages,siteGalleries,'about')} />
           </div>
           <div className="dortis-philosophy-footer"><span>CREATIVITY WITH PURPOSE</span><span>EVERY ARTIST HAS A STORY.</span><span>DORTIS © 2026</span></div>
         </div>
       </section>
 
-      <CaxBrandValues />
+      <CaxBrandValues images={siteImages} galleries={siteGalleries} />
 
-      <DortisFAQ items={faqs} />
+      <DortisFAQ items={faqs} media={getMediaUrls(siteImages,siteGalleries,'faq')}/>
 
       <section id="lien-he" className="cax-contact scene-section">
         <div className="cax-contact-layout section-shell">
           <div className="cax-contact-copy"><p className="cax-kicker">08 / THE NEXT CREATIVE CHAPTER</p><h2>Cùng tạo nên<br/><em>dấu ấn của bạn.</em></h2><p>Từ một ý tưởng nhỏ đến hình ảnh nghệ sĩ trọn vẹn — Dortis sẵn sàng cho những kết nối sáng tạo. Khám phá những dịch vụ hiện đang được giới thiệu.</p><a href="#dich-vu" className="button-dark">KHÁM PHÁ DỊCH VỤ <Arrow /></a></div>
-          <CaxFinalFan imageUrl={siteImages.contact}/>
+          <CaxFinalFan imageUrls={getMediaUrls(siteImages,siteGalleries,'contact')}/>
         </div>
       </section>
 

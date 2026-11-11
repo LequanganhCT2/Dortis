@@ -1,7 +1,8 @@
+import { RotatingImage } from './SiteMedia'
 import React, { useState } from 'react'
 import './dortis-faq.css'
 
-export default function DortisFAQ({ items = [] }) {
+export default function DortisFAQ({ items = [], media = [] }) {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const tilt = event => {
@@ -19,6 +20,7 @@ export default function DortisFAQ({ items = [] }) {
   }
 
   return <section id="cau-hoi" className="dortis-faq scene-section" aria-labelledby="dortis-faq-title">
+    <RotatingImage urls={media} className="dortis-faq-ambient" />
     <div className="section-shell dortis-faq-layout">
       <header className="dortis-faq-editorial">
         <div className="dortis-faq-section-mark">

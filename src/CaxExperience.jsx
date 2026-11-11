@@ -1,3 +1,4 @@
+import { getMediaUrls, RotatingImage } from './SiteMedia'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -31,7 +32,7 @@ function useTouchSwipe(left,right){
     onTouchEnd:e=>{if(!start.current)return;const dx=e.changedTouches[0].clientX-start.current[0],dy=e.changedTouches[0].clientY-start.current[1];start.current=null;if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.3)return;dx<0?left():right()},
   }
 }
-export function CaxHeroDeck({images={}}){
+export function CaxHeroDeck({images={},galleries={}}){
   const [selected,setSelected]=useState(0)
   const [expanded,setExpanded]=useState(false)
   const reduce=useReducedMotion()
@@ -121,7 +122,7 @@ export function CaxHeroDeck({images={}}){
           key={s.code} style={cssVars} aria-pressed={active}
           aria-label={s.label+(active&&expanded?' – nhấn lại để thu gọn':' – chọn thẻ')}
           onClick={()=>toggleCard(i)}>
-          {images.hero&&<img src={images.hero} alt="" className="cax-deck-custom-image" loading="eager"/>}
+          <RotatingImage urls={getMediaUrls(images,galleries,'hero')} className="cax-deck-custom-image" offset={i} loading="eager"/>
           <span className="cax-sheet-eyebrow">DORTIS STUDIO / {s.code}</span>
           <strong className="cax-sheet-headline">{s.lines[0]}<span>{s.lines[1]}</span></strong>
           <span className="cax-sheet-footer">{s.kind}<span aria-hidden="true">↗</span></span>
@@ -161,7 +162,7 @@ export function CaxServicePanels({services,images={}}){
     </button>)}
   </div>
 }
-export function CaxArtistExperience(){
+export function CaxArtistExperience({images={},galleries={}}){
   const [mode,setMode]=useState('quick'),[index,setIndex]=useState(0)
   const shift=n=>setIndex(x=>(x+n+3)%3),chapter=chapters[index]
   const touch=useTouchSwipe(()=>shift(1),()=>shift(-1))
@@ -173,14 +174,14 @@ export function CaxArtistExperience(){
     </div></div>
     <div className="cax-artist-frame"><div className="cax-artist-frame-label"><span>DORTIS / BẢN MẪU MINH HỌA</span><span>{mode==='quick'?'QUICK PORTFOLIO':'IMMERSIVE JOURNEY'}</span></div>
       {mode==='quick'?<div className="cax-quick">
-        <div className="cax-quick-cover"><small>FICTIONAL ARTIST / DEMO</small><strong>HẠ<br/>LAM.</strong><span>CONTEMPORARY POP</span></div>
+        <div className="cax-quick-cover"><RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo"/><small>FICTIONAL ARTIST / DEMO</small><strong>HẠ<br/>LAM.</strong><span>CONTEMPORARY POP</span></div>
         <div className="cax-quick-info"><p className="cax-kicker">ARTIST / QUICK VIEW</p><h3>Hạ Lam <small>— nghệ sĩ giả lập</small></h3><p>Giới thiệu, video nổi bật, cột mốc và thông tin hợp tác luôn dễ tìm, không cần chờ 3D hay chuyển cảnh.</p>
         <div className="cax-quick-stats"><span><b>BIO</b>Giới thiệu</span><span><b>SHOWREEL</b>Video</span><span><b>CREDITS</b>Dấu mốc</span></div>
         <a href="#dich-vu">KHÁM PHÁ WEBSITE NGHỆ SĨ ↗</a></div>
       </div>:<div className="cax-explore">
         <div className={'cax-explore-screen chapter-'+index} {...touch} tabIndex={0}
           onKeyDown={e=>{if(e.key==='ArrowRight'){e.preventDefault();shift(1)}if(e.key==='ArrowLeft'){e.preventDefault();shift(-1)}}}>
-          <span>CHAPTER 0{index+1} / 03 — {chapter[0]}</span><div><strong>{chapter[1]}</strong><p>{chapter[2]}</p></div><small>HẠ LAM / FICTIONAL ARTIST DEMO</small>
+          <RotatingImage urls={getMediaUrls(images,galleries,'artist-experience')} className="dortis-section-photo" offset={index}/><span>CHAPTER 0{index+1} / 03 — {chapter[0]}</span><div><strong>{chapter[1]}</strong><p>{chapter[2]}</p></div><small>HẠ LAM / FICTIONAL ARTIST DEMO</small>
         </div>
         <div className="cax-explore-chapters">{chapters.map((c,i)=><button key={c[0]} type="button" className={i===index?'active':''} aria-current={i===index?'step':undefined} onClick={()=>setIndex(i)}><b>0{i+1}</b>{c[0]}</button>)}</div>
         <div className="cax-explore-arrows"><button type="button" aria-label="Chương trước" onClick={()=>shift(-1)}>←</button><button type="button" aria-label="Chương tiếp theo" onClick={()=>shift(1)}>→</button></div>
@@ -188,7 +189,7 @@ export function CaxArtistExperience(){
     </div>
   </div></section>
 }
-export function CaxBrandValues(){
+export function CaxBrandValues({images={},galleries={}}){
   const [openValue,setOpenValue]=useState(null)
   const [isVisible,setIsVisible]=useState(false)
   const stageRef=useRef(null)
@@ -225,6 +226,7 @@ export function CaxBrandValues(){
   const toggle=initial=>setOpenValue(current=>current===initial?null:initial)
 
   return <section id="gia-tri" className="cax-values cax-values-3d scene-section" aria-labelledby="cax-values-heading">
+    <RotatingImage urls={getMediaUrls(images,galleries,'values')} className="dortis-values-ambient"/>
     <div className="section-shell cax-values-3d-shell">
       <div className="cax-values-3d-layout">
         <div ref={stageRef} className={'cax-values-3d-stage'+(isVisible?' is-visible':'')+(openValue?' has-selection':'')}
@@ -274,12 +276,12 @@ export function CaxBrandValues(){
   </section>
 }
 
-export function CaxFinalFan({imageUrl}){
+export function CaxFinalFan({imageUrl,imageUrls=[]}){
   const [front,setFront]=useState(0)
   const cards=[['PORTFOLIO','CREATIVE IDENTITY.'],['ARTIST BRAND','YOUR STORY.'],['DIGITAL','BEYOND THE STAGE.']]
   return <div className="cax-fan-deck" aria-label="Giới thiệu ba hướng sáng tạo">
     <div className="cax-fan-stack">{cards.map(([type,title],i)=><div key={type} className={'cax-fan-card position-'+((i-front+3)%3)}>
-      {imageUrl&&<img src={imageUrl} alt="" loading="lazy"/>}<span>0{i+1} / {type}</span><strong>{title}</strong><small>DORTIS CREATIVE CONCEPT</small>
+      <RotatingImage urls={imageUrls.length?imageUrls:imageUrl?[imageUrl]:[]} offset={i} className="cax-fan-photo"/><span>0{i+1} / {type}</span><strong>{title}</strong><small>DORTIS CREATIVE CONCEPT</small>
     </div>)}</div>
     <div className="cax-fan-controls"><span>CREATIVE PRODUCT DECK</span><button type="button" onClick={()=>setFront(i=>(i+1)%3)}>XEM THẺ TIẾP ↗</button></div>
   </div>

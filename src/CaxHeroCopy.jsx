@@ -53,7 +53,7 @@ export default function CaxHeroCopy() {
       DORTIS — CREATIVE ARTIST STUDIO / EST. 2026
     </p>
     <h1 className="cax-hero-type__title">
-      Chúng tôi giúp <span className="cax-hero-type__accent cobalt">nghệ sĩ</span>{' '}
+      Chúng tôi giúp <span className="cax-hero-type__accent cobalt">nghệ sĩ</span><br/>
       xây dựng hình ảnh <span className="cax-hero-type__accent teal">chuyên nghiệp</span>{' '}
       và lan tỏa <span className="cax-hero-type__accent ember">dấu ấn riêng.</span>
     </h1>

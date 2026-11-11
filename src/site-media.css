@@ -1,0 +1,30 @@
+.dortis-rotating-media{display:block;position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.dortis-rotating-media .dortis-media-layer{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.dortis-rotating-media .dortis-media-layer.current{animation:dortis-image-fade-in 850ms ease both}
+@keyframes dortis-image-fade-in{from{opacity:0}to{opacity:1}}
+.dortis-values-ambient,.dortis-faq-ambient{position:absolute;z-index:0;inset:0;opacity:.11;mix-blend-mode:multiply;pointer-events:none}
+.dortis-values-ambient .dortis-media-layer,.dortis-faq-ambient .dortis-media-layer{object-fit:cover}
+.cax-quick-cover .dortis-section-photo,.cax-explore-screen .dortis-section-photo{z-index:0;opacity:.16;mix-blend-mode:multiply}
+.cax-quick-cover>*:not(.dortis-rotating-media),.cax-explore-screen>*:not(.dortis-rotating-media){position:relative;z-index:1}
+.cax-explore-screen{position:relative;overflow:hidden;isolation:isolate}
+.cax-fan-card>.dortis-rotating-media{position:absolute;inset:0;opacity:.14;z-index:0}
+.cax-fan-card>.dortis-rotating-media img{height:100%;width:100%;object-fit:cover}
+.cax-fan-card>*:not(.dortis-rotating-media){z-index:1;position:relative}
+.cax-service-media .dortis-rotating-media,.cax-circle-media .dortis-rotating-media{position:absolute;inset:0;background:#eaf0f5;z-index:1}
+.cax-service-media .dortis-rotating-media img,.cax-circle-media .dortis-rotating-media img{object-fit:contain}
+.cax-circle-media .cax-circle-category{z-index:2}
+.cax-hero-deck .dortis-rotating-media.cax-deck-custom-image{z-index:0;position:absolute;inset:0;opacity:.17}
+.dortis-philosophy-photo.dortis-rotating-media{position:absolute;inset:0;opacity:.23}
+.dortis-philosophy-photo.dortis-rotating-media img{object-fit:cover}
+.dortis-public-projects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.dortis-public-project{min-width:0;border:1px solid #d5e5e9;border-radius:17px;overflow:hidden;background:#fff;box-shadow:0 12px 25px #15364c0c}
+.dortis-public-project-preview{position:relative;aspect-ratio:4/3;background:linear-gradient(125deg,#d5eaf0,#f1e1d7);overflow:hidden}
+.dortis-public-project-preview .dortis-rotating-media{position:absolute;inset:0}
+.dortis-public-project-body{padding:20px 21px}
+.dortis-public-project-body strong{font-size:17px;line-height:1.5;color:#19283b;display:block}
+.dortis-public-project-body p{font-size:12px;color:#667d8c;line-height:1.8;margin:9px 0 0}
+@media(max-width:820px){.dortis-public-projects{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.dortis-public-projects{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.dortis-rotating-media .dortis-media-layer.current{animation:none}.dortis-rotating-media .dortis-media-layer.dormant{display:none}}
+
+.cax-fan-card>.dortis-rotating-media img{opacity:1}

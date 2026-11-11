@@ -1,3 +1,4 @@
+import { RotatingImage } from './SiteMedia'
 import React, { useState } from 'react'
 
 const chapters = [
@@ -15,10 +16,10 @@ const chapters = [
   },
 ]
 
-export default function PhilosophyStoryCard({ imageUrl }) {
+export default function PhilosophyStoryCard({ imageUrl, imageUrls = [] }) {
   const [selected, setSelected] = useState(1)
   return <aside className="dortis-philosophy-card dortis-philosophy-story" aria-label="Ba lớp câu chuyện của Dortis">
-    {imageUrl ? <img className="dortis-philosophy-photo" src={imageUrl} alt="" loading="lazy" /> : null}
+    <RotatingImage urls={imageUrls.length?imageUrls:imageUrl?[imageUrl]:[]} className="dortis-philosophy-photo"/>
     <span className="dortis-philosophy-card-top">DORTIS / ARTIST IDENTITY</span>
     <div className="dortis-philosophy-symbol dortis-philosophy-watermark" aria-hidden="true"><span>D</span><span>T</span></div>
     <div className="dortis-philosophy-story-content">

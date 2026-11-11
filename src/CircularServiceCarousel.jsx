@@ -1,3 +1,4 @@
+import { getMediaUrls, RotatingImage } from './SiteMedia'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import './circular-services.css'
 
@@ -18,7 +19,7 @@ function wrappedDistance(index, active, length) {
   return distance
 }
 
-export default function CircularServiceCarousel({ services = [], images = {} }) {
+export default function CircularServiceCarousel({ services = [], images = {}, galleries = {} }) {
   const stageRef = useRef(null)
   const pointerStart = useRef(null)
   const suppressClick = useRef(false)
@@ -35,13 +36,15 @@ export default function CircularServiceCarousel({ services = [], images = {} }) 
       description: service.description,
       category: SHOWCASE_LABELS[index],
       lines: SHOWCASE_TITLES[index],
-      image: images['service-' + service.style] || null,
+      imageUrls: getMediaUrls(images,galleries,'service-' + service.style),
+      image: getMediaUrls(images,galleries,'service-' + service.style)[0] || null,
       details: details[index],
       className: 'cax-service-' + service.style,
     }))
     const extra = GALLERY_NUMBERS.map(number => {
       const label = String(number).padStart(2, '0')
-      const image = images['service-gallery-' + label]
+      const media = getMediaUrls(images,galleries,'service-gallery-' + label)
+      const image = media[0]
       return image ? {
         key: 'service-gallery-' + label,
         number: label,
@@ -51,12 +54,13 @@ export default function CircularServiceCarousel({ services = [], images = {} }) 
         category: 'CREATIVE GALLERY',
         lines: ['Creative', 'Showcase'],
         image,
+        imageUrls: media,
         details: 'Tài sản hình ảnh đã được cho phép giới thiệu công khai',
         className: 'cax-service-gallery',
       } : null
     }).filter(Boolean)
     return [...core, ...extra].slice(0, MAX_ITEMS)
-  }, [services, images])
+  }, [services, images, galleries])
 
   const total = items.length
   const current = items[Math.min(active, Math.max(total - 1, 0))]
@@ -160,7 +164,7 @@ export default function CircularServiceCarousel({ services = [], images = {} }) 
           onClick={() => select(index)}>
           <span className="cax-circle-card-top"><span>{item.number} / {index < 4 ? 'SERVICE' : 'GALLERY'}</span><span aria-hidden="true">↗</span></span>
           <span className="cax-circle-media">
-            {item.image ? <img src={item.image} alt="" loading={abs <= 1 ? 'eager' : 'lazy'} onError={event => { event.currentTarget.style.display = 'none' }} /> :
+            {item.image ? <RotatingImage urls={item.imageUrls} className="cax-circle-photo" loading={abs <= 1 ? 'eager' : 'lazy'}/> :
               <span className="cax-circle-paper" aria-hidden="true">
                 <small>DORTIS / {item.number}</small>
                 <strong>{item.lines[0]}<span>{item.lines[1]}</span></strong>
