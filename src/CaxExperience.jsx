@@ -189,15 +189,91 @@ export function CaxArtistExperience(){
   </div></section>
 }
 export function CaxBrandValues(){
-  const [flips,setFlips]=useState([])
-  const toggle=x=>setFlips(curr=>curr.includes(x)?curr.filter(y=>y!==x):[...curr,x])
-  return <section id="gia-tri" className="cax-values section-shell scene-section">
-    <header className="cax-values-heading"><div><p className="cax-kicker">06 / WHAT MAKES DORTIS</p><h2>Điều tạo nên<br/><em>DORTIS.</em></h2></div><p>Sáu chữ cái. Sáu giá trị tạo nên bản sắc và cách Dortis sáng tạo.</p></header>
-    <div className="cax-values-grid">{values.map(([initial,name,meaning,extra],i)=><button key={initial} type="button" aria-pressed={flips.includes(initial)} className={'cax-value-card tone-'+i+(flips.includes(initial)?' flipped':'')} onClick={()=>toggle(initial)}>
-      <span className="cax-value-inner"><span className="cax-value-face front"><span className="cax-value-initial">{initial}</span><span className="cax-value-summary"><strong>{name}</strong><span>{meaning}</span></span><small>CHẠM ĐỂ XEM THÊM ↗</small></span><span className="cax-value-face back"><b>{initial} / {name.toUpperCase()}</b><span>{extra}</span><small>↶ TRỞ LẠI</small></span></span>
-    </button>)}</div>
+  const [openValue,setOpenValue]=useState(null)
+  const [isVisible,setIsVisible]=useState(false)
+  const stageRef=useRef(null)
+  const reduce=useReducedMotion()
+
+  useEffect(()=>{
+    const stage=stageRef.current
+    if(!stage||!('IntersectionObserver' in window)){
+      setIsVisible(true)
+      return
+    }
+    const observer=new IntersectionObserver(entries=>{
+      if(entries.some(entry=>entry.isIntersecting)){
+        setIsVisible(true)
+        observer.disconnect()
+      }
+    },{threshold:.12})
+    observer.observe(stage)
+    return ()=>observer.disconnect()
+  },[])
+
+  const tiltCard=event=>{
+    if(reduce||event.pointerType!=='mouse'||!window.matchMedia('(hover:hover) and (pointer:fine)').matches)return
+    const node=event.currentTarget,rect=node.getBoundingClientRect()
+    const x=(event.clientX-rect.left)/rect.width-.5
+    const y=(event.clientY-rect.top)/rect.height-.5
+    node.style.setProperty('--values-tilt-x',(-y*11).toFixed(2)+'deg')
+    node.style.setProperty('--values-tilt-y',(x*13).toFixed(2)+'deg')
+  }
+  const clearTilt=event=>{
+    event.currentTarget.style.setProperty('--values-tilt-x','0deg')
+    event.currentTarget.style.setProperty('--values-tilt-y','0deg')
+  }
+  const toggle=initial=>setOpenValue(current=>current===initial?null:initial)
+
+  return <section id="gia-tri" className="cax-values cax-values-3d scene-section" aria-labelledby="cax-values-heading">
+    <div className="section-shell cax-values-3d-shell">
+      <div className="cax-values-3d-layout">
+        <div ref={stageRef} className={'cax-values-3d-stage'+(isVisible?' is-visible':'')+(openValue?' has-selection':'')}
+          role="group" aria-label="Sáu giá trị DORTIS, chọn khối để xem nội dung phía sau"
+          onKeyDown={event=>{if(event.key==='Escape'&&openValue){setOpenValue(null);event.stopPropagation()}}}>
+          <span className="cax-values-orbit orbit-one" aria-hidden="true" />
+          <span className="cax-values-orbit orbit-two" aria-hidden="true" />
+          <span className="cax-values-stage-glow" aria-hidden="true" />
+          {values.map(([initial,name,meaning,extra],index)=>{
+            const expanded=openValue===initial
+            return <button type="button" key={initial}
+              className={'cax-values-3d-card cax-value-position-'+index+' cax-value-tone-'+(index%3)+(expanded?' is-expanded':'')}
+              aria-label={name+(expanded?' – đóng mặt sau':' – lật để xem ý nghĩa')}
+              aria-pressed={expanded}
+              style={{zIndex:expanded?25:[7,10,6,5,8,4][index],'--values-entrance-delay':(index*85)+'ms'}}
+              onClick={()=>toggle(initial)} onPointerMove={tiltCard} onPointerLeave={clearTilt}
+              onBlur={clearTilt}>
+              <span className="cax-values-card-shell">
+                <span className="cax-values-face front" aria-hidden={expanded}>
+                  <span className="cax-values-card-top"><span>{String(index+1).padStart(2,'0')} / DORTIS</span><span aria-hidden="true">↗</span></span>
+                  <span className="cax-values-card-letter">{initial}</span>
+                  <span className="cax-values-card-copy"><strong>{name}</strong><span>{meaning}</span></span>
+                  <span className="cax-values-card-hint">CHẠM ĐỂ XEM THÊM ↗</span>
+                </span>
+                <span className="cax-values-face back" aria-hidden={!expanded}>
+                  <span className="cax-values-card-top">{String(index+1).padStart(2,'0')} / {initial}</span>
+                  <strong className="cax-values-back-heading">{name}</strong>
+                  <span className="cax-values-back-description">{extra}</span>
+                  <span className="cax-values-card-hint">↶ TRỞ LẠI</span>
+                </span>
+              </span>
+            </button>
+          })}
+          <div className="cax-values-stage-caption" aria-hidden="true">ART · IDENTITY · EMOTION</div>
+        </div>
+
+        <header className="cax-values-3d-editorial">
+          <p className="cax-values-3d-kicker">06 / WHAT MAKES DORTIS</p>
+          <h2 id="cax-values-heading">Điều tạo nên <em>DORTIS.</em></h2>
+          <span className="cax-values-3d-rule" aria-hidden="true"/>
+          <p className="cax-values-3d-lead">Sáu chữ cái. Sáu giá trị tạo nên bản sắc và cách Dortis sáng tạo.</p>
+          <div className="cax-values-3d-instruction"><span className="cax-values-3d-instruction-icon" aria-hidden="true">↗</span><span>Rê chuột để cảm nhận chiều sâu.<br/>Chạm vào từng khối để khám phá giá trị.</span></div>
+          <p className="cax-values-3d-signature">CREATIVE THINKING, DISTINCTIVE IDENTITY.</p>
+        </header>
+      </div>
+    </div>
   </section>
 }
+
 export function CaxFinalFan({imageUrl}){
   const [front,setFront]=useState(0)
   const cards=[['PORTFOLIO','CREATIVE IDENTITY.'],['ARTIST BRAND','YOUR STORY.'],['DIGITAL','BEYOND THE STAGE.']]
