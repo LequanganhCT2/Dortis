@@ -26,6 +26,8 @@
   -webkit-backdrop-filter:none;
 }
 .site-header.dortis-shared-header .main-nav a{
+  font-size:12.5px;
+  font-weight:700;
   background:transparent;
   border:0;
   border-radius:0;
@@ -39,6 +41,7 @@
   box-shadow:inset 0 -2px #008f91;
 }
 .site-header.dortis-shared-header .header-contact{
+  font-size:11.5px;
   background:transparent;
   border:0;
   border-radius:0;
@@ -73,6 +76,7 @@
 .dortis-admin-logout:focus-visible{outline:2px solid #008f91;outline-offset:4px}
 
 @media(max-width:900px){
+  .site-header.dortis-shared-header .main-nav a{font-size:14px}
   /* Mobile navigation remains functional but without a white overlay/card. */
   .site-header.dortis-home-header .main-nav.menu-open,
   .site-header.dortis-shared-header .main-nav.menu-open{
@@ -87,10 +91,11 @@
   }
 }
 @media(max-width:650px){
+  .site-header.dortis-shared-header .header-contact{font-size:10.5px}
   .site-header.dortis-admin-header{padding-left:19px;padding-right:19px}
   .dortis-admin-logout{font-size:10px}
 }
 @media(max-width:380px){
   .dortis-shared-header{gap:7px}
-  .dortis-shared-header .header-contact{gap:5px;font-size:8px;padding:9px}
+  .dortis-shared-header .header-contact{gap:5px;padding:9px}
 }

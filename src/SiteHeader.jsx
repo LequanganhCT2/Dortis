@@ -99,8 +99,6 @@ export default function SiteHeader({ onAdminSignOut = null }) {
       {DORTIS_NAV_ITEMS.map(([id,title])=><a key={id} href={href(id)}
         className={active===id?'active':''} aria-current={active===id?'page':undefined}
         onClick={close}>{title}</a>)}
-      <a href="/artists" className={active==='artists'?'active':''} onClick={close}
-        aria-current={active==='artists'?'page':undefined}>Nghệ sĩ</a>
     </nav>
     <a className="header-contact" href="/admin" onClick={close}>
       ĐĂNG NHẬP <span className="arrow" aria-hidden="true">↗</span>
