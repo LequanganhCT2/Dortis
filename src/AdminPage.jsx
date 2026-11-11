@@ -125,8 +125,19 @@ export default function AdminPage() {
     finally { setBusy(false) }
   }
   async function signOut() {
-    setAuthorized(false); setUser(null)
-    await supabase?.auth.signOut()
+    if (busy) return
+    setBusy(true)
+    try {
+      const { error: signOutError } = await supabase.auth.signOut()
+      if (signOutError) throw signOutError
+      setAuthorized(false)
+      setUser(null)
+      // Replace the private route so Back does not reopen the admin screen.
+      window.location.replace('/')
+    } catch (err) {
+      setError('Không thể đăng xuất. Vui lòng thử lại.')
+      setBusy(false)
+    }
   }
 
   const withHeader = content => <div className={authorized ? 'dortis-page-under-header dortis-admin-shell' : 'dortis-admin-shell'}>
