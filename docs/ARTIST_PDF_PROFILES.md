@@ -35,6 +35,7 @@
 
 ## Technical constraints
 
+- Large PDF upload: Supabase TUS resumable 6 MB chunks via pinned `tus-js-client@4.3.1` (files above 6 MB); normal upload for smaller files.
 - PDF parser: pinned \`pdfjs-dist@6.5.438\`, loaded only when importing or rendering pages.
 - Up to 60 pages and 100 MB per PDF in the browser. Supabase project's global maximum upload size may be lower; a larger document can be compressed first.
 - Image extraction: rendered PDF pages, max 1160px width, preferred WebP at 0.77 quality, fallback JPEG, 5MB max per generated page.

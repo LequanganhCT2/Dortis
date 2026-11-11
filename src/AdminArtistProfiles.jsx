@@ -78,6 +78,37 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
     return slug+'-'+n
   }
 
+
+  async function uploadPrivatePdf(path,file){
+    if(file.size<=6*1024*1024){
+      const {error:upError}=await supabase.storage.from(PDF_BUCKET)
+        .upload(path,file,{contentType:uploadMime,upsert:false})
+      if(upError)throw upError
+      return
+    }
+    const {data:{session},error:sessionError}=await supabase.auth.getSession()
+    if(sessionError||!session?.access_token)throw new Error('Phiên đăng nhập hết hạn. Hãy đăng nhập lại.')
+    const tus=await import('tus-js-client')
+    const sourceUrl=supabase.supabaseUrl.replace(/\/+$/,'')
+    const base=sourceUrl.endsWith('.supabase.co')?
+      sourceUrl.replace(/\.supabase\.co$/,'.storage.supabase.co'):sourceUrl
+    return new Promise((resolve,reject)=>{
+      const upload=new tus.Upload(file,{
+        endpoint:base+'/storage/v1/upload/resumable',
+        headers:{authorization:'Bearer '+session.access_token},
+        uploadDataDuringCreation:true,
+        removeFingerprintOnSuccess:true,
+        retryDelays:[0,2500,5000,10000,20000],
+        metadata:{bucketName:PDF_BUCKET,objectName:path,contentType:uploadMime,cacheControl:'3600'},
+        chunkSize:6*1024*1024,
+        onError:reject,
+        onProgress:(uploaded,total)=>setProgress('Đang tải PDF riêng tư · '+Math.round(uploaded/Math.max(1,total)*100)+'%'),
+        onSuccess:resolve
+      })
+      upload.start()
+    })
+  }
+
   async function importFiles(files){
     const list=Array.from(files||[])
     if(!list.length)return
@@ -96,8 +127,7 @@ export default function AdminArtistProfiles({user,signOut,supabase}){
         const slug=await uniqueSlug(parsed.slug)
         path='artist-pdfs/'+crypto.randomUUID()+'/'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-90)
         setProgress('['+(i+1)+'/'+list.length+'] Đang lưu PDF riêng tư...')
-        const {error:upError}=await supabase.storage.from(PDF_BUCKET).upload(path,file,{contentType:uploadMime,upsert:false})
-        if(upError)throw upError
+        await uploadPrivatePdf(path,file)
         const introduction=parsed.sections.find(s=>s.body&&s.body.length>75)?.body.slice(0,500)||''
         const {data:created,error:insertError}=await supabase.from('artist_profiles')
           .insert({name:parsed.name,slug,role:parsed.role,tagline:'',

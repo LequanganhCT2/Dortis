@@ -24,8 +24,9 @@ export function slugifyArtist(value) {
 }
 export function artistNameFromFilename(name) {
   return String(name||'').replace(/\.pdf$/i,'')
-    .replace(/\b(porfolio|portfolio|profile|singer|ca si|ca sĩ|ho so|hồ sơ)\b/gi,'')
-    .replace(/[-_]+/g,' ').replace(/\s+/g,' ').trim() || 'Nghệ sĩ mới'
+    .replace(/[-_]+/g,' ')
+    .replace(/(porfolio|portfolio|profile|singer|ca\s*sĩ|ca\s*si|hồ\s*sơ|ho\s*so)/giu,'')
+    .replace(/\s+/g,' ').trim() || 'Nghệ sĩ mới'
 }
 function printable(str){return String(str||'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim()}
 function extractLines(content){
