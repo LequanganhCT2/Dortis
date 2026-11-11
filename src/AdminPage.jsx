@@ -30,7 +30,7 @@ const supabase = API_KEY ? createClient(API_URL, API_KEY, {
 const getReadableError = (error, fallback = 'Không thể hoàn tất thao tác') => {
   if (!error) return fallback
   if (error.message?.includes('relation') || error.code === '42P01') return 'Chưa khởi tạo bảng site_images trên Supabase Dortis.'
-  if (error.message?.includes('row-level security') || error.code === '42501') return 'Không có quyền admin ghi dữ liệu. Kiểm tra vai trò và chính sách RLS.'
+  if (error.message?.includes('row-level security') || error.code === '42501') return 'Phiên đăng nhập chưa có quyền ghi. Hãy đăng xuất và đăng nhập lại để cập nhật quyền admin (RLS).'
   return error.message || fallback
 }
 
@@ -147,11 +147,45 @@ export default function AdminPage() {
   const [error, setError] = useState('')
   const check = useCallback(async () => {
     if (!supabase) { setChecking(false); return }
-    const { data, error } = await supabase.auth.getUser()
-    if (error || !data?.user) { setUser(null); setAuthorized(false); setChecking(false); return }
-    setUser(data.user)
-    setAuthorized(data.user.app_metadata?.role === 'admin')
-    setChecking(false)
+    try {
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) {
+        setUser(null)
+        setAuthorized(false)
+        return
+      }
+      setUser(data.user)
+      const isAdmin = data.user.app_metadata?.role === 'admin'
+      if (!isAdmin) { setAuthorized(false); return }
+
+      // getUser() returns fresh app_metadata, but Storage RLS evaluates the
+      // app_metadata embedded in the *existing JWT*, which can be stale after
+      // a role grant. Refresh it before enabling the image editor.
+      const jwtRole = (token) => {
+        if (!token) return null
+        try {
+          const payload = token.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/')
+          return JSON.parse(atob(payload)).app_metadata?.role ?? null
+        } catch { return null }
+      }
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) throw sessionError
+      if (jwtRole(sessionData?.session?.access_token) !== 'admin') {
+        const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession()
+        if (refreshError) throw refreshError
+        if (jwtRole(refreshed?.session?.access_token) !== 'admin') {
+          throw new Error('JWT vẫn chưa cập nhật quyền admin.')
+        }
+      }
+      setAuthorized(true)
+      setError('')
+    } catch (err) {
+      setAuthorized(false)
+      setError('Không thể làm mới quyền quản trị. Vui lòng đăng xuất, đăng nhập lại và thử lần nữa.')
+      console.error('Dortis admin session refresh failed:', err?.message)
+    } finally {
+      setChecking(false)
+    }
   }, [])
   useEffect(() => {
     check()
