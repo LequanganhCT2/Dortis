@@ -21,7 +21,7 @@ export function getMediaUrls(primary = {}, gallery = {}, slot) {
 }
 
 /** CSS crossfade; no canvas and no full-page reload. */
-export function RotatingImage({ urls = [], className = '', alt = '', interval = 5800, offset = 0, loading = 'lazy', onIndexChange = null }) {
+export function RotatingImage({ urls = [], className = '', alt = '', interval = 5800, offset = 0, loading = 'lazy', onIndexChange = null, imageZoom = 100 }) {
   const validUrls = useMemo(() => [...new Set(urls.filter(url => typeof url === 'string' && url.startsWith('https://')))], [urls])
   const [step, setStep] = useState(0)
   const opacityByUrl=useContext(MediaOpacityContext)
@@ -55,9 +55,10 @@ export function RotatingImage({ urls = [], className = '', alt = '', interval = 
   if (!validUrls.length) return null
   const prev = (active - 1 + validUrls.length) % validUrls.length
   const savedOpacity=opacityByUrl[validUrls[active]]
-  const mediaStyle=Number.isFinite(savedOpacity)
-    ? {opacity:Math.min(100,Math.max(0,savedOpacity))/100}
-    : undefined
+  const mediaStyle={
+    ...(Number.isFinite(savedOpacity)?{opacity:Math.min(100,Math.max(0,savedOpacity))/100}:{}),
+    '--dortis-image-zoom':Math.min(2.5,Math.max(.5,Number(imageZoom)/100||1))
+  }
   return <span ref={holder} className={'dortis-rotating-media ' + className}
     style={mediaStyle} aria-hidden={!alt}>
     {validUrls.length > 1 && <img className="dortis-media-layer dormant" src={validUrls[prev]} alt="" loading="lazy" decoding="async" />}

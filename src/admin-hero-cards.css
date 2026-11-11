@@ -147,3 +147,11 @@
   text-shadow:0 1px 8px rgba(255,255,255,.46);
 }
 .hero-card-live-content>strong em{display:inline;margin-left:.35em}
+
+/* Editing controls for layout and zoom; preview itself is the shared public card. */
+.hero-ratio-input select{box-sizing:border-box;width:100%;border:1px solid #d9e3ea;
+  border-radius:7px;background:#fff;color:#162439;padding:11px 12px;
+  font:600 12px/1.5 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer}
+.hero-ratio-input select:focus{outline:2px solid #008f91}
+.hero-image-zoom-control{margin-top:11px}
+.hero-editor-preview .cax-single-card-preview{margin:8px 0 0}

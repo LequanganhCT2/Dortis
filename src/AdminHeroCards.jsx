@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { SITE_CONTENT_DEFAULTS } from './siteContent'
+import { CaxHeroCard } from './CaxExperience'
+import { MediaOpacityProvider } from './SiteMedia'
+import { HERO_RATIOS, heroAspectRatio, heroZoom } from './heroImagePresentation'
 import { HERO_CARD_LIMIT, HERO_IMAGES_PER_CARD, getActiveHeroCardIds, heroImageSlot } from './heroImageSets'
 import './admin-hero-cards.css'
 
@@ -21,8 +24,10 @@ const cardKey=(card,field)=>'card'+card+field
 const photoKey=(card,image,field)=>'card'+card+'Image'+image+field
 const cardKeys=card=>[
   ...FIELDS.map(([field])=>cardKey(card,field)),
+  cardKey(card,'AspectRatio'),
   ...Array.from({length:HERO_IMAGES_PER_CARD},(_,index)=>
-    PHOTO_FIELDS.map(([field])=>photoKey(card,index+1,field))).flat()
+    [...PHOTO_FIELDS.map(([field])=>photoKey(card,index+1,field)),
+      photoKey(card,index+1,'Zoom')]).flat()
 ]
 const validImage=file=>{
   if(!FILE_TYPES[file.type])return 'Chỉ chấp nhận JPG, PNG, WebP hoặc AVIF.'
@@ -278,6 +283,15 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
       const photoText=field=>String(draft[photoKey(card,photoNumber,field)]??'')
       const display=field=>photoText(field)||txt(field)
       const cardDirty=dirty(card)
+      const draftRatio=heroAspectRatio(draft,card)
+      const draftZoom=heroZoom(draft,card,photoNumber)
+      const previewUrl=currentPhoto.image?.image_url
+      // Preserve the exact homepage appearance when this photo still uses its
+      // original (null) opacity, but reflect any unsaved slider changes.
+      const hasOpacityOverride=opacityDraft[currentPhoto.slot]!==undefined||
+        (savedOpacity!==null&&savedOpacity!==undefined)
+      const previewOpacity=previewUrl&&hasOpacityOverride?
+        {[previewUrl]:Number(photoOpacity)}:{}
       return <article key={card} className={'hero-editor-card'+(isOpen?' is-open':'')}>
         <div className="hero-editor-card-heading">
           <div className="hero-editor-card-label">
@@ -303,6 +317,15 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
                 <input value={txt(field)} onChange={e=>update(cardKey(card,field),e.target.value)}
                   maxLength={800} placeholder={placeholder}/>
               </label>)}
+              <label className="hero-ratio-input">
+                <span>Tỷ lệ khung của thẻ</span>
+                <select value={draftRatio}
+                  onChange={event=>update(cardKey(card,'AspectRatio'),event.target.value)}>
+                  {HERO_RATIOS.map(ratio=><option key={ratio} value={ratio}>
+                    {ratio.replace('/',' : ')}{ratio==='4/3'?' · mặc định':''}
+                  </option>)}
+                </select>
+              </label>
               <div className="hero-editor-text-divider"/>
               <p>Chữ riêng cho ảnh {String(photoNumber).padStart(2,'0')}
                 <small>Để trống sẽ sử dụng chữ mặc định của thẻ.</small>
@@ -362,18 +385,27 @@ export default function AdminHeroCards({supabase,user,primary,onMediaUpdated,onN
                 </div>
                 <small>0%: ẩn ảnh · 100%: ảnh rõ hoàn toàn. Nhấn Lưu để áp dụng riêng cho ảnh này.</small>
               </div>}
+              {currentPhoto.image?.image_url&&<div className="media-opacity-control hero-image-zoom-control">
+                <div className="media-opacity-top">
+                  <label htmlFor={'hero-image-zoom-'+card}>THU PHÓNG ẢNH</label>
+                  <output>{draftZoom}%</output>
+                </div>
+                <input id={'hero-image-zoom-'+card} type="range"
+                  min="50" max="250" step="5" value={draftZoom}
+                  disabled={!!busy}
+                  onChange={event=>update(photoKey(card,photoNumber,'Zoom'),event.target.value)}/>
+                <small>50–250%. Chọn ảnh khác để chỉnh riêng, rồi nhấn Lưu thẻ để đồng bộ.</small>
+              </div>}
             </div>
             <div className="hero-editor-col hero-editor-preview">
               <h4>03 / XEM TRƯỚC HTML/CSS</h4>
               <p>Nội dung thay đổi trực tiếp khi bạn nhập.</p>
-              <div className="hero-card-live-preview" aria-label={'Bản xem trước thẻ '+card}>
-                {currentPhoto.image?.image_url&&<img src={currentPhoto.image.image_url} alt=""
-                  style={{opacity:Number(photoOpacity)/100}} aria-hidden="true"/>}
-                <div className="hero-card-live-content">
-                  <strong>{display('Line1')}{' '}{display('Line2')}</strong>
-                  <small>{display('Footer')} <b aria-hidden="true">↗</b></small>
+              <MediaOpacityProvider opacities={previewOpacity}>
+                <div className="cax-hero-deck cax-single-card-preview">
+                  <CaxHeroCard preview cardId={card} cardIndex={activeCards.indexOf(card)}
+                    copy={draft} imageNumber={photoNumber} imageUrls={previewUrl?[previewUrl]:[]}/>
                 </div>
-              </div>
+              </MediaOpacityProvider>
               <a href="/" target="_blank" rel="noreferrer" className="hero-live-site-link">XEM TRÊN TRANG CHỦ ↗</a>
             </div>
           </div>

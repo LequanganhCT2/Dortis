@@ -414,3 +414,25 @@ body{overflow-x:hidden;font-family:'Be Vietnam Pro',Arial,sans-serif;font-optica
 @media(max-width:640px){
   .cax-hero-deck .cax-deck-card .cax-sheet-headline{font-size:clamp(17px,4.5vw,24px)}
 }
+
+/* Shared Hero card geometry: only framing and photo zoom are configurable.
+   Existing opacity and white overlay declarations are intentionally untouched. */
+.cax-hero-deck:not(.cax-single-card-preview) .cax-deck-card{
+  width:calc(65% * var(--cax-ratio-width,1));
+}
+.cax-hero-deck .dortis-rotating-media.cax-deck-custom-image .dortis-media-layer{
+  transform:scale(var(--dortis-image-zoom,1));
+  transform-origin:center center;
+}
+@media(max-width:640px){
+  .cax-hero-deck:not(.cax-single-card-preview) .cax-deck-card{
+    width:calc(75% * var(--cax-ratio-width,1));
+  }
+}
+/* The Admin preview IS the Homepage card, not a separately-drawn mockup. */
+.cax-hero-deck.cax-single-card-preview{width:100%;max-width:none;margin:0}
+.cax-hero-deck.cax-single-card-preview .cax-deck-card{
+  position:relative;top:auto;left:auto;width:100%;height:auto;
+  transform:none!important;transition:none;cursor:default;pointer-events:none;
+  margin:0;
+}

@@ -1,6 +1,7 @@
 import { getMediaUrls, RotatingImage } from './SiteMedia'
 import {copyFor} from './siteContent'
 import { getHeroCardPhotos, getActiveHeroCardIds } from './heroImageSets'
+import {heroAspectRatio,heroWidthFactor,heroZoom} from './heroImagePresentation'
 import React, { useEffect, useRef, useState } from 'react'
 
 const showcases = [
@@ -36,6 +37,42 @@ function useTouchSwipe(left,right){
     onTouchEnd:e=>{if(!start.current)return;const dx=e.changedTouches[0].clientX-start.current[0],dy=e.changedTouches[0].clientY-start.current[1];start.current=null;if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.3)return;dx<0?left():right()},
   }
 }
+/**
+ * The same real Hero card is rendered on Homepage and in Admin.
+ * Admin preview only changes interactivity and the outer card geometry.
+ */
+export function CaxHeroCard({
+  cardId,cardIndex=0,copy={},imageUrls=[],imageNumber=1,active=true,preview=false,
+  style={},interval=5800,onClick,onImageIndexChange
+}){
+  const original=showcases[cardId-1]||showcases[0]
+  const prefix='card'+cardId
+  const photoPrefix=prefix+'Image'+imageNumber
+  const photoText=(field,fallback)=>copy[photoPrefix+field]||fallback
+  const ratio=heroAspectRatio(copy,cardId)
+  const zoom=heroZoom(copy,cardId,imageNumber)
+  const label=copy[prefix+'Title']||original.label
+  const Tag=preview?'div':'button'
+  return <Tag {...(preview?{}:{type:'button','aria-pressed':active,onClick})}
+    className={'cax-deck-card cax-card-'+cardIndex+(active?' is-active':'')}
+    style={{...style,aspectRatio:ratio,'--cax-ratio-width':heroWidthFactor(ratio)}}
+    aria-label={preview?'Xem trước thẻ '+label:label}>
+    <RotatingImage urls={imageUrls} className="cax-deck-custom-image"
+      interval={interval} imageZoom={zoom} loading="eager"
+      onIndexChange={onImageIndexChange}/>
+    <span className="cax-deck-top-copy">
+      <strong className="cax-sheet-headline">
+        {photoText('Line1',copy[prefix+'Line1']||original.lines[0])}{' '}
+        {photoText('Line2',copy[prefix+'Line2']||original.lines[1])}
+      </strong>
+    </span>
+    <span className="cax-sheet-footer">
+      {photoText('Footer',copy[prefix+'Footer']||original.kind)}
+      <span aria-hidden="true">↗</span>
+    </span>
+  </Tag>
+}
+
 export function CaxHeroDeck({images={},galleries={},content={}}){
   const copy=copyFor(content,'hero')
   const heroCardPhotos=getHeroCardPhotos(images)
@@ -117,8 +154,6 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
       {displayShowcases.map((s,i)=>{
         const cardId=s.cardId
         const imageNumber=heroCardPhotos[cardId-1][heroImageIndices[cardId-1]||0]?.imageNumber||1
-        const imageCopyKey='card'+cardId+'Image'+imageNumber
-        const imageText=(field,fallback)=>copy[imageCopyKey+field]||fallback
         const active=i===selected
         const behind=(i-selected+displayShowcases.length)%displayShowcases.length
         const collapsedX=[0,-8,9,3,-5,6][behind]
@@ -136,20 +171,12 @@ export function CaxHeroDeck({images={},galleries={},content={}}){
           '--cax-stack-scale':collapsedScale,
           zIndex:active?10:1+(displayShowcases.length-behind),
         }
-        return <button type="button" className={'cax-deck-card cax-card-'+i+(active?' is-active':'')}
-          key={s.code} style={cssVars} aria-pressed={active}
-          aria-label={s.label+(active&&expanded?' – nhấn lại để thu gọn':' – chọn thẻ')}
-          onClick={()=>toggleCard(i)}>
-          <RotatingImage urls={heroCardPhotos[cardId-1].map(photo=>photo.url)} className="cax-deck-custom-image"
-            interval={5800+i*550} loading="eager"
-            onIndexChange={index=>setHeroImageIndices(old=>old[cardId-1]===index?old:
-              old.map((v,j)=>j===cardId-1?index:v))}/>
-          <span className="cax-deck-top-copy">
-            <strong className="cax-sheet-headline">{imageText('Line1',s.lines[0])}{' '}
-              {imageText('Line2',s.lines[1])}</strong>
-          </span>
-          <span className="cax-sheet-footer">{imageText('Footer',copy['card'+cardId+'Footer']||s.kind)}<span aria-hidden="true">↗</span></span>
-        </button>
+        return <CaxHeroCard key={s.code} cardId={cardId} cardIndex={i}
+          copy={copy} imageNumber={imageNumber} active={active} style={cssVars}
+          imageUrls={heroCardPhotos[cardId-1].map(photo=>photo.url)}
+          interval={5800+i*550} onClick={()=>toggleCard(i)}
+          onImageIndexChange={index=>setHeroImageIndices(old=>old[cardId-1]===index?old:
+            old.map((v,j)=>j===cardId-1?index:v))}/>
       })}
       <span className="cax-deck-interaction-hint">{expanded?'CHỌN THẺ · KÉO TRÁI/PHẢI':'NHẤN THẺ ĐỂ BUNG MỞ'} <span aria-hidden="true">↗</span></span>
     </div>
