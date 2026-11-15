@@ -223,7 +223,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
                 + Bổ sung các dòng OCR còn thiếu vào nội dung
               </button>
             </div>
-          </details>
+          </details>}
           {page.warnings.length>0&&<p className="pdf-import__warning">
             {page.warnings.join(' ')}</p>}
           <label>Loại nội dung
