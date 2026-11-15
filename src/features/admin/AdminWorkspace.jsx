@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react'
 import AdminMediaEditor from '../../AdminMediaEditor'
 import AdminArtistProfiles from '../../AdminArtistProfiles'
-import LongNhatPortfolio from '../portfolio/long-nhat/LongNhatPortfolio'
+import PortfolioTemplateManager from '../portfolio/templates/PortfolioTemplateManager'
 import {Brand} from '../../SiteHeader'
 import {MEDIA_GROUPS} from '../media/config/mediaGroups'
 import {portfolioCounts} from '../artists/domain/portfolioFilters'
@@ -82,9 +82,9 @@ function Dashboard({supabase,navigate}){
         subtitle={loading?'Đang cập nhật dữ liệu...':error?'Không tải được dữ liệu Portfolio':total+' Portfolio · '+published+' đã xuất bản'}
         action={<UiButton variant="secondary" onClick={()=>navigate(ROUTES.artists)}>Tất cả</UiButton>}>
         {rows.some(row=>row.slug==='long-nhat')&&<div className="ui-admin-v4-template-link">
-          <span>Website mẫu đang phát triển</span>
-          <button type="button" onClick={()=>navigate(ROUTES.portfolio)}>
-            Xem Website Long Nhật Singer ↗
+          <span>Thiết kế Portfolio dùng chung cho nhiều nghệ sĩ</span>
+          <button type="button" onClick={()=>navigate(ROUTES.templates+'?artist=long-nhat')}>
+            Chọn form cho Long Nhật ↗
           </button>
         </div>}
         {rows.length?<div className="ui-admin-v4-recent">{rows.slice(0,4).map(row=>
@@ -95,6 +95,13 @@ function Dashboard({supabase,navigate}){
           </button>)}</div>:
           <p className="ui-admin-v4-empty">{loading?'Đang tải danh sách...':'Chưa có Portfolio để hiển thị.'}</p>}
       </UiPanel>
+      <button type="button" className="ui-admin-v4-destination ui-admin-v4-destination--artists"
+        onClick={()=>navigate(ROUTES.templates)}>
+        <span className="ui-admin-v4-destination__kind">03 / REUSABLE PORTFOLIO</span>
+        <strong>Thư viện mẫu Portfolio</strong>
+        <span>3 form nền · Nhiều nghệ sĩ dùng chung bố cục, ảnh và chữ riêng biệt.</span>
+        <span className="ui-admin-v4-destination__action">Quản lý mẫu ↗</span>
+      </button>
     </div>
   </main>
 }
@@ -133,7 +140,7 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
     navigate(href)
   }
   const pageTitle=view==='overview'?'Dashboard':view==='artists'?'Hồ sơ nghệ sĩ':
-    view==='portfolio'?'Website Long Nhật Singer':
+    view==='templates'?'Thư viện mẫu Portfolio':
     MEDIA_GROUPS.find(item=>item.id===section)?.title||'Chỉnh sửa Website'
   return <div className="ui-admin-workspace dortis-admin-v4">
     {mobileNav&&<button type="button" className="ui-admin-v4-backdrop"
@@ -148,7 +155,9 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
         <p className="ui-admin-v4-navlabel">KHÔNG GIAN QUẢN LÝ</p>
         <SidebarLink href={ROUTES.media+'?section=hero'} icon="website" active={view==='media'} onClick={navigateLink}>Website DORTIS</SidebarLink>
         <SidebarLink href={ROUTES.artists} icon="artist"
-          active={view==='artists'||view==='portfolio'} onClick={navigateLink}>Hồ sơ nghệ sĩ</SidebarLink>
+          active={view==='artists'} onClick={navigateLink}>Hồ sơ nghệ sĩ</SidebarLink>
+        <SidebarLink href={ROUTES.templates} icon="website"
+          active={view==='templates'} onClick={navigateLink}>Mẫu Portfolio</SidebarLink>
         {view==='media'&&<div className="ui-admin-v4-subnav" aria-label="Chỉnh sửa nhanh website">
           <p className="ui-admin-v4-navlabel">CHỈNH SỬA NHANH</p>
           {MEDIA_GROUPS.map(group=>{
@@ -157,11 +166,11 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
               onClick={navigateLink}>{group.title}</SidebarLink>
           })}
         </div>}
-        {(view==='artists'||view==='portfolio')&&<div className="ui-admin-v4-subnav"
-          aria-label="Công cụ website nghệ sĩ">
-          <p className="ui-admin-v4-navlabel">WEBSITE NGHỆ SĨ</p>
-          <SidebarLink href={ROUTES.portfolio} active={view==='portfolio'}
-            onClick={navigateLink}>Long Nhật Singer · Bản xem trước</SidebarLink>
+        {(view==='artists'||view==='templates')&&<div className="ui-admin-v4-subnav"
+          aria-label="Thiết kế dùng chung">
+          <p className="ui-admin-v4-navlabel">FORM PORTFOLIO</p>
+          <SidebarLink href={ROUTES.templates} active={view==='templates'}
+            onClick={navigateLink}>Thư viện mẫu & kế thừa</SidebarLink>
         </div>}
       </div>
       <div className="ui-admin-v4-sidebar__footer">
@@ -187,9 +196,9 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
         {view==='overview'?<Dashboard supabase={supabase} navigate={navigate}/>:
           view==='media'?<AdminMediaEditor user={user} supabase={supabase}
             initialSection={section} onSectionChange={()=>setRouteValue(window.location.pathname+window.location.search)}/>:
-          view==='portfolio'?<LongNhatPortfolio supabase={supabase}
-            onBack={()=>navigate(ROUTES.artists)}
-            onEdit={()=>navigate(ROUTES.artists+'?select=long-nhat')}/>:
+          view==='templates'?<PortfolioTemplateManager supabase={supabase} user={user}
+            initialArtistSlug={new URLSearchParams(url.search).get('artist')||''}
+            onArtistList={()=>navigate(ROUTES.artists)}/>:
           <AdminArtistProfiles user={user} supabase={supabase}
             initialSlug={new URLSearchParams(url.search).get('select')||''}/>}
       </div>

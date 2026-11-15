@@ -53,11 +53,12 @@ export default function ArtistPortfolioCatalog({profiles=[],selected,onSelect,di
             <span>{chosen?'Đang chỉnh sửa':'Xem và chỉnh sửa'} <span aria-hidden="true">↗</span></span>
           </div>
           </button>
-          {profile.slug==='long-nhat'&&<a className="artist-catalog__website"
-            href="/admin/portfolio" aria-label={'Xem website mẫu của '+profile.name}>
-            <span>WEBSITE NGHỆ SĨ · XEM TRƯỚC</span>
-            <strong>Xem website mẫu ↗</strong>
-          </a>}
+          <a className="artist-catalog__website"
+            href={'/admin/templates?artist='+encodeURIComponent(profile.slug)}
+            aria-label={'Chọn mẫu Portfolio cho '+profile.name}>
+            <span>FORM DÙNG CHUNG · NỘI DUNG RIÊNG</span>
+            <strong>Chọn mẫu Portfolio ↗</strong>
+          </a>
         </article>
       })}
     </div>:<div className="artist-catalog__empty">

@@ -111,3 +111,15 @@ Các trang public và Admin được tách bằng `React.lazy`/dynamic import nh
 - `LongNhatPortfolio.jsx` quản lý hai layout Quick EPK / Immersive, xem mobile/desktop, lightbox keyboard/Escape, báo cáo điều kiện phê duyệt. CSS riêng neutral provisional **không** phải palette Long Nhật đã được duyệt.
 - Existing `/artists/long-nhat` vẫn giữ nguyên; việc profile có `status=published` không mở khóa phát hành website nghệ sĩ mới. `/portfolio/long-nhat` tiếp tục hiển thị trạng thái chưa phát hành.
 - Chưa có PDF visual audit, media rights approval, contact booking được phê duyệt hoặc design tokens khóa: phải hoàn thành trước khi đăng website riêng công khai.
+
+## Portfolio Form Inheritance v2 — 15/11/2026
+
+- `/admin/templates`: Thư viện **nhiều form Portfolio** có thể dùng chung cho nhiều nghệ sĩ.
+- `/admin/portfolio`: Đường dẫn cũ về cùng trình quản lý nhiều form; không còn hardcode riêng Long Nhật.
+- `artist_website_templates`: blueprint/layout, style, version và thứ tự section. Cập nhật blueprint kế thừa xuống tất cả instances.
+- `artist_website_instances`: quan hệ N:M giữa `artist_profiles` và templates. Mỗi instance giữ `content.sections` + `content.images` riêng, không sửa hồ sơ công khai.
+- `dortis-artist-web-drafts`: Storage **private**, RLS Admin-only; ảnh JPG/PNG/WebP/AVIF 4MB được tải lên từng slot; URL xem trước là signed URL có thời hạn.
+- Phân quyền bằng `auth.jwt().app_metadata.role=admin` trên bảng và Storage; không có client-side service role.
+- Tạo thêm mẫu bằng clone blueprint hoặc chỉnh section / thứ tự / layout / số slot. Không xóa dữ liệu nội dung riêng khi form thay đổi.
+- Ảnh không lấy từ PDF. PDF Design Knowledge Reference chỉ cung cấp phương pháp lựa chọn layout, type, image safe zone, responsive, motion accessibility, không áp đặt palette/identity.
+- Đầu ra hiện tại là **Admin-only draft**; không xuất bản website nghệ sĩ riêng khi chưa duyệt nguồn, quyền media và contact.

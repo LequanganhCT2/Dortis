@@ -1,3 +1,5 @@
+> **Mẫu Portfolio dùng chung:** Tại `/admin/templates` chọn Editorial Story, Cinematic Stage, Minimal Signature hoặc tạo form mới; mỗi form gán được nhiều nghệ sĩ với ảnh/chữ riêng. Từ trang Hồ sơ nghệ sĩ, nhấn **Chọn mẫu Portfolio**. Bản nháp website không lấy ảnh từ PDF, không xuất bản tự động.
+
 # DORTIS — Artist Profile Platform
 
 > **Xem Website Long Nhật Singer:** Đăng nhập `/login` → `/admin/artists` → mở thẻ Long Nhật → **Xem website mẫu**; hoặc mở thẳng `/admin/portfolio` khi đã có quyền Admin. Đây là bản dựng nội bộ, không thay thế hồ sơ hiện đang công khai tại `/artists/long-nhat`.

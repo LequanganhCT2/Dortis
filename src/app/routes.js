@@ -5,6 +5,7 @@ export const ROUTES = Object.freeze({
   media: '/admin/media',
   artists: '/admin/artists',
   portfolio: '/admin/portfolio',
+  templates: '/admin/templates',
   publicArtists: '/artists',
   longNhatPublic: '/portfolio/long-nhat'
 })
@@ -21,7 +22,7 @@ export function resolveRoute(pathname = '/') {
 
 export function resolveAdminView(pathname = ROUTES.admin) {
   // Artist website studio lives inside the admin's artist-management flow.
-  if (pathname === ROUTES.portfolio) return 'portfolio'
+  if (pathname === ROUTES.portfolio || pathname === ROUTES.templates) return 'templates'
   if (pathname === ROUTES.artists) return 'artists'
   if (pathname === ROUTES.media) return 'media'
   return 'overview'
