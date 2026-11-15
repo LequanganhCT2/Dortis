@@ -31,6 +31,16 @@ export const PRESET_FORMS=Object.freeze([
     ]}
 ])
 export const FORM_LAYOUTS=['split','split-reverse','cover','grid','mosaic','wide','text']
+export const FORM_EFFECTS=[
+  {id:'auto',label:'Tự động theo khu vực'},
+  {id:'depth',label:'Ảnh nổi 3D + nền mờ'},
+  {id:'overlap',label:'Chữ đè ảnh'},
+  {id:'spotlight',label:'Spotlight sân khấu'},
+  {id:'glass',label:'Chữ kính mờ trên ảnh'},
+  {id:'orbit',label:'Ảnh xếp lớp / chiều sâu'},
+  {id:'typography',label:'Chữ khổng lồ + ảnh'}
+]
+export const FORM_EFFECT_IDS=FORM_EFFECTS.map(item=>item.id)
 export function blueprintFor(preset){
   return {style:preset.style,sections:preset.sections.map(s=>({...s})),source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
@@ -46,6 +56,7 @@ export function normalizeBlueprint(input={}){
     .slice(0,24).map(x=>({
       id:x.id,label:String(x.label||'Khu vực').slice(0,80),
       layout:FORM_LAYOUTS.includes(x.layout)?x.layout:'split',
+      effect:FORM_EFFECT_IDS.includes(x.effect)?x.effect:'auto',
       slots:Math.max(0,Math.min(10,Math.floor(Number(x.slots)||0)))
     }))
   return {style,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
@@ -72,8 +83,10 @@ export function resolveInstance(template,instance,profile){
 export function setSectionField(content={},id,field,value){
   if(!/^[a-z0-9_-]{1,40}$/.test(id)||!['title','eyebrow','body'].includes(field))
     throw new Error('Invalid field')
+  const existing=content.sections?.[id]||{}
   return {...content,sections:{...(content.sections||{}),
-    [id]:{...(content.sections?.[id]||{}),[field]:String(value).slice(0,10000)}}}
+    [id]:{...existing,[field]:String(value).slice(0,10000),
+      fieldOverrides:{...(existing.fieldOverrides||{}),[field]:true}}}}
 }
 export function setSlotImage(content={},slot,image){
   if(!/^[a-z0-9_-]{1,40}:[0-9]{1,2}$/.test(slot))throw new Error('Invalid slot')

@@ -58,6 +58,9 @@ export function copySourceSection(content={},sectionId,source){
   return {...content,sections:{...(content.sections||{}),[sectionId]:{
     ...existing,title:String(source.title||''),eyebrow:String(source.eyebrow||''),
     body:combineSourceText(source),
+    // Explicitly selecting a source page re-links all three fields; later
+    // Form edits can override one field at a time without changing the profile.
+    fieldOverrides:{},
     highlights:Array.isArray(source.highlights)?[...source.highlights]:[],
     metrics:Array.isArray(source.metrics)?source.metrics.map(x=>Array.isArray(x)?[...x]:x):[],
     sourcePage:Number(source.page)||null

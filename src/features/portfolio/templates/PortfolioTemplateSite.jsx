@@ -1,48 +1,104 @@
-import React from 'react'
-import {resolveInstance} from './model'
+import React,{useEffect,useRef} from 'react'
+import {resolveArtistPortfolio} from './resolvedPortfolio'
+import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
+import './portfolio-effects.css'
 
-/** Shared, data-driven website renderer. Admin preview uses identical markup for
- * every form; the only differences are the template blueprint and artist data.
- * No PDF images are ever extracted or auto-imported.
+/** Preview and future renderer share exactly the same source-bound markup.
+ * Visual effects never alter the stored profile text or the original images.
  */
+function MotionSection({section,index,styleName,urls,artistRole}){
+  const frame=useRef(0)
+  const realAssets=(section.images||[]).filter(asset=>asset?.path&&urls[asset.path])
+  const hasImage=sectionHasRealImage(section,urls)
+  const effect=chooseSectionEffect({effect:section.effect,layout:section.layout,
+    index,style:styleName,imageCount:realAssets.length})
+  const firstImage=realAssets[0]&&urls[realAssets[0].path]
+  useEffect(()=>()=>{if(frame.current)cancelAnimationFrame(frame.current)},[])
+  function handleMove(event){
+    if(event.pointerType==='touch'||!hasImage)return
+    const element=event.currentTarget
+    const bounds=element.getBoundingClientRect()
+    if(!bounds.width||!bounds.height)return
+    const x=(event.clientX-bounds.left)/bounds.width-.5
+    const y=(event.clientY-bounds.top)/bounds.height-.5
+    if(frame.current)cancelAnimationFrame(frame.current)
+    frame.current=requestAnimationFrame(()=>{
+      element.style.setProperty('--pt-rotate-x',(-y*5).toFixed(2)+'deg')
+      element.style.setProperty('--pt-rotate-y',(x*7).toFixed(2)+'deg')
+      element.style.setProperty('--pt-shift-x',(x*20).toFixed(1)+'px')
+      element.style.setProperty('--pt-shift-y',(y*13).toFixed(1)+'px')
+    })
+  }
+  function handleLeave(event){
+    if(frame.current)cancelAnimationFrame(frame.current)
+    frame.current=0
+    const el=event.currentTarget
+    for(const key of ['--pt-rotate-x','--pt-rotate-y','--pt-shift-x','--pt-shift-y'])el.style.removeProperty(key)
+  }
+  const textPresent=Boolean(section.title||section.body||section.eyebrow)
+  return <section id={'pt-'+section.id}
+    className={'pt-site__section pt-layout--'+section.layout+
+      ' pt-fx-section pt-fx--'+effect+
+      (hasImage?' pt-fx--has-photo':' pt-fx--waiting-photo')+
+      (index===0?' is-first':'')}
+    onPointerMove={handleMove} onPointerLeave={handleLeave}>
+    {firstImage&&<div className="pt-fx__ambient" aria-hidden="true">
+      <img src={firstImage} alt="" loading="lazy" decoding="async"/>
+    </div>}
+    <span className="pt-fx__index" aria-hidden="true">{String(index+1).padStart(2,'0')}</span>
+    {section.title&&<span className="pt-fx__type-echo" aria-hidden="true">{section.title}</span>}
+    <div className="pt-site__copy">
+      <small>{String(index+1).padStart(2,'0')} / {section.eyebrow||
+        (index===0&&artistRole?artistRole:section.label)}</small>
+      {section.title?<h2>{section.title}</h2>:
+        <h2 className="pt-site__placeholder-text">Chưa có tiêu đề trong hồ sơ</h2>}
+      {section.body?<p>{section.body}</p>:
+        <p className="pt-site__placeholder-text">
+          {section.sourceStatus==='missing'
+            ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'
+            :textPresent?'':'Chưa có nội dung từ Hồ sơ nghệ sĩ.'}
+        </p>}
+      {section.sourceStatus==='linked'&&<span className="pt-fx__source-note">
+        Hồ sơ nghệ sĩ · Trang {String(section.sourcePage).padStart(2,'0')}
+      </span>}
+    </div>
+    {section.slots>0&&<div className="pt-site__media" aria-label={'Ảnh khu vực '+section.label}>
+      {section.images.map((asset,i)=>{
+        const url=asset?.path?urls[asset.path]:null
+        return <div key={section.id+':'+i}
+          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')}>
+          {url?<img src={url} alt={asset?.alt||section.title||section.label}
+            loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>:
+            <div className="pt-site__empty-image">
+              <span aria-hidden="true">+</span>
+              <small>ẢNH {String(i+1).padStart(2,'0')}</small>
+              <em>Tải ảnh riêng trong Admin</em>
+            </div>}
+        </div>
+      })}
+    </div>}
+    <span className="pt-fx__detail" aria-hidden="true"/>
+  </section>
+}
 export default function PortfolioTemplateSite({template,instance,profile,urls={},device='desktop'}){
-  const view=resolveInstance(template,instance,profile)
+  const view=resolveArtistPortfolio(template,instance,profile)
+  const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
   return <div className={'pt-device pt-device--'+device}>
     <main className={'pt-site pt-site--'+view.style} aria-label={'Xem trước '+view.templateName}>
       <header className="pt-site__nav">
-        <strong>{view.artistName||'ARTIST NAME'}<span>.</span></strong>
+        <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
-          {view.sections.slice(0,4).map(s=><a key={s.id} href={'#pt-'+s.id}>{s.label}</a>)}
+          {activeSections.slice(0,4).map(s=><a key={s.id}
+            href={'#pt-'+s.id}>{s.title?s.title.slice(0,27):s.label}</a>)}
         </nav>
-        <span className="pt-site__nav-meta">PORTFOLIO / PREVIEW</span>
+        <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
       </header>
-      {view.sections.map((section,index)=><section key={section.id}
-        id={'pt-'+section.id} className={'pt-site__section pt-layout--'+section.layout+
-          (index===0?' is-first':'')}>
-        <div className="pt-site__copy">
-          <small>{String(index+1).padStart(2,'0')} / {section.eyebrow||section.label}</small>
-          <h2>{section.title||<span className="pt-site__placeholder-text">Tiêu đề chưa nhập</span>}</h2>
-          {section.body?<p>{section.body}</p>:
-            <p className="pt-site__placeholder-text">Chưa có nội dung. Nhập chữ riêng cho nghệ sĩ này trong thanh chỉnh sửa.</p>}
-        </div>
-        {section.slots>0&&<div className="pt-site__media">
-          {section.images.map((asset,i)=>{
-            const url=asset?.path?urls[asset.path]:null
-            return <div key={section.id+':'+i}
-              className={'pt-site__media-tile'+(!url?' is-empty':'')}>
-              {url?<img src={url} alt={asset?.alt||section.label+' '+(i+1)}
-                decoding="async" loading={index===0?'eager':'lazy'}/>:
-                <div className="pt-site__empty-image">
-                  <span>+</span><small>ẢNH {String(i+1).padStart(2,'0')}</small>
-                  <em>Tải ảnh trong Admin</em>
-                </div>}
-            </div>
-          })}
-        </div>}
-      </section>)}
+      {view.sections.map((section,index)=><MotionSection
+        key={section.id} section={section} index={index}
+        styleName={view.style} urls={urls} artistRole={view.artistRole}/>)}
       <footer className="pt-site__footer">
-        <span>{view.artistName||'ARTIST'} / PORTFOLIO</span>
-        <small>Chỉ là bản nháp nội bộ · Không có thông tin booking chưa xác nhận</small>
+        <span>{view.artistName||'PORTFOLIO'}</span>
+        <small>Hồ sơ nghệ sĩ / Bản xem trước nội bộ · Nội dung từ PDF đã xác nhận.</small>
       </footer>
     </main>
   </div>

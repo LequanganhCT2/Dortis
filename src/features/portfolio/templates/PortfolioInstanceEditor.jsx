@@ -2,6 +2,7 @@ import React,{useEffect,useMemo,useState} from 'react'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {normalizeBlueprint,setSectionField,setSlotImage} from './model'
 import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist} from './sourceBinding'
+import {sourceBoundField,restoreLinkedFields} from './resolvedPortfolio'
 import './template-site.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -19,6 +20,8 @@ export default function PortfolioInstanceEditor({
     template,profile,instance.content||{},true))
   const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
   const [sourcePage,setSourcePage]=useState('')
+  const [sourceProfile,setSourceProfile]=useState(profile)
+  const [refreshingProfile,setRefreshingProfile]=useState(false)
   const [device,setDevice]=useState('desktop')
   const [urls,setUrls]=useState({})
   const [dirty,setDirty]=useState(false)
@@ -27,9 +30,10 @@ export default function PortfolioInstanceEditor({
   const [notice,setNotice]=useState('')
   const sections=useMemo(()=>normalizeBlueprint(template.blueprint).sections,[template.blueprint])
   const current=sections.find(s=>s.id===active)||sections[0]
-  const sourcePages=useMemo(()=>artistSourcePages(profile),[profile])
+  const sourcePages=useMemo(()=>artistSourcePages(sourceProfile),[sourceProfile])
   useEffect(()=>{
     const inferred=hydrateInstanceFromArtist(template,profile,instance.content||{},true)
+    setSourceProfile(profile)
     const changed=JSON.stringify(inferred)!==JSON.stringify(instance.content||{})
     setContent(inferred)
     setActive(normalizeBlueprint(template.blueprint).sections[0]?.id||'')
@@ -69,6 +73,23 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>setSectionField(prev,current.id,field,value))
     setDirty(true);setNotice('')
   }
+  async function refreshSource(){
+    if(refreshingProfile||busy)return
+    setRefreshingProfile(true);setError('')
+    try{
+      const {data,error:dbError}=await supabase.from('artist_profiles')
+        .select('id,name,role,sections').eq('id',profile.id).single()
+      if(dbError)throw dbError
+      setSourceProfile(data)
+      setNotice('Đã đọc bản Hồ sơ nghệ sĩ mới nhất. Các trường đang liên kết tự cập nhật; thay đổi riêng được giữ nguyên.')
+    }catch(e){setError('Không đọc lại được Hồ sơ nghệ sĩ: '+e.message)}
+    finally{setRefreshingProfile(false)}
+  }
+  function restoreSourceText(){
+    if(!currentOwn.sourcePage)return
+    setContent(prev=>restoreLinkedFields(prev,current.id))
+    setDirty(true);setNotice('Đã liên kết lại tiêu đề và mô tả với mục nguồn. Lưu để áp dụng.')
+  }
   function importCurrentSource(){
     if(!current||!sourcePage)return
     const chosen=sourcePages.find(p=>p.page===Number(sourcePage))
@@ -77,7 +98,7 @@ export default function PortfolioInstanceEditor({
     setDirty(true);setNotice('Đã nạp mục từ hồ sơ PDF. Nhấn Lưu thay đổi để ghi nhận.')
   }
   function importAllBlank(){
-    setContent(prev=>hydrateInstanceFromArtist(template,profile,prev,true))
+    setContent(prev=>hydrateInstanceFromArtist(template,sourceProfile,prev,true))
     setDirty(true);setNotice('Các khu vực còn trống đã được điền từ hồ sơ nghệ sĩ. Ảnh riêng không thay đổi.')
   }
   async function save(){
@@ -135,12 +156,17 @@ export default function PortfolioInstanceEditor({
     <header className="pt-editor__head">
       <div><button type="button" onClick={onBack} className="pt-link">← Thư viện form</button>
         <p className="pt-overline">DORTIS / PORTFOLIO INSTANCE</p>
-        <h1>{profile.name}</h1>
+        <h1>{sourceProfile.name}</h1>
         <p>Đang kế thừa <strong>{template.name}</strong> · phiên bản {template.version}.
-          Nội dung được liên kết với {sourcePages.length} mục của hồ sơ nghệ sĩ; ảnh do bạn tự tải lên, độc lập với PDF gốc.</p></div>
+          Form lấy chữ theo {sourcePages.length} mục trong Hồ sơ nghệ sĩ đã nhập PDF.
+          Ảnh bạn tải vào đây sẽ được giữ riêng, không dùng ảnh cắt từ PDF.</p></div>
       <div className="pt-editor__actions">
+        <button type="button" className="pt-btn pt-btn--light"
+          disabled={busy||refreshingProfile} onClick={refreshSource}>
+          {refreshingProfile?'Đang cập nhật...':'↻ Đọc lại Hồ sơ nghệ sĩ'}
+        </button>
         <button type="button" className="pt-btn pt-btn--light" disabled={busy||!sourcePages.length}
-          onClick={importAllBlank}>↓ Lấy dữ liệu còn trống từ PDF</button>
+          onClick={importAllBlank}>↓ Liên kết các mục còn trống</button>
         <span className="pt-status">BẢN NHÁP · ADMIN ONLY</span>
         <button type="button" className="pt-btn" disabled={!dirty||busy}
           onClick={save}>{busy?'Đang xử lý...':dirty?'Lưu thay đổi':'Đã lưu'}</button>
@@ -163,7 +189,7 @@ export default function PortfolioInstanceEditor({
           <h2>02 / Nội dung: {current.label}</h2>
           <div className="pt-editor__source">
             <span className="pt-overline">KẾ THỪA CÁC MỤC TỪ HỒ SƠ PDF</span>
-            <p>{sourcePages.length?sourcePages.length+' mục đã đọc và lưu ở Hồ sơ nghệ sĩ.':
+            <p>{sourcePages.length?sourcePages.length+' mục đang có trong Hồ sơ nghệ sĩ. Khi sửa hồ sơ, bạn bấm Đọc lại để đồng bộ chữ đã liên kết.':
               'Hồ sơ nghệ sĩ chưa có mục chữ. Tải PDF từ trang Hồ sơ nghệ sĩ.'}</p>
             <label>Chọn mục nguồn để điền vào phần này
               <select value={sourcePage||String(currentOwn.sourcePage||'')} disabled={busy||!sourcePages.length}
@@ -178,20 +204,26 @@ export default function PortfolioInstanceEditor({
               disabled={busy||!sourcePage} onClick={importCurrentSource}>
               Lấy chữ của mục đã chọn ↓
             </button>
-            {currentOwn.sourcePage&&<small>Đang dùng dữ liệu từ trang {currentOwn.sourcePage} ·
-              Bạn vẫn có thể sửa nội dung bên dưới mà không sửa PDF gốc.</small>}
+            {currentOwn.sourcePage&&<small>
+              <strong>Đang liên kết trang {currentOwn.sourcePage}.</strong> Chữ mặc định lấy từ Hồ sơ nghệ sĩ;
+              chỉ phần bạn trực tiếp thay trong Form mới là bản tùy chỉnh.
+            </small>}
+            {currentOwn.sourcePage&&Object.values(currentOwn.fieldOverrides||{}).some(Boolean)&&
+              <button type="button" className="pt-btn pt-btn--light"
+                onClick={restoreSourceText} disabled={busy}>Khôi phục chữ từ Hồ sơ nghệ sĩ ↺</button>}
           </div>
           <label>Nhãn phụ
-            <input type="text" value={currentOwn.eyebrow||''}
-              onChange={e=>changeText('eyebrow',e.target.value)} placeholder="Ví dụ: Nghệ sĩ / Giới thiệu"/>
+            <input type="text" value={sourceBoundField(sourceProfile,content,current.id,'eyebrow')}
+              onChange={e=>changeText('eyebrow',e.target.value)} placeholder="Nhãn phụ lấy từ mục PDF"/>
           </label>
           <label>Tiêu đề
-            <input type="text" value={currentOwn.title??(current.id==='hero'?profile.name:'')}
-              onChange={e=>changeText('title',e.target.value)} placeholder="Nhập tiêu đề"/>
+            <input type="text" value={sourceBoundField(sourceProfile,content,current.id,'title')||
+              (current.id==='hero'?sourceProfile.name:'')}
+              onChange={e=>changeText('title',e.target.value)} placeholder="Tiêu đề trong Hồ sơ nghệ sĩ"/>
           </label>
           <label>Mô tả
-            <textarea rows={4} value={currentOwn.body||''}
-              onChange={e=>changeText('body',e.target.value)} placeholder="Nhập nội dung riêng của nghệ sĩ..."/>
+            <textarea rows={4} value={sourceBoundField(sourceProfile,content,current.id,'body')}
+              onChange={e=>changeText('body',e.target.value)} placeholder="Nội dung từ mục PDF đã duyệt..."/>
           </label>
           <h3>03 / Ảnh của khu vực ({current.slots})</h3>
           <p>Chọn ảnh gốc từ máy, tối đa 4 MB/ảnh. Không cắt hoặc nhập ảnh từ PDF.</p>
@@ -222,14 +254,14 @@ export default function PortfolioInstanceEditor({
       </aside>
       <section className="pt-editor__preview">
         <div className="pt-editor__preview-head"><div>
-          <strong>LIVE PREVIEW</strong><span> Bố cục lấy từ form dùng chung · Nội dung riêng của {profile.name}</span>
+          <strong>LIVE PREVIEW · 3D</strong><span> Hiển thị chữ từ Hồ sơ nghệ sĩ · Ảnh gốc tự tải · 3D nhẹ trên desktop</span>
         </div><div className="pt-segment">
           <button type="button" className={device==='desktop'?'is-active':''}
             onClick={()=>setDevice('desktop')}>Desktop</button>
           <button type="button" className={device==='mobile'?'is-active':''}
             onClick={()=>setDevice('mobile')}>Mobile</button>
         </div></div>
-        <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={profile}
+        <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
           urls={urls} device={device}/>
       </section>
     </div>

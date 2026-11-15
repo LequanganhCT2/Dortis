@@ -212,3 +212,26 @@
   .pt-editor__source{padding:11px}
   .pt-template__visual--cinematic>span{font-size:51px}
 }
+/* Layout presets now expose one visual treatment per section, not just photo slots. */
+.pt-blueprint__row{
+  grid-template-columns:28px minmax(140px,1.1fr) minmax(105px,.8fr)
+    minmax(170px,1.25fr) 82px 74px;
+}
+.pt-blueprint__row label:nth-child(4) select{color:#1e7180;border-color:#c9e4e5;background:#f5fbfb}
+.pt-editor__source strong{color:#1a6370}
+.pt-editor__source .pt-btn{justify-content:center}
+.pt-editor__preview{background:
+ radial-gradient(ellipse at top right,#d2dce3,transparent 55%),#e8edef}
+.pt-editor__preview-head strong{color:#2c4458;letter-spacing:.13em}
+@media(max-width:1250px){
+  .pt-blueprint__row{grid-template-columns:24px minmax(130px,1fr) minmax(110px,.8fr) minmax(145px,1fr)}
+  .pt-blueprint__row>label:nth-child(5){grid-column:3}
+  .pt-blueprint__row .pt-blueprint__moves{grid-column:4}
+}
+@media(max-width:680px){
+  .pt-blueprint__row{grid-template-columns:24px minmax(0,1fr) minmax(0,1fr)}
+  .pt-blueprint__row>label:nth-child(2){grid-column:span 2}
+  .pt-blueprint__row>label:nth-child(4){grid-column:2/-1}
+  .pt-blueprint__row>label:nth-child(5){grid-column:2}
+  .pt-blueprint__row .pt-blueprint__moves{grid-column:3}
+}

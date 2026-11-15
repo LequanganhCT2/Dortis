@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
-import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS} from './model'
+import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import {hydrateInstanceFromArtist} from './sourceBinding'
 import './template-admin.css'
@@ -83,7 +83,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   function appendSection(){
     setBlueprint(cur=>({...cur,sections:[...cur.sections,{
       id:'custom_'+crypto.randomUUID().slice(0,8),
-      label:'Khu vực mới',layout:'split',slots:1
+      label:'Khu vực mới',layout:'split',effect:'auto',slots:1
     }]}))
   }
   async function saveTemplate(){
@@ -135,7 +135,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>
         <h1>Thư viện mẫu Portfolio<span>.</span></h1>
-        <p>Đầu tiên nhập PDF ở Hồ sơ nghệ sĩ để lấy tên, chữ và các mục. Sau đó gán nghệ sĩ vào một form: hệ thống tự nạp các mục có sẵn, bạn chọn ảnh gốc từng vị trí.</p></div>
+        <p>Nhập PDF ở Hồ sơ nghệ sĩ, xác nhận chữ theo từng trang. Gán hồ sơ vào bất kỳ mẫu nào: bố cục 3D dùng chung, nội dung luôn đến từ hồ sơ đó, ảnh do bạn tự tải lên.</p></div>
       <div><span className="pt-status">{templates.length} FORM · {instances.length} LƯỢT SỬ DỤNG</span>
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
@@ -148,7 +148,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <div className="pt-blueprint__header">
           <div><span className="pt-overline">FORM BLUEPRINT · INHERITED DESIGN</span>
             <h2>Chỉnh bố cục: {templates.find(t=>t.id===editingTemplate)?.name}</h2>
-            <p>Chỉnh form gốc sẽ cập nhật bố cục cho tất cả người đang kế thừa. Ảnh và chữ của từng người không bị ghi đè.</p>
+            <p>Thiết kế nhiều lớp 3D, ảnh sắc nét với ánh sáng mờ phía sau, chữ đè ảnh hoặc bảng kính mờ. Chỉnh hiệu ứng của mẫu sẽ áp dụng cho tất cả nghệ sĩ đang dùng; chữ PDF và ảnh riêng vẫn độc lập.</p>
           </div>
           <div className="pt-action-row">
             <button type="button" className="pt-btn pt-btn--light"
@@ -172,6 +172,10 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             <label>Bố cục<select value={section.layout}
               onChange={e=>updateSection(i,'layout',e.target.value)}>
               {FORM_LAYOUTS.map(layout=><option key={layout} value={layout}>{layout}</option>)}
+            </select></label>
+            <label>Hiệu ứng hình & chữ<select value={section.effect||'auto'}
+              onChange={e=>updateSection(i,'effect',e.target.value)}>
+              {FORM_EFFECTS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
             </select></label>
             <label>Vị trí ảnh<select value={section.slots}
               onChange={e=>updateSection(i,'slots',Number(e.target.value))}>
@@ -207,7 +211,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                 <span>v{group.version}</span></div>
               <p>{group.description}</p>
               <div className="pt-template__stats"><span>{normalizeBlueprint(group.blueprint).sections.length} khu vực</span>
-                <span>{group.people.length} nghệ sĩ sử dụng</span></div>
+                <span>{group.people.length} nghệ sĩ sử dụng</span><span>3D / layered visuals</span></div>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
               <div className="pt-template__people">
