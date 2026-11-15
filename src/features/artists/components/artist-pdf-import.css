@@ -250,3 +250,31 @@
  .pdf-import__reading-mode>div{flex-direction:column}
  .pdf-import__reading-mode>div button{width:100%}
 }
+
+
+/* Two OCR engines in the same editorial upload area. Consent stays visible
+   before any third-party document transfer, including on small screens. */
+.pdf-import__engine{display:flex;flex-direction:column;gap:9px;width:min(100%,760px);
+  padding:16px;margin:0 0 8px;border:1px solid #dbe4eb;border-radius:12px;
+  background:#fff;min-width:0;text-align:left}
+.pdf-import__engine legend{padding:0 6px;color:#526574;font-size:10px;
+  font-weight:800;letter-spacing:.08em}
+.pdf-import__engine>label{display:flex;align-items:flex-start;gap:10px;padding:13px;
+  background:#f7f9fa;border:1px solid #e5eaee;border-radius:9px;cursor:pointer;
+  max-width:100%;min-width:0}
+.pdf-import__engine>label.is-selected{border-color:#9faeb9;background:#f0f4f6}
+.pdf-import__engine>label:has(input:disabled){opacity:.55;cursor:not-allowed}
+.pdf-import__engine input{accent-color:#142338;margin:3px 0 0;flex:0 0 auto}
+.pdf-import__engine span{display:flex;flex-direction:column;gap:5px;min-width:0;flex:1}
+.pdf-import__engine strong{font:800 12px 'Be Vietnam Pro',system-ui,sans-serif;color:#233143}
+.pdf-import__engine small{font:500 10px/1.65 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#677a8b}
+.pdf-import__engine>label.pdf-import__cloud-consent{background:#fff;border-style:dashed}
+.pdf-import__cloud-consent span{font:500 10px/1.8 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#536a7b}
+.pdf-import__drop>button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:680px){
+  .pdf-import__drop{margin:12px;padding:16px}
+  .pdf-import__engine{padding:10px}
+  .pdf-import__engine>label{padding:11px}
+}

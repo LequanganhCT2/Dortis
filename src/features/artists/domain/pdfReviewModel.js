@@ -84,7 +84,9 @@ export function normalizeReviewedPage(page){
     title:plain(page.title).slice(0,240),eyebrow:plain(page.eyebrow).slice(0,160),
     subtitle:'',body:String(page.body||''),
     kind:'reviewed_pdf_text',
-    extraction:{source:page.ocrStatus==='done'?'text_layer_and_local_ocr':'text_layer_or_manual',
+    extraction:{source:page.ocrProvider==='mistral'?'mistral_cloud_ocr':
+      page.ocrStatus==='done'?'text_layer_and_local_ocr':'text_layer_or_manual',
+      ocrProvider:page.ocrProvider||'local',
       ocrConfidence:page.ocrStatus==='done'?page.ocrConfidence:null,
       manualEdited:page.editedFields?.body===true,
       reviewed:true},
@@ -93,7 +95,8 @@ export function normalizeReviewedPage(page){
     text_blocks:(Array.isArray(page.sourceBlocks)?page.sourceBlocks:[])
       .map(block=>({
         text:String(block.text||''),
-        source:block.source==='ocr'?'ocr':'pdf',
+        source:['ocr','mistral'].includes(block.source)?block.source:'pdf',
+        type:String(block.type||'text').slice(0,32),
         bbox:block.bbox||null,
         confidence:block.confidence??null
       })).filter(block=>block.text),

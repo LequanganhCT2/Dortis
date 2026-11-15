@@ -108,6 +108,7 @@ export function applyOcrToReview(review,results=[]){
     return {...page,title,body,pdfText,ocrText,ocrConfidence:confidence,
       ocrStatus:ocrText?'done':'empty',ocrError:null,
       ocrMainSource:page.editedFields?.body===true?'manual':selected.source,
+      ocrProvider:result.provider==='mistral'?'mistral':'local',
       sourceBlocks:spatial?.blocks||page.sourceBlocks||[],
       ocrBlocks:Array.isArray(result.paragraphs)?result.paragraphs.map(p=>({
         text:p.text,bbox:p.bbox,confidence:p.confidence??null

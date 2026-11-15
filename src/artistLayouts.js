@@ -138,7 +138,8 @@ export function normalizeArtistSection(row={}) {
     extraction:row.extraction&&typeof row.extraction==='object'
       ? {...row.extraction}:null,
     text_blocks:Array.isArray(row.text_blocks)?row.text_blocks.map(block=>({
-      text:String(block?.text||''),source:block?.source==='ocr'?'ocr':'pdf',
+      text:String(block?.text||''),source:['ocr','mistral'].includes(block?.source)?block.source:'pdf',
+      type:String(block?.type||'text').slice(0,32),
       bbox:block?.bbox||null,confidence:block?.confidence??null
     })).filter(block=>block.text):[],
     highlights:Array.isArray(row.highlights)?row.highlights.map(s=>String(s).slice(0,240)).slice(0,24):[],
