@@ -1,16 +1,1 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "installCommand": "npm install --no-audit --no-fund",
-  "functions": {
-    "api/portfolio-ocr.js": {
-      "maxDuration": 300
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/((?!api/).*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+{"framework":"vite","rewrites":[{"source":"/(.*)","destination":"/index.html"}]}

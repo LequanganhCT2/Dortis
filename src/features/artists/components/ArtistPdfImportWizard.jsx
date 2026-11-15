@@ -3,7 +3,6 @@ import {extractArtistPdf,slugifyArtist} from '../../../artistPdf'
 import {buildReviewFromExtraction,normalizeReviewedPage,validateReviewedImport} from '../domain/pdfReviewModel'
 import {selectAutomaticOcrPages,applyOcrToReview} from '../domain/ocrReconciliation'
 import {appendReviewedParagraph} from '../domain/ocrLayout'
-import {applyCloudOcrToReview} from '../domain/cloudOcrReview'
 import './artist-pdf-import.css'
 
 const LIMIT=100*1024*1024
@@ -23,25 +22,10 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
   const [error,setError]=useState('')
   const [dragging,setDragging]=useState(false)
   const [ocrRunning,setOcrRunning]=useState(false)
-  const [engine,setEngine]=useState('local')
-  const [cloudConsent,setCloudConsent]=useState(false)
-  const [classifyWithAi,setClassifyWithAi]=useState(false)
-  const [cloudInfo,setCloudInfo]=useState({
-    loading:true,mistralAvailable:false,geminiAvailable:false
-  })
   const ocrController=useRef(null)
   const runVersion=useRef(0)
   const inputRef=useRef(null)
   const [previewUrl,setPreviewUrl]=useState('')
-  useEffect(()=>{
-    let active=true
-    import('../services/cloudPdfOcr').then(module=>module.getCloudOcrAvailability(supabase))
-      .then(info=>{if(active)setCloudInfo({...info,loading:false})})
-      .catch(()=>{if(active)setCloudInfo({
-        loading:false,mistralAvailable:false,geminiAvailable:false
-      })})
-    return ()=>{active=false}
-  },[supabase])
   useEffect(()=>{
     if(!file){setPreviewUrl('');return}
     const url=URL.createObjectURL(file)
@@ -54,10 +38,8 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
   function patchDoc(key,value){setDoc(d=>({...d,[key]:value}))}
   function patchPage(key,value){
     setDoc(d=>({...d,pages:d.pages.map((p,i)=>i===pageIndex?
-      {...p,[key]:value,
-        ...(key==='body'?{ocrMainSource:'manual'}:{}),
-        reviewed:key==='reviewed'?value:false,
-        editedFields:['title','body','layout'].includes(key)
+      {...p,[key]:value,reviewed:key==='reviewed'?value:false,
+        editedFields:['title','body'].includes(key)
           ?{...(p.editedFields||{}),[key]:true}:p.editedFields}:p)}))
   }
   async function performOcr(fileToRead,targets,review,{quality='standard'}={}){
@@ -123,53 +105,11 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
     await performOcr(file,unreviewed,doc,{quality})
   }
   function skipOcr(){ocrController.current?.abort()}
-  async function performCloudOcr(fileToRead,review){
-    const controller=new AbortController()
-    const token=++runVersion.current
-    ocrController.current=controller
-    setOcrRunning(true);setBusy(true);setError('');setStage('ocr')
-    setProgress('Đang chuẩn bị OCR Mistral AI…')
-    try{
-      const {processCloudPdf}=await import('../services/cloudPdfOcr')
-      const response=await processCloudPdf(fileToRead,{
-        supabase,userId:user.id,pageCount:review.pageCount,
-        classify:classifyWithAi&&cloudInfo.geminiAvailable,
-        signal:controller.signal,onProgress:message=>{
-          if(token===runVersion.current)setProgress(message)
-        },onCleanupWarning:message=>{
-          if(token===runVersion.current)setError(message)
-        }
-      })
-      if(token!==runVersion.current)return
-      setDoc(current=>applyCloudOcrToReview(current||review,response))
-      const missing=Array.isArray(response.missingPages)?response.missingPages:[]
-      if(missing.length || response.classificationWarning)
-        setError([
-          missing.length?'Mistral chưa đọc được trang '+missing.join(', ')+'. Bạn có thể dùng OCR trên thiết bị.':'',
-          response.classificationWarning||''
-        ].filter(Boolean).join(' '))
-    }catch(e){
-      if(token===runVersion.current)setError(controller.signal.aborted?
-        'Đã dừng OCR AI. File PDF tạm được yêu cầu xóa; có thể dùng OCR trên thiết bị.':
-        'OCR AI chưa hoàn tất: '+e.message+'. Chữ PDF gốc vẫn được giữ. Bạn có thể dùng OCR trên thiết bị.')
-    }finally{
-      if(token===runVersion.current){
-        ocrController.current=null
-        setOcrRunning(false);setBusy(false);setProgress('');setStage('review')
-      }
-    }
-  }
   async function load(fileToRead){
     if(!fileToRead)return
     setError('')
     if(!/\.pdf$/i.test(fileToRead.name)||!fileToRead.size||fileToRead.size>LIMIT){
       setError('Vui lòng chọn PDF hợp lệ, dung lượng tối đa 100 MB.');return
-    }
-    if(engine==='cloud' && (!cloudInfo.mistralAvailable||!cloudConsent)){
-      setError('Cần bật Mistral và đồng ý gửi PDF tới nhà cung cấp OCR trước khi sử dụng.');return
-    }
-    if(engine==='cloud' && fileToRead.size>50*1024*1024){
-      setError('OCR Mistral tối đa 50 MB/file. Hãy dùng OCR trên thiết bị.');return
     }
     setFile(fileToRead);setDoc(null);setPageIndex(0);setBusy(true);setStage('extract')
     try{
@@ -178,12 +118,9 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       const review=buildReviewFromExtraction(parsed)
       if(!review.pages.length)throw new Error('PDF không có trang hợp lệ.')
       setDoc(review)
-      if(engine==='cloud')await performCloudOcr(fileToRead,review)
-      else{
-        const targets=selectAutomaticOcrPages(review.pages)
-        if(targets.length)await performOcr(fileToRead,targets,review,{quality:'standard'})
-        else setStage('review')
-      }
+      const targets=selectAutomaticOcrPages(review.pages)
+      if(targets.length)await performOcr(fileToRead,targets,review,{quality:'standard'})
+      else setStage('review')
     }catch(e){
       setError('Không phân tích được PDF: '+e.message)
       setStage('pick')
@@ -232,7 +169,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
     <header className="pdf-import__intro">
       <div><span className="pdf-import__eyebrow">01 / ARTIST SOURCE LIBRARY</span>
         <h2>Nhập Portfolio từ PDF<span>.</span></h2>
-        <p>Chọn OCR trên thiết bị hoặc Mistral AI theo bố cục. Chữ PDF gốc và bản OCR luôn được giữ riêng để đối chiếu; chỉ lưu hồ sơ sau khi duyệt.</p></div>
+        <p>Đọc lớp chữ gốc và quét OCR tất cả trang (kể cả trang có chữ và ảnh đan xen). Các trang thiết kế phức tạp được quét thêm từng cột; bạn duyệt kết quả trước khi lưu.</p></div>
       <div className="pdf-import__steps" aria-label="Các bước nhập PDF">
         {STEPS.map((name,i)=><span key={name} className={
           (i===0&&stage==='pick'||i===1&&['extract','ocr','review'].includes(stage)||i===2&&stage==='save')?'is-active':''}>
@@ -244,59 +181,22 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       onDragOver={e=>{e.preventDefault();setDragging(true)}}
       onDragLeave={e=>{e.preventDefault();setDragging(false)}}
       onDrop={e=>{e.preventDefault();setDragging(false);load(e.dataTransfer.files?.[0])}}>
-      <fieldset className="pdf-import__engine">
-        <legend>CHỌN CÔNG CỤ ĐỌC PDF</legend>
-        <label className={engine==='local'?'is-selected':''}>
-          <input type="radio" name="dortis-ocr-engine" checked={engine==='local'}
-            onChange={()=>{setEngine('local');setCloudConsent(false)}}/>
-          <span><strong>Đọc trên thiết bị</strong><small>PDF.js + Tesseract · không gửi tệp ra ngoài</small></span>
-        </label>
-        <label className={engine==='cloud'?'is-selected':''}>
-          <input type="radio" name="dortis-ocr-engine" checked={engine==='cloud'}
-            disabled={!cloudInfo.mistralAvailable}
-            onChange={()=>setEngine('cloud')}/>
-          <span><strong>Mistral AI · OCR nâng cao</strong>
-            <small>{cloudInfo.loading?'Đang kiểm tra kết nối AI…':
-              cloudInfo.mistralAvailable?'Đọc bố cục và chữ trong ảnh · có tính phí API':
-              'Chưa cấu hình MISTRAL_API_KEY trên Vercel'}</small></span>
-        </label>
-        {engine==='cloud'&&<>
-          <label className="pdf-import__cloud-consent">
-            <input type="checkbox" checked={cloudConsent}
-              onChange={e=>setCloudConsent(e.target.checked)}/>
-            <span>Tôi đồng ý gửi PDF tạm thời tới Mistral để nhận dạng.
-              PDF được tải vào Storage riêng tư, gửi qua liên kết có hạn và yêu cầu xóa sau OCR.
-              Nhà cung cấp có thể xử lý hoặc lưu dữ liệu theo chính sách riêng.</span>
-          </label>
-          <label className="pdf-import__cloud-consent">
-            <input type="checkbox" checked={classifyWithAi}
-              disabled={!cloudInfo.geminiAvailable}
-              onChange={e=>setClassifyWithAi(e.target.checked)}/>
-            <span>Gợi ý phân loại mục bằng Gemini, không tự sửa chữ.
-              {!cloudInfo.geminiAvailable?' Chưa có GEMINI_API_KEY.':''}</span>
-          </label>
-        </>}
-      </fieldset>
       <div className="pdf-import__drop-icon" aria-hidden="true">PDF<span>＋</span></div>
       <strong>Thả file PDF hoặc chọn từ máy</strong>
-      <p>{engine==='cloud'?'Mistral tối đa 50 MB · PDF chỉ lưu tạm để xử lý rồi xóa':
-        'Tối đa 100 MB · OCR cục bộ tiếng Việt + Anh · PDF không lên server'}</p>
-      <button type="button" disabled={engine==='cloud'&&!cloudConsent}
-        onClick={()=>inputRef.current?.click()}>+ CHỌN FILE PDF</button>
+      <p>Tối đa 100 MB · OCR tiếng Việt + Anh cho toàn bộ Portfolio · PDF không lưu lên Supabase</p>
+      <button type="button" onClick={()=>inputRef.current?.click()}>+ CHỌN FILE PDF</button>
       <input ref={inputRef} type="file" accept=".pdf,application/pdf" hidden onChange={e=>{
         const picked=e.target.files?.[0];e.target.value='';load(picked)
       }}/>
     </div>}
     {(stage==='extract'||stage==='ocr')&&<div className="pdf-import__working" role="status">
       <span className="pdf-import__spinner" aria-hidden="true"/>
-      <h3>{stage==='ocr'?(engine==='cloud'?'Mistral đang đọc cấu trúc PDF…':'Đang nhận dạng chữ trong ảnh…'):'Đang đọc lớp chữ PDF…'}</h3>
+      <h3>{stage==='ocr'?'Đang nhận dạng chữ trong ảnh…':'Đang đọc lớp chữ PDF…'}</h3>
       <p>{progress||'Đọc từng trang, không lưu hình hoặc PDF lên server.'}</p>
       {stage==='ocr'&&<button type="button" className="pdf-import__ocr-skip"
         onClick={skipOcr}>Bỏ qua OCR, xem kết quả đã đọc</button>}
-      {stage==='ocr'&&<small>{engine==='cloud'?
-          'OCR AI xử lý trên máy chủ. Nếu hủy, kết quả chưa hoàn tất có thể không được giữ.':
-          'Đã quét: '+(doc?.quality?.ocrPages||0)+'/'+(doc?.pageCount||'?')+
-          ' trang. Có thể dừng mà không mất các trang đã đọc.'}</small>}
+      {stage==='ocr'&&<small>Đã quét: {doc?.quality?.ocrPages||0}/{doc?.pageCount||'?'} trang.
+        Đang quét nhiều vùng để phát hiện thêm chữ. Có thể dừng mà không mất các trang đã đọc.</small>}
     </div>}
     {(stage==='review'||stage==='save')&&doc&&<div className="pdf-import__review">
       <div className="pdf-import__summary">
@@ -314,7 +214,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             <button type="button" className="pdf-import__ocr-all"
               disabled={busy||!doc.pages.some(p=>!p.reviewed)}
               onClick={()=>runOcrForPages(doc.pages.map(p=>p.page),'deep')}>
-              ✧ Quét sâu bằng Tesseract
+              ✧ Quét sâu tất cả trang chưa duyệt
             </button>
           </div>
         </div>
@@ -374,16 +274,14 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             <div className="pdf-import__reading-mode">
               <strong>NỘI DUNG ĐANG DÙNG: {page.ocrMainSource==='manual'?'BẠN ĐÃ SỬA':
                 page.ocrMainSource==='ocr'?'OCR THEO KHỐI':
-                page.ocrMainSource==='cloud'?'MISTRAL AI · THEO BỐ CỤC':
                  page.ocrMainSource==='combined'?'PDF + OCR THEO VỊ TRÍ':'LỚP CHỮ PDF GỐC'}</strong>
-              <p>{page.ocrProvider==='mistral'?
-                'Bản Mistral giữ thứ tự đọc và phân loại khối. Chọn chữ PDF gốc nếu phát hiện sai; phần sửa tay không bị ghi đè.':
-                'Không tự nối OCR toàn trang với các cột; chọn nguồn hoặc bổ sung từng đoạn.'}</p>
+              <p>Không tự nối kết quả quét toàn trang với cột trái, cột phải.
+                Chọn một nguồn hoặc thêm riêng từng đoạn cần thiết.</p>
               <div>
                 <button type="button" disabled={busy||page.reviewed||!page.pdfText}
                   onClick={()=>patchPage('body',page.pdfText||'')}>Dùng chữ PDF gốc</button>
                 <button type="button" disabled={busy||page.reviewed||!page.ocrText}
-                  onClick={()=>patchPage('body',page.ocrText||'')}>{page.ocrProvider==='mistral'?'Dùng chữ Mistral AI':'Dùng OCR đã sắp theo khối'}</button>
+                  onClick={()=>patchPage('body',page.ocrText||'')}>Dùng OCR đã sắp theo khối</button>
               </div>
             </div>
             {Array.isArray(page.ocrBlocks)&&page.ocrBlocks.length>0&&
@@ -435,8 +333,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
               {page.sourceBlocks.map((block,index)=>
                 <div className="pdf-import__ocr-block" key={index}>
                   <span>{String(index+1).padStart(2,'0')} · {block.source==='ocr'?
-                    'CHỮ TRONG ẢNH (OCR)':block.source==='mistral'?
-                    'MISTRAL AI':'CHỮ PDF GỐC'}
+                    'CHỮ TRONG ẢNH (OCR)':'CHỮ PDF GỐC'}
                     {block.needsReview?' · CẦN KIỂM TRA ĐOẠN GIAO NHAU':''}</span>
                   <p>{block.text}</p>
                 </div>)}
@@ -489,8 +386,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       </footer>
       <p className="pdf-import__footnote">
         Chỉ lưu text/nhóm nội dung đã duyệt thành bản nháp tại Hồ sơ nghệ sĩ.
-        {engine==='cloud'?'PDF được lưu tạm trên Storage riêng tư khi dùng Mistral và yêu cầu xóa sau OCR.':
-        'PDF không được tải lên Supabase khi dùng chế độ cục bộ.'} File trên máy của bạn không bị xóa.
+        File PDF gốc không có trong database hay Storage. File trên máy của bạn không bị xóa.
       </p>
     </div>}
   </section>
