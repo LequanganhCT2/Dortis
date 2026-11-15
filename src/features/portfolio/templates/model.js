@@ -38,12 +38,16 @@ export function normalizeBlueprint(input={}){
   const style=['editorial','cinematic','minimal'].includes(input.style)?input.style:'editorial'
   const ids=new Set()
   const sections=(Array.isArray(input.sections)?input.sections:[])
-    .filter(x=>x&&typeof x.id==='string'&&/^[a-z0-9_-]{1,40}$/.test(x.id)&&!ids.has(x.id))
-    .slice(0,24).map(x=>{ids.add(x.id);return {
+    .filter(x=>{
+      if(!x||typeof x.id!=='string'||!/^[a-z0-9_-]{1,40}$/.test(x.id)||ids.has(x.id))return false
+      ids.add(x.id)
+      return true
+    })
+    .slice(0,24).map(x=>({
       id:x.id,label:String(x.label||'Khu vực').slice(0,80),
       layout:FORM_LAYOUTS.includes(x.layout)?x.layout:'split',
       slots:Math.max(0,Math.min(10,Math.floor(Number(x.slots)||0)))
-    }})
+    }))
   return {style,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
 export function resolveInstance(template,instance,profile){
