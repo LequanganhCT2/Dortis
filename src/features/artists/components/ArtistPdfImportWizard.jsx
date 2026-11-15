@@ -1,7 +1,8 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {extractArtistPdf,slugifyArtist} from '../../../artistPdf'
 import {buildReviewFromExtraction,normalizeReviewedPage,validateReviewedImport} from '../domain/pdfReviewModel'
-import {selectAutomaticOcrPages,applyOcrToReview,combinePdfOcrText} from '../domain/ocrReconciliation'
+import {selectAutomaticOcrPages,applyOcrToReview} from '../domain/ocrReconciliation'
+import {appendReviewedParagraph} from '../domain/ocrLayout'
 import './artist-pdf-import.css'
 
 const LIMIT=100*1024*1024
@@ -262,32 +263,67 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             <button type="button" disabled={busy||page.reviewed}
               onClick={()=>runOcrForPages([page.page],'deep')}>✧ Quét sâu trang này (nhiều vùng)</button>
             {page.ocrStatus==='done'&&<span>
-              OCR tiếng Việt + tiếng Anh · Độ tin cậy tham khảo {page.ocrConfidence??'?'}%
+              Đã nhận dạng · {page.ocrConfidence==null?'Cần kiểm tra':
+                'Độ tin cậy tham khảo '+page.ocrConfidence+'%'}
             </span>}
             {page.ocrStatus==='failed'&&<span className="pdf-import__ocr-failed">
               {page.ocrError||'Trang này OCR chưa thành công'}
             </span>}
           </div>
-          {page.ocrStatus==='done'&&<details className="pdf-import__ocr-compare">
-            <summary>Đối chiếu chữ từ PDF và chữ OCR</summary>
-            <div><strong>Lớp chữ gốc PDF</strong><pre>{page.pdfText||'Không có lớp chữ'}</pre></div>
-            <div><strong>OCR từ hình ảnh</strong><pre>{page.ocrText||'Không nhận diện được'}</pre>
-              <button type="button" className="pdf-import__ocr-add"
-                disabled={busy||page.reviewed||!page.ocrText}
-                onClick={()=>patchPage('body',combinePdfOcrText(page.body,page.ocrText))}>
-                + Bổ sung các dòng OCR còn thiếu vào nội dung
-              </button>
-            </div>
-            {(page.ocrPasses||[]).filter(p=>p.text).map((pass,index)=>
-              <div key={index}>
-                <strong>Vùng {({full:'toàn trang',left:'trái',right:'phải',
-                  top:'trên',bottom:'dưới'})[pass.kind]||pass.kind}
-                  {pass.confidence!=null?' · '+Math.round(pass.confidence)+'%':''}
-                </strong>
-                <pre>{pass.text}</pre>
+          {page.ocrStatus==='done'&&<>
+            <div className="pdf-import__reading-mode">
+              <strong>NỘI DUNG ĐANG DÙNG: {page.ocrMainSource==='manual'?'BẠN ĐÃ SỬA':
+                page.ocrMainSource==='ocr'?'OCR THEO KHỐI':'LỚP CHỮ PDF GỐC'}</strong>
+              <p>Không tự nối kết quả quét toàn trang với cột trái, cột phải.
+                Chọn một nguồn hoặc thêm riêng từng đoạn cần thiết.</p>
+              <div>
+                <button type="button" disabled={busy||page.reviewed||!page.pdfText}
+                  onClick={()=>patchPage('body',page.pdfText||'')}>Dùng chữ PDF gốc</button>
+                <button type="button" disabled={busy||page.reviewed||!page.ocrText}
+                  onClick={()=>patchPage('body',page.ocrText||'')}>Dùng OCR đã sắp theo khối</button>
               </div>
-            )}
-          </details>}
+            </div>
+            {Array.isArray(page.ocrBlocks)&&page.ocrBlocks.length>0&&
+              <details className="pdf-import__ocr-blocks" open={false}>
+                <summary>Các khối chữ theo vị trí trên trang ({page.ocrBlocks.length})</summary>
+                <p>Chọn từng khối riêng để bổ sung. Các dòng OCR bị đứt đoạn không tự ghép vào văn bản chính.</p>
+                {page.ocrBlocks.map((block,index)=><div className="pdf-import__ocr-block" key={index}>
+                  <span>KHỐI {String(index+1).padStart(2,'0')}
+                    {block.confidence!=null?' · '+Math.round(block.confidence)+'%':''}</span>
+                  <p>{block.text}</p>
+                  <button type="button" disabled={busy||page.reviewed}
+                    onClick={()=>patchPage('body',appendReviewedParagraph(page.body,block.text))}>
+                    + Thêm khối này vào nội dung
+                  </button>
+                </div>)}
+              </details>}
+            <details className="pdf-import__ocr-compare">
+              <summary>Đối chiếu các nguồn OCR · Chỉ đưa vào nội dung khi chọn</summary>
+              <div><strong>Lớp chữ gốc PDF</strong><pre>{page.pdfText||'Không có lớp chữ'}</pre></div>
+              <div><strong>OCR toàn trang đã sắp theo khối</strong>
+                <pre>{page.ocrText||'Không nhận diện được'}</pre>
+                <button type="button" className="pdf-import__ocr-add"
+                  disabled={busy||page.reviewed||!page.ocrText}
+                  onClick={()=>patchPage('body',appendReviewedParagraph(page.body,page.ocrText))}>
+                  + Bổ sung nội dung OCR đã chọn
+                </button>
+              </div>
+              {(page.ocrPasses||[]).filter(p=>p.text&&p.kind!=='full').map((pass,index)=>
+                <div key={index}>
+                  <strong>Quét bổ sung vùng {({left:'trái',right:'phải',
+                    top:'trên',bottom:'dưới'})[pass.kind]||pass.kind}
+                    {pass.confidence!=null?' · '+Math.round(pass.confidence)+'%':''}
+                  </strong>
+                  <pre>{pass.text}</pre>
+                  <button type="button" className="pdf-import__ocr-add"
+                    disabled={busy||page.reviewed}
+                    onClick={()=>patchPage('body',appendReviewedParagraph(page.body,pass.text))}>
+                    + Thêm vùng này (chỉ khi đã đối chiếu PDF)
+                  </button>
+                </div>
+              )}
+            </details>
+          </>}
           {page.warnings.length>0&&<p className="pdf-import__warning">
             {page.warnings.join(' ')}</p>}
           <label>Loại nội dung
@@ -303,7 +339,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             <input value={page.eyebrow} disabled={busy} maxLength={160}
               placeholder="Không bắt buộc"
               onChange={e=>patchPage('eyebrow',e.target.value)}/></label>
-          <label>Văn bản trích xuất và OCR · Có thể sửa trước khi lưu
+          <label>Văn bản theo khối · Kiểm tra thứ tự, dấu và số trước khi lưu
             <textarea rows={9} value={page.body} disabled={busy}
               onChange={e=>patchPage('body',e.target.value)}
               placeholder={page.textFound?'Kiểm tra tên, dấu tiếng Việt, chữ và các con số.':

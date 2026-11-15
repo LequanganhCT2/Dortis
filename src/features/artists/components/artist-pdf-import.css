@@ -211,3 +211,42 @@
  .pdf-import__ocr-actions{flex-direction:column;align-items:stretch}
  .pdf-import__ocr-actions .pdf-import__ocr-all{width:100%}
 }
+
+/* Readable OCR: paragraphs are positioned, cropped-region suggestions stay separate. */
+.pdf-import__reading-mode{
+ border:1px solid #d1e4dc;background:#f2f9f6;border-radius:10px;
+ padding:13px;display:flex;flex-direction:column;gap:9px;
+}
+.pdf-import__reading-mode>strong{font:800 10px 'Be Vietnam Pro',system-ui,sans-serif;color:#35745e;letter-spacing:.05em}
+.pdf-import__reading-mode>p,.pdf-import__ocr-blocks>p{
+ font:500 10px/1.8 'Be Vietnam Pro',system-ui,sans-serif;color:#607c78;margin:0;
+}
+.pdf-import__reading-mode>div{display:flex;flex-wrap:wrap;gap:8px}
+.pdf-import__reading-mode button,.pdf-import__ocr-block button{
+ cursor:pointer;border:1px solid #bfd5d1;background:#fff;border-radius:7px;
+ color:#255d58;padding:9px 11px;font:750 10px 'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pdf-import__reading-mode button:hover,.pdf-import__ocr-block button:hover{background:#e5f4ef}
+.pdf-import__reading-mode button:disabled,.pdf-import__ocr-block button:disabled{
+ opacity:.42;cursor:not-allowed;
+}
+.pdf-import__ocr-blocks{border:1px solid #d8e4eb;border-radius:9px;background:#f8fbfc}
+.pdf-import__ocr-blocks>summary{
+ cursor:pointer;padding:12px 14px;background:#edf4f7;
+ font:800 10px 'Be Vietnam Pro',system-ui,sans-serif;color:#42647a
+}
+.pdf-import__ocr-blocks>p{padding:11px 14px 0}
+.pdf-import__ocr-block{margin:11px 13px;padding:12px;background:white;
+ border:1px solid #dce7ec;border-radius:8px;display:flex;flex-direction:column;gap:10px;
+}
+.pdf-import__ocr-block>span{font:800 9px 'Be Vietnam Pro',system-ui,sans-serif;
+ color:#728795;letter-spacing:.08em}
+.pdf-import__ocr-block>p{white-space:pre-wrap;overflow-wrap:anywhere;
+ font:500 11px/1.85 'Be Vietnam Pro',system-ui,sans-serif;color:#263f4b;margin:0}
+.pdf-import__ocr-block>button{align-self:flex-start}
+.pdf-import__ocr-compare>div{display:flex;flex-direction:column;align-items:flex-start}
+.pdf-import__ocr-compare pre{width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:650px){
+ .pdf-import__reading-mode>div{flex-direction:column}
+ .pdf-import__reading-mode>div button{width:100%}
+}

@@ -53,6 +53,20 @@ export function mergeOcrPasses(passes=[]){
   for(const pass of usable.slice(1))output=combinePdfOcrText(output,pass.text)
   return output.slice(0,MAX_REVIEW_CHARACTERS)
 }
+/** Choose ONE coherent narrative for the editable field. Adding text from
+ * extra zones must be an explicit Admin action, not automatic concatenation.
+ */
+export function selectMainReviewText(pdfText='',ocrText=''){
+  const pdf=String(pdfText||'').trim()
+  const ocr=String(ocrText||'').trim()
+  if(!ocr)return {text:pdf,source:'pdf'}
+  if(!pdf)return {text:ocr,source:'ocr'}
+  // PDFs commonly contain only a heading as actual text, the biography is
+  // rasterized: a substantially longer OCR paragraph is the better draft.
+  if(pdf.length<200 && ocr.length>pdf.length*1.65)
+    return {text:ocr,source:'ocr'}
+  return {text:pdf,source:'pdf'}
+}
 export function applyOcrToReview(review,results=[]){
   const byPage=new Map(results.map(result=>[Number(result.page),result]))
   const pages=review.pages.map(page=>{
@@ -60,10 +74,13 @@ export function applyOcrToReview(review,results=[]){
     if(!result || page.reviewed)return page
     if(result.error)return {...page,ocrStatus:'failed',ocrError:String(result.error),
       warnings:[...(page.warnings||[]),'OCR gặp lỗi ở trang này: '+String(result.error)]}
-    const recognized=split(result.text).join('\n')
-    const ocrText=combinePdfOcrText(page.ocrText||'',recognized)
+    // OCR replaces previous OCR on a rescan. Never accumulate approximate
+    // words from old passes into new output.
+    const recognized=String(result.text||'').trim()
+    const ocrText=recognized
     const pdfText=page.pdfText??page.body
-    const body=page.editedFields?.body===true?page.body:combinePdfOcrText(pdfText,ocrText)
+    const selected=selectMainReviewText(pdfText,ocrText)
+    const body=page.editedFields?.body===true?page.body:selected.text
     const c=Number(result.confidence)
     const confidence=result.confidence==null||!Number.isFinite(c)?null:Math.round(c)
     const warnings=(page.warnings||[])
@@ -72,11 +89,18 @@ export function applyOcrToReview(review,results=[]){
     else if(confidence!==null && confidence<70)
       warnings.push('OCR độ tin cậy thấp: kiểm tra kỹ dấu, tên riêng và các con số.')
     else warnings.push('OCR có thể thiếu hoặc sai: đối chiếu từng đoạn với trang PDF trước khi xác nhận.')
-    const first=split(recognized)[0]||''
+    // Only use a heading suggested from positioned OCR blocks. Blindly taking
+    // the first line previously produced fragments such as "ca a" and "7/41".
+    const heading=String(result.suggestedTitle||'').trim()
     const title=page.editedFields?.title===true?page.title:
-      (page.title||(first.length>=4&&first.length<=75?first:''))
+      (page.title||heading)
     return {...page,title,body,pdfText,ocrText,ocrConfidence:confidence,
       ocrStatus:ocrText?'done':'empty',ocrError:null,
+      ocrMainSource:page.editedFields?.body===true?'manual':selected.source,
+      ocrBlocks:Array.isArray(result.paragraphs)?result.paragraphs.map(p=>({
+        text:p.text,bbox:p.bbox,confidence:p.confidence??null
+      })):[],
+      ocrSourcePass:result.sourcePass||'full',
       ocrPasses:Array.isArray(result.passes)?result.passes.map(p=>({
         kind:String(p.kind||'full'),text:String(p.text||''),confidence:p.confidence??null
       })):page.ocrPasses||[],

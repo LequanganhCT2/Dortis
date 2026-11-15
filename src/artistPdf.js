@@ -30,28 +30,55 @@ export function artistNameFromFilename(name) {
     .replace(/\s+/g,' ').trim() || 'Nghệ sĩ mới'
 }
 function printable(str){return String(str||'').replace(/[\u0000-\u001f\u007f]/g,' ').replace(/\s+/g,' ').trim()}
-function extractLines(content){
-  const spans=content.items.filter(i=>typeof i.str==='string'&&i.str.trim()).map(item=>({
-    str:printable(item.str), x:item.transform?.[4]||0, y:item.transform?.[5]||0,
-    height:Math.max(7,Math.abs(item.transform?.[3]||11)), width:item.width||0
+/** Read PDF text by physical blocks instead of joining unrelated columns
+ * that happen to share the same Y coordinate. This is independent of OCR.
+ */
+export function extractLines(content,pageWidth=1000){
+  const spans=(content?.items||[]).filter(i=>typeof i.str==='string'&&i.str.trim()).map(item=>({
+    str:printable(item.str),x:item.transform?.[4]||0,y:item.transform?.[5]||0,
+    height:Math.max(7,Math.abs(item.transform?.[3]||11)),width:item.width||0
   })).filter(t=>t.str)
   spans.sort((a,b)=>(Math.abs(b.y-a.y)>4?b.y-a.y:a.x-b.x))
-  const lines=[]
+  const rows=[]
   for(const span of spans){
-    let line=lines.find(line=>Math.abs(line.y-span.y)<Math.max(3,Math.min(7,span.height*.28)))
-    if(!line){line={y:span.y,parts:[],height:span.height};lines.push(line)}
-    line.parts.push(span)
+    let row=rows.find(row=>Math.abs(row.y-span.y)<Math.max(3,Math.min(7,span.height*.28)))
+    if(!row){row={y:span.y,parts:[],height:span.height};rows.push(row)}
+    row.parts.push(span)
   }
-  return lines.sort((a,b)=>b.y-a.y).map(line=>{
-    let previous=null,parts=[]
-    for(const item of line.parts.sort((a,b)=>a.x-b.x)){
-      if(previous&&item.str===previous.str&&Math.abs(item.x-previous.x)<5)continue
-      if(previous&&item.x>previous.x+previous.width+Math.max(4,item.height*.2))parts.push(' ')
-      parts.push(item.str)
-      previous=item
+  const segments=[]
+  for(const row of rows){
+    const ordered=row.parts.sort((a,b)=>a.x-b.x)
+    let groups=[],group=[],previous=null
+    for(const item of ordered){
+      const gap=previous?item.x-(previous.x+previous.width):0
+      if(group.length&&gap>Math.max(33,pageWidth*.055)){
+        groups.push(group);group=[]
+      }
+      group.push(item);previous=item
     }
-    return printable(parts.join(''))
-  }).filter(Boolean).filter((line,index,array)=>index===0||line!==array[index-1])
+    if(group.length)groups.push(group)
+    for(const parts of groups){
+      let previous=null,words=[]
+      for(const item of parts){
+        if(previous&&item.str===previous.str&&Math.abs(item.x-previous.x)<5)continue
+        if(previous&&item.x>previous.x+previous.width+Math.max(4,item.height*.2))words.push(' ')
+        words.push(item.str);previous=item
+      }
+      const text=printable(words.join(''))
+      if(text)segments.push({text,x:parts[0].x,y:row.y,
+        x1:Math.max(...parts.map(part=>part.x+part.width))})
+    }
+  }
+  const left=segments.filter(t=>t.x1<pageWidth*.50)
+  const right=segments.filter(t=>t.x>pageWidth*.50)
+  const dual=left.length>=2&&right.length>=2&&left.length+right.length>=segments.length*.72
+  const ySort=(a,b)=>b.y-a.y||a.x-b.x
+  const sorted=dual?[
+    ...segments.filter(t=>t.x<pageWidth*.18&&t.x1>pageWidth*.82).sort(ySort),
+    ...segments.filter(t=>!(t.x<pageWidth*.18&&t.x1>pageWidth*.82)&&t.x<pageWidth*.5).sort(ySort),
+    ...segments.filter(t=>!(t.x<pageWidth*.18&&t.x1>pageWidth*.82)&&t.x>=pageWidth*.5).sort(ySort)
+  ]:segments.sort(ySort)
+  return sorted.map(t=>t.text).filter((text,index,all)=>index===0||text!==all[index-1])
 }
 export function inferTitle(lines,pageNumber){
   if(pageNumber===1)return {title:'Trang bìa',rest:lines}
@@ -95,7 +122,7 @@ export async function extractArtistPdf(file,onProgress=()=>{}){
     for(let index=1;index<=pdf.numPages;index++){
       const page=await pdf.getPage(index)
       const content=await page.getTextContent({includeMarkedContent:false})
-      const lines=extractLines(content)
+      const lines=extractLines(content,page.getViewport({scale:1}).width)
       const inferred=inferTitle(lines,index)
       const body=inferred.rest.join('\n').slice(0,14000)
       // Keep raw text independent of the title guess. A heuristic headline

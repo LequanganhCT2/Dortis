@@ -1,6 +1,6 @@
 import {loadPdfBytes,destroyArtistPdf} from '../../../artistPdf.js'
 import {buildOcrPasses,renderScale} from '../domain/ocrPassPlan.js'
-import {mergeOcrPasses} from '../domain/ocrReconciliation.js'
+import {paragraphsFromBlocks,selectPrimaryOcr,guessOcrHeading} from '../domain/ocrLayout.js'
 
 /** Client-only Tesseract OCR for mixed raster/text Portfolio pages.
  * - The same worker is reused for every page/pass.
@@ -71,10 +71,16 @@ export async function ocrPdfPages(file,pageNumbers,{
               tessedit_pageseg_mode:PSM[pass.mode]||PSM.AUTO,
               preserve_interword_spaces:'1'
             })
+            // Full-page OCR returns positioned paragraphs. Cropped rescans are
+            // kept as separate alternatives, never appended line-by-line.
             const {data}=await worker.recognize(canvas,
-              pass.rectangle?{rectangle:pass.rectangle}:{})
+              pass.rectangle?{rectangle:pass.rectangle}:{},
+              pass.kind==='full'?{text:true,blocks:true}:{text:true})
+            const paragraphs=pass.kind==='full'?
+              paragraphsFromBlocks(data?.blocks||[],canvas.width):[]
             passes.push({kind:pass.kind,text:String(data?.text||'').trim(),
-              confidence:Number.isFinite(data?.confidence)?data.confidence:null})
+              confidence:Number.isFinite(data?.confidence)?data.confidence:null,
+              paragraphs})
           }catch(e){
             if(signal?.aborted)break
             passes.push({kind:pass.kind,text:'',confidence:null,
@@ -83,11 +89,11 @@ export async function ocrPdfPages(file,pageNumbers,{
         }
         if(signal?.aborted)break
         const usable=passes.filter(p=>p.text)
-        const confidenceValues=usable.map(p=>p.confidence).filter(Number.isFinite)
-        const confidence=confidenceValues.length?
-          confidenceValues.reduce((sum,n)=>sum+n,0)/confidenceValues.length:null
+        const primary=selectPrimaryOcr(passes)
         const result={
-          page:pageNumber,text:mergeOcrPasses(usable),confidence,
+          page:pageNumber,text:primary.text,confidence:primary.confidence,
+          sourcePass:primary.kind,paragraphs:primary.paragraphs,
+          suggestedTitle:guessOcrHeading(primary.paragraphs,canvas.height),
           passes,quality,
           ...(usable.length?{}:{error:'Không nhận diện được chữ ở trang này. Hãy thử quét sâu hoặc nhập thủ công.'})
         }
