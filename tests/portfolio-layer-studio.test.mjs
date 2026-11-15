@@ -78,7 +78,7 @@ test('Add, edit and remove text sticker without touching linked artist fields',(
 })
 test('Resetting scene desktop does not discard artist mobile design or source',()=>{
   let a=enableSectionScene({},hero)
-  a=patchSceneLayer(a,hero,'mobile','title',{x:30})
+  a=patchSceneLayer(a,hero,'mobile','title',{w:60,x:30})
   a=patchSceneLayer(a,hero,'desktop','title',{x:44})
   a=resetSectionScene(a,hero,'desktop')
   assert.equal(getScene(a,hero,'desktop').layers.title.x,7)
