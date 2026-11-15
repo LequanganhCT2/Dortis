@@ -20,7 +20,8 @@ export function resolveRoute(pathname = '/') {
 }
 
 export function resolveAdminView(pathname = ROUTES.admin) {
-  if (pathname === ROUTES.portfolio) return 'portfolio'
+  // Legacy Portfolio link now opens the unified artist library.
+  if (pathname === ROUTES.portfolio) return 'artists'
   if (pathname === ROUTES.artists) return 'artists'
   if (pathname === ROUTES.media) return 'media'
   return 'overview'

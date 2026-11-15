@@ -93,3 +93,12 @@ Các trang public và Admin được tách bằng `React.lazy`/dynamic import nh
 - Admin đã đăng nhập vào `/login` sẽ chuyển về `/admin`.
 - Đăng nhập thành công đưa người dùng đến `/admin`; đăng xuất về `/login`.
 - Hai route dùng chung một phiên kiểm tra quyền và chuyển bằng History API để không tải lại toàn bộ trang.
+
+## Admin Sidebar + Portfolio Library (15/11/2026)
+
+- Dashboard xuất hiện sau đăng nhập tại `/admin`, có hai khu vực chính: **Website DORTIS** và **Hồ sơ nghệ sĩ**.
+- Thanh điều hướng cố định bên trái trên desktop, ngăn kéo trên mobile; chọn Media nhanh trong sidebar, không tạo Navbar ngang thứ hai.
+- `/admin/artists` hiển thị **mọi Portfolio có thật** trong `artist_profiles`, lọc theo bản nháp/công khai và tìm kiếm; chọn thẻ để dùng editor PDF hiện có.
+- URL cũ `/admin/portfolio` chuyển về `/admin/artists`, không còn khu vực giả lập Long Nhật riêng trong menu.
+- Không tạo hồ sơ/ảnh/chứng thực giả. Cấu trúc Long Nhật Singer trong `features/portfolio/long-nhat` được giữ lại làm tài liệu kỹ thuật nội bộ nhưng không đại diện cho một record lưu trữ.
+- Chỉ dùng một file style cho workspace và tái sử dụng `UiButton`, `UiPanel`, `UiStatus`; phần danh sách được trích thành `ArtistPortfolioCatalog`.

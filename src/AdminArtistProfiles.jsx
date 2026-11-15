@@ -5,6 +5,7 @@ import { renderArtistPhotoCrops } from './artistPhotoCrops'
 import { renderPdfPageOriginal } from './artistPdfOriginal'
 import ArtistOriginalPages from './ArtistOriginalPages'
 import ArtistPortfolioSections from './ArtistPortfolioSections'
+import ArtistPortfolioCatalog from './features/artists/components/ArtistPortfolioCatalog'
 import { uploadArtistPdf, downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
 import './admin-artists.css'
 
@@ -24,6 +25,8 @@ const allPhotoPaths=sections=>[...new Set((sections||[]).flatMap(s=>[
 
 export default function AdminArtistProfiles({user,supabase}){
   const [profiles,setProfiles]=useState([])
+  const [loadingProfiles,setLoadingProfiles]=useState(true)
+  const editorRef=useRef(null)
   const [sources,setSources]=useState({})
   const [selected,setSelected]=useState(null)
   const [form,setForm]=useState(null)
@@ -42,8 +45,9 @@ export default function AdminArtistProfiles({user,supabase}){
       supabase.from('artist_profiles').select('*').order('updated_at',{ascending:false}),
       supabase.from('artist_profile_sources').select('profile_id,original_filename,pdf_storage_path,page_count')
     ])
-    if(p.error||s.error){setError(getError(p.error||s.error));return}
+    if(p.error||s.error){setError(getError(p.error||s.error));setLoadingProfiles(false);return}
     setProfiles(p.data||[])
+    setLoadingProfiles(false)
     setSources(Object.fromEntries((s.data||[]).map(row=>[row.profile_id,row])))
     setSelected(prev=>{
       if(prev&&!(p.data||[]).some(x=>x.id===prev))return null
@@ -52,6 +56,13 @@ export default function AdminArtistProfiles({user,supabase}){
   },[supabase])
   useEffect(()=>{load()},[load])
 
+  function openPortfolio(profile){
+    edit(profile)
+    window.requestAnimationFrame(()=>editorRef.current?.scrollIntoView({
+      behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',
+      block:'start'
+    }))
+  }
   function edit(profile){
     setSelected(profile.id)
     setForm({
@@ -392,15 +403,16 @@ export default function AdminArtistProfiles({user,supabase}){
 
   return <div className="artist-admin-wrapper">
     <div className="admin-dashboard artist-admin">
-      <header className="artist-admin-intro"><span>DORTIS / ARTIST PROFILE CMS</span>
+      <header className="artist-admin-intro"><span>DORTIS / ARTIST PORTFOLIOS</span>
         <h1>Hồ sơ <em>nghệ sĩ.</em></h1>
-        <p>Mỗi PDF tạo một trang nghệ sĩ riêng. Chọn chế độ <strong>Giữ nguyên PDF</strong> để giữ đúng vị trí chữ, màu và ảnh trên từng trang. Hoặc chọn HTML/CSS để tự thiết kế nội dung.</p>
-        <div className="artist-admin-heading-actions"><a href="/artists" target="_blank" rel="noreferrer">XEM TRANG NGHỆ SĨ ↗</a><a href="/admin">QUẢN LÝ ẢNH ↗</a></div>
+        <p>Quản lý toàn bộ Portfolio trong một nơi: chọn hồ sơ bên dưới để chỉnh sửa, nhập PDF mới hoặc thay đổi trạng thái xuất bản.</p>
       </header>
       {error&&<p className="admin-alert error" role="alert">{error}</p>}
       {notice&&<p className="admin-alert success" role="status">{notice}</p>}
       {busy&&<div className="artist-admin-progress" role="status"><span className="artist-admin-loader"/>{progress||'Đang xử lý...'}</div>}
-      <section className="artist-admin-upload">
+      <ArtistPortfolioCatalog profiles={profiles} loading={loadingProfiles}
+        selected={selected} onSelect={openPortfolio} disabled={busy}/>
+      <section className="artist-admin-upload" id="artist-upload">
         <div><span>01 / IMPORT PDF</span><h2>Nhập hồ sơ từ PDF.</h2>
           <p>Chọn tối đa 8 PDF trong một lượt. Mỗi file là một ca sĩ/nghệ sĩ, có thể gồm nhiều trang. PDF gốc được lưu riêng tư; hồ sơ mới luôn ở trạng thái bản nháp.</p></div>
         <label className={'artist-admin-file'+(busy?' is-disabled':'')}>
@@ -413,17 +425,7 @@ export default function AdminArtistProfiles({user,supabase}){
         </label>
       </section>
       <section className="artist-admin-content">
-        <aside className="artist-admin-index">
-          <div className="artist-admin-index-heading"><h2>Danh sách hồ sơ</h2><span>{profiles.length} hồ sơ</span></div>
-          {profiles.length?profiles.map((row,i)=><button type="button" key={row.id}
-              className={'artist-admin-index-row'+(selected===row.id?' active':'')}
-              onClick={()=>edit(row)} disabled={busy}>
-              <span className="artist-admin-index-number">{String(i+1).padStart(2,'0')}</span>
-              <span className="artist-admin-index-label"><strong>{row.name}</strong><small>{row.role} · {(row.sections||[]).length} trang</small></span>
-              <span className={'artist-admin-status '+row.status}>{row.status==='published'?'CÔNG KHAI':'BẢN NHÁP'}</span>
-            </button>):<p className="artist-admin-index-empty">Chưa có hồ sơ. Hãy tải PDF ca sĩ đầu tiên.</p>}
-        </aside>
-        <div className="artist-admin-editor">
+        <div className="artist-admin-editor" id="artist-editor" ref={editorRef}>
           {!form?<div className="artist-admin-empty"><span>✳ DORTIS / PROFILE EDITOR</span><h2>Chọn một hồ sơ để chỉnh sửa.</h2><p>Thay tên nghệ sĩ, sửa nội dung trích xuất từng trang, kiểm duyệt rồi xuất bản để tạo website riêng.</p></div>:
           <div>
             <div className="artist-admin-editor-head"><div><span>02 / EDIT & REVIEW</span><h2>Biên tập hồ sơ</h2></div>

@@ -149,3 +149,69 @@
 .artist-admin-css-preview .artist-original-stack{max-width:850px}
 .artist-admin-css-preview .artist-original-footer{padding:25px}
 @media(max-width:650px){.artist-admin-render-mode{grid-template-columns:1fr}.artist-admin-render-mode>p{grid-column:auto}.artist-admin-css-preview>.artist-pdf-original{height:75vh}}
+
+/* Unified portfolio library. Cards replace the separate legacy list column. */
+.dortis-admin-v4 .artist-catalog{
+  padding:21px;margin:0 0 20px;background:#fff;border:1px solid #dde7ec;
+  border-radius:15px;display:flex;flex-direction:column;gap:17px;
+}
+.dortis-admin-v4 .artist-catalog__heading{display:flex;align-items:flex-start;
+  justify-content:space-between;gap:14px;min-width:0}
+.dortis-admin-v4 .artist-catalog__kicker{margin:0 0 8px;font-size:9px;font-weight:850;letter-spacing:.1em;color:#008b91}
+.dortis-admin-v4 .artist-catalog__heading h2{font-size:clamp(19px,2vw,25px);
+  line-height:1.3;letter-spacing:-.035em;margin:0;color:#1b2a40}
+.dortis-admin-v4 .artist-catalog__heading h2>span{display:inline-flex;justify-content:center;align-items:center;
+  border-radius:7px;background:#ecf5f6;color:#087780;font-size:12px;padding:5px 9px;vertical-align:middle;margin-left:7px}
+.dortis-admin-v4 .artist-catalog__heading p:last-child{color:#708492;font-size:11px;line-height:1.7;margin:8px 0 0}
+.dortis-admin-v4 .artist-catalog__heading>a{font-size:10px;color:#236e81;text-decoration:none;
+  font-weight:800;border:1px solid #cde1e7;border-radius:8px;padding:11px 13px;white-space:nowrap}
+.dortis-admin-v4 .artist-catalog__heading>a:hover{background:#f3fafa}
+.dortis-admin-v4 .artist-catalog__toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.dortis-admin-v4 .artist-catalog__search{min-width:200px;flex:1;max-width:460px}
+.dortis-admin-v4 .artist-catalog__search .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.dortis-admin-v4 .artist-catalog__search input{width:100%;box-sizing:border-box;min-height:39px;
+  border:1px solid #dce7ec;background:#fafcfd;border-radius:9px;
+  padding:10px 13px;font:500 11px 'Be Vietnam Pro',system-ui,sans-serif;
+  outline:none;color:#18324a}
+.dortis-admin-v4 .artist-catalog__search input:focus{border-color:#008d93;box-shadow:0 0 0 3px #07949b18}
+.dortis-admin-v4 .artist-catalog__filters{display:flex;align-items:center;gap:5px;overflow-x:auto;scrollbar-width:none}
+.dortis-admin-v4 .artist-catalog__filters button{border:1px solid transparent;background:transparent;
+  color:#6b8190;border-radius:8px;padding:10px;font:750 10px 'Be Vietnam Pro',system-ui,sans-serif;
+  cursor:pointer;white-space:nowrap}
+.dortis-admin-v4 .artist-catalog__filters button.active{background:#e8f5f5;border-color:#d4e9e9;color:#0a737d}
+.dortis-admin-v4 .artist-catalog__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,245px),1fr));gap:13px}
+.dortis-admin-v4 .artist-catalog__card{appearance:none;overflow:hidden;text-align:left;
+  display:flex;flex-direction:column;min-width:0;background:#fff;border:1px solid #dfe8ec;
+  border-radius:12px;padding:0;cursor:pointer;transition:border-color .18s,box-shadow .18s}
+.dortis-admin-v4 .artist-catalog__card:hover{border-color:#9acdd2;box-shadow:0 8px 22px #284d6310}
+.dortis-admin-v4 .artist-catalog__card.is-selected{border-color:#07939a;box-shadow:0 0 0 2px #0b9b9d19}
+.dortis-admin-v4 .artist-catalog__card:disabled{opacity:.65;cursor:not-allowed}
+.dortis-admin-v4 .artist-catalog__cover{position:relative;width:100%;aspect-ratio:16/9;
+  background:linear-gradient(135deg,#e5f1f4,#e3e7ee);overflow:hidden;
+  display:grid;place-items:center}
+.dortis-admin-v4 .artist-catalog__cover img{display:block;width:100%;height:100%;object-fit:cover}
+.dortis-admin-v4 .artist-catalog__cover>span:not(.artist-catalog__status){font-size:36px;letter-spacing:-.07em;
+  font-weight:800;color:#87a8b5}
+.dortis-admin-v4 .artist-catalog__status{position:absolute;top:10px;right:10px;
+  background:#f2f5f7;color:#5c7080;border-radius:7px;padding:6px 8px;
+  font-size:9px;font-weight:800;line-height:1.2}
+.dortis-admin-v4 .artist-catalog__status.is-public{background:#e2f7eb;color:#217650}
+.dortis-admin-v4 .artist-catalog__meta{display:flex;flex-direction:column;align-items:flex-start;
+  gap:7px;padding:15px;min-height:145px}
+.dortis-admin-v4 .artist-catalog__meta small{font-size:10px;color:#78909d}
+.dortis-admin-v4 .artist-catalog__meta strong{color:#1b2d41;font-size:15px;line-height:1.4}
+.dortis-admin-v4 .artist-catalog__meta p{color:#718493;font-size:10px;margin:0;
+  line-height:1.6;max-width:100%;overflow-wrap:anywhere}
+.dortis-admin-v4 .artist-catalog__meta>span{display:flex;justify-content:space-between;align-items:center;
+  width:100%;color:#087882;font-weight:850;font-size:10px;margin-top:auto}
+.dortis-admin-v4 .artist-catalog__empty{border:1px dashed #ccdde3;border-radius:10px;
+  background:#fafcfd;color:#637e8f;padding:24px;font-size:12px}
+@media(max-width:700px){
+ .dortis-admin-v4 .artist-catalog{padding:14px}
+ .dortis-admin-v4 .artist-catalog__heading{flex-wrap:wrap}
+ .dortis-admin-v4 .artist-catalog__heading>a{align-self:flex-start}
+ .dortis-admin-v4 .artist-catalog__toolbar{align-items:stretch}
+ .dortis-admin-v4 .artist-catalog__search{max-width:none;flex:1 0 100%}
+ .dortis-admin-v4 .artist-catalog__filters{width:100%}
+}
+@media(prefers-reduced-motion:reduce){.dortis-admin-v4 .artist-catalog__card{transition:none}}
