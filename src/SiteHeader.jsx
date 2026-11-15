@@ -100,7 +100,7 @@ export default function SiteHeader({ onAdminSignOut = null }) {
         className={active===id?'active':''} aria-current={active===id?'page':undefined}
         onClick={close}>{title}</a>)}
     </nav>
-    <a className="header-contact" href="/admin" onClick={close}>
+    <a className="header-contact" href="/login" onClick={close}>
       QUẢN TRỊ <span className="arrow" aria-hidden="true">↗</span>
     </a>
     <button className="menu-toggle" type="button" aria-label={menuOpen?'Đóng menu':'Mở menu'}

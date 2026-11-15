@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { supabase, adminLoginEmail as ADMIN_EMAIL } from './infrastructure/supabase/client'
 import { canManageContent } from './core/auth/roles'
 import {clientNavigate} from './app/navigation'
+import {authRedirect} from './app/routes'
 import AdminWorkspace from './features/admin/AdminWorkspace'
 import './admin.css'
 
@@ -13,7 +14,7 @@ const getReadableError = (error, fallback = 'Không thể hoàn tất thao tác'
 }
 
 
-export default function AdminPage() {
+export default function AdminPage({mode='admin'}) {
   const [user, setUser] = useState(null)
   const [authorized, setAuthorized] = useState(false)
   const [checking, setChecking] = useState(!!supabase)
@@ -22,17 +23,17 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const check = useCallback(async () => {
-    if (!supabase) { setChecking(false); return }
+    if (!supabase) { setChecking(false); return false }
     try {
       const { data, error } = await supabase.auth.getUser()
       if (error || !data?.user) {
         setUser(null)
         setAuthorized(false)
-        return
+        return false
       }
       setUser(data.user)
       const isAdmin = canManageContent(data.user)
-      if (!isAdmin) { setAuthorized(false); return }
+      if (!isAdmin) { setAuthorized(false); return false }
 
       // getUser() returns fresh app_metadata, but Storage RLS evaluates the
       // app_metadata embedded in the *existing JWT*, which can be stale after
@@ -55,10 +56,12 @@ export default function AdminPage() {
       }
       setAuthorized(true)
       setError('')
+      return true
     } catch (err) {
       setAuthorized(false)
       setError('Không thể làm mới quyền quản trị. Vui lòng đăng xuất, đăng nhập lại và thử lần nữa.')
       console.error('Dortis admin session refresh failed:', err?.message)
+      return false
     } finally {
       setChecking(false)
     }
@@ -70,6 +73,13 @@ export default function AdminPage() {
     return () => data.subscription.unsubscribe()
   }, [check])
 
+  // Direct links to /admin never show the login form there. A valid admin
+  // visiting /login is forwarded to the workspace without another login.
+  useEffect(() => {
+    const destination=authRedirect(mode,checking,authorized)
+    if(destination)clientNavigate(destination,{replace:true})
+  },[mode,checking,authorized])
+
   async function signIn(event) {
     event.preventDefault()
     setError(''); setBusy(true)
@@ -79,7 +89,9 @@ export default function AdminPage() {
       const { error } = await supabase.auth.signInWithPassword({ email: accountEmail, password })
       if (error) throw error
       setPassword('')
-      await check()
+      const validAdmin=await check()
+      if(validAdmin)clientNavigate('/admin',{replace:true})
+      else setError('Tài khoản đăng nhập không có quyền Admin.')
     } catch (e) { setError('Đăng nhập không thành công. Kiểm tra tài khoản hoặc mật khẩu.') }
     finally { setBusy(false) }
   }
@@ -91,8 +103,9 @@ export default function AdminPage() {
       if (signOutError) throw signOutError
       setAuthorized(false)
       setUser(null)
+      setBusy(false)
       // Replace the private route so Back does not reopen the admin screen.
-      clientNavigate('/',{replace:true})
+      clientNavigate('/login',{replace:true})
     } catch (err) {
       setError('Không thể đăng xuất. Vui lòng thử lại.')
       setBusy(false)
@@ -105,6 +118,9 @@ export default function AdminPage() {
 
   if (checking) return withHeader(<main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>)
   if (!supabase) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>)
+  // A private route redirects to the standalone login route, never displays it.
+  if(mode==='admin'&&!authorized)return null
+  if(mode==='login'&&authorized)return null
   if (user && !authorized) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Không có quyền quản trị.</h1><p>Tài khoản hiện tại chưa được cấp vai trò admin trong Supabase Auth. Không thể chỉnh sửa ảnh.</p><button onClick={signOut}>Đăng xuất</button></div></main>)
   if (authorized) return withHeader(<AdminWorkspace user={user} supabase={supabase} onSignOut={signOut}/>)
   return withHeader(<main className="admin-auth"><form className="admin-login" onSubmit={signIn}>

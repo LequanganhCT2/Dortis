@@ -85,3 +85,11 @@ Các trang public và Admin được tách bằng `React.lazy`/dynamic import nh
 - Chuyển cảnh dùng opacity nhẹ; **không dùng transform trên wrapper**, để không phá fixed/sticky navbar.
 - Nếu tải một module lỗi, hiển thị đường phục hồi rõ ràng thay vì treo trang trắng.
 - Việc build thành công không thay thế kiểm thử UI thực tế, đặc biệt lần truy cập đầu tiên ở mạng chậm.
+
+## Routes /login và /admin (15/11/2026)
+
+- `/login`: duy nhất nơi hiển thị form đăng nhập. Chỉ Admin được xác thực và đi tiếp.
+- `/admin` và `/admin/*`: trang riêng được bảo vệ bởi Supabase Auth và `app_metadata.role=admin`; Guest chuyển sang `/login`.
+- Admin đã đăng nhập vào `/login` sẽ chuyển về `/admin`.
+- Đăng nhập thành công đưa người dùng đến `/admin`; đăng xuất về `/login`.
+- Hai route dùng chung một phiên kiểm tra quyền và chuyển bằng History API để không tải lại toàn bộ trang.

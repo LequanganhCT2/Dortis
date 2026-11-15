@@ -69,7 +69,7 @@ export default function AppRouter(){
       const anchor=event.target instanceof Element?event.target.closest('a[href]'):null
       const destination=anchor&&internalUrl(anchor.getAttribute('href'),window.location.href)
       if(!destination)return
-      if(destination.pathname.startsWith('/admin'))loadAdmin().catch(()=>{})
+      if(destination.pathname==='/login'||destination.pathname.startsWith('/admin'))loadAdmin().catch(()=>{})
       else if(destination.pathname.startsWith('/artists'))loadArtists().catch(()=>{})
     }
     window.addEventListener(NAVIGATION_EVENT,sync)
@@ -102,16 +102,22 @@ export default function AppRouter(){
 
   const url=new URL(locationValue,window.location.origin)
   const route=resolveRoute(url.pathname)
-  const routeKey=route==='artists'?url.pathname:route
+  // Login and Admin share the same authorization lifecycle to avoid reloading
+  // authentication state when the URL changes after signing in.
+  const routeKey=(route==='admin'||route==='login')?'private':route==='artists'?url.pathname:route
   let Screen=NotFound
   if(route==='home')Screen=DortisHome
-  else if(route==='admin')Screen=AdminPage
+  else if(route==='admin'||route==='login')Screen=AdminPage
   else if(route==='artists')Screen=ArtistPages
   else if(route==='portfolio-unpublished')Screen=PortfolioUnpublished
 
   return <RouteErrorBoundary routeKey={routeKey}>
     <Suspense fallback={<RouteFallback/>}>
-      <div className="dortis-route-stage" key={routeKey}><Screen/></div>
+      <div className="dortis-route-stage" key={routeKey}>
+        {route==='admin'||route==='login'
+          ?<Screen mode={route}/>
+          :<Screen/>}
+      </div>
     </Suspense>
   </RouteErrorBoundary>
 }
