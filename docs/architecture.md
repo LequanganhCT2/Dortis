@@ -75,3 +75,13 @@ Các trang public và Admin được tách bằng `React.lazy`/dynamic import nh
 - `npm run build`: Vite build với lazy routes.
 - Chạy trên nhánh `feat/clean-architecture-long-nhat`; Vercel Preview, không tự gán alias `dortis.vercel.app`.
 - Chỉ merge sau khi nghiệm thu visual, kiểm tra login/logout, Back/Forward, sticky quick-edit, mobile và dữ liệu đang có.
+
+## Sửa lỗi điều hướng và tải trang đầu (15/11/2026)
+
+- Homepage được import đồng bộ trong `AppRouter`: không còn màn hình Suspense toàn trang khi người dùng mở lần đầu.
+- Admin và Artist Pages vẫn được tải khi cần; React Transition giữ trang cũ trong khi tải route mới.
+- Điều hướng `same-origin` được bắt từ anchor thông thường, dùng History API và `popstate`; tương thích Back/Forward, nút mở tab mới và modifier keys.
+- Điều hướng trong Admin sử dụng chung `clientNavigate`, không tải lại cả ứng dụng.
+- Chuyển cảnh dùng opacity nhẹ; **không dùng transform trên wrapper**, để không phá fixed/sticky navbar.
+- Nếu tải một module lỗi, hiển thị đường phục hồi rõ ràng thay vì treo trang trắng.
+- Việc build thành công không thay thế kiểm thử UI thực tế, đặc biệt lần truy cập đầu tiên ở mạng chậm.

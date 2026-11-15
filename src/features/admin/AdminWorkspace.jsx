@@ -5,6 +5,7 @@ import LongNhatPortfolio from '../portfolio/long-nhat/LongNhatPortfolio'
 import { Brand } from '../../SiteHeader'
 import { MEDIA_GROUPS } from '../media/config/mediaGroups'
 import { ROUTES, resolveAdminView } from '../../app/routes'
+import {clientNavigate} from '../../app/navigation'
 import { UiButton, UiNavLink, UiPanel, UiStatus } from '../../shared/ui'
 
 const MAIN_NAV = [
@@ -76,7 +77,7 @@ export default function AdminWorkspace({user,supabase,onSignOut}) {
   const section=normalizeSection(url.search)
   const navigate=href=>{
     if(href===routeValue)return
-    window.history.pushState({},'',href)
+    clientNavigate(href)
     setRouteValue(href)
     window.scrollTo({top:0,behavior:'instant'})
   }
@@ -112,7 +113,7 @@ export default function AdminWorkspace({user,supabase,onSignOut}) {
         })}
       </nav>}
     </header>
-    <div className="ui-admin-workspace__content">
+    <div className="ui-admin-workspace__content" key={view}>
       {view==='overview'?<AdminDashboard navigate={navigate}/>:
         view==='media'?<AdminMediaEditor user={user} supabase={supabase} initialSection={section}
           onSectionChange={()=>setRouteValue(window.location.pathname+window.location.search)}/>:

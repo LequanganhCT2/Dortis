@@ -4,6 +4,7 @@ import AdminSectionContent from './AdminSectionContent'
 import AdminHeroCards from './AdminHeroCards'
 import AdminMediaSlots from './AdminMediaSlots'
 import { MEDIA_GROUPS as GROUPS } from './features/media/config/mediaGroups'
+import {clientNavigate} from './app/navigation'
 import { HERO_IMAGES_PER_CARD, HERO_CARD_LIMIT, heroImageSlot } from './heroImageSets'
 
 const MB5 = 5 * 1024 * 1024
@@ -51,7 +52,7 @@ export default function AdminMediaEditor({ user, supabase, initialSection='hero'
     setGroupId(nextId)
     const nextUrl=new URL(window.location.href)
     nextUrl.searchParams.set('section',nextId)
-    window.history.replaceState({},'',nextUrl.pathname+nextUrl.search)
+    clientNavigate(nextUrl.pathname+nextUrl.search,{replace:true})
     onSectionChange?.(nextId)
     setError('')
     setNotice('')

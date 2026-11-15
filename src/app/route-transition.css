@@ -1,0 +1,22 @@
+/* Route changes retain the current screen while a lazy route downloads.
+ * Animate only the incoming route, never the entire window scroll tree. */
+.dortis-route-stage{min-height:100svh;animation:dortis-route-enter .22s cubic-bezier(.22,.61,.36,1) both}
+@keyframes dortis-route-enter{
+  from{opacity:.88}
+  to{opacity:1}
+}
+.dortis-route-message{
+  box-sizing:border-box;min-height:100svh;display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;gap:13px;
+  background:#f4f7f8;color:#182238;padding:32px max(24px,7vw);
+  font-family:'Be Vietnam Pro',system-ui,sans-serif;
+}
+.dortis-route-message p:first-child{font-size:10px;font-weight:850;letter-spacing:.14em;color:#008f91}
+.dortis-route-message h1{font-size:clamp(28px,4vw,48px);line-height:1.2;margin:0}
+.dortis-route-message p{font-size:13px;line-height:1.8;max-width:500px;color:#557083}
+.dortis-route-message button,.dortis-route-message a{
+  border:1px solid #182238;border-radius:8px;background:#182238;color:white;
+  text-decoration:none;font:750 12px/1.3 'Be Vietnam Pro',system-ui,sans-serif;
+  padding:13px 16px;cursor:pointer
+}
+@media(prefers-reduced-motion:reduce){.dortis-route-stage{animation:none}}

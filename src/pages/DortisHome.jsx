@@ -10,7 +10,6 @@ import PhilosophyStoryCard from '../PhilosophyStoryCard'
 import DortisFAQ from '../DortisFAQ'
 import { getMediaUrls, RotatingImage, MediaOpacityProvider } from '../SiteMedia'
 import CaxHeroCopy from '../CaxHeroCopy'
-import ArtistPages from '../ArtistPages'
 
 const services = [
   { number: '01', title: 'CV & Portfolio', english: 'ARTIST IDENTITY', description: 'Một hồ sơ chỉn chu, nơi giọng hát, cá tính và những cột mốc được kể theo cách riêng.', symbol: '01 — PORTFOLIO', style: 'cv' },

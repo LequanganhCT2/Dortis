@@ -119,3 +119,8 @@
  .ui-admin-quick-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){.ui-admin-workspace *{transition:none!important}}
+
+/* Fade only the Admin content. Never animate the sticky/fixed Navbar itself. */
+.ui-admin-workspace__content{animation:dortis-admin-view-enter .18s ease-out both}
+@keyframes dortis-admin-view-enter{from{opacity:.9}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.ui-admin-workspace__content{animation:none}}

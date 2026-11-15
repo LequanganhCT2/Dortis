@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { supabase, adminLoginEmail as ADMIN_EMAIL } from './infrastructure/supabase/client'
 import { canManageContent } from './core/auth/roles'
+import {clientNavigate} from './app/navigation'
 import AdminWorkspace from './features/admin/AdminWorkspace'
 import './admin.css'
 
@@ -91,7 +92,7 @@ export default function AdminPage() {
       setAuthorized(false)
       setUser(null)
       // Replace the private route so Back does not reopen the admin screen.
-      window.location.replace('/')
+      clientNavigate('/',{replace:true})
     } catch (err) {
       setError('Không thể đăng xuất. Vui lòng thử lại.')
       setBusy(false)
