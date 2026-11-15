@@ -29,6 +29,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     letterSpacing:layer.spacing+'px',whiteSpace:'pre-line',
     fontSize:'clamp(9px,'+(layer.size*100/ratio).toFixed(3)+'cqw,180px)',
     textShadow:layerId==='title'?'0 7px 22px #0a132837':'none',
+    filter:layer.blur?'blur('+layer.blur+'px)':'none',
     overflowWrap:'anywhere'
   }
   const startDrag=(event,mode)=>{
