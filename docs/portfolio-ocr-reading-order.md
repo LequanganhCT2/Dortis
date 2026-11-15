@@ -10,8 +10,8 @@ Ngày sửa 15/11/2026.
 1. OCR toàn trang yêu cầu Tesseract.js `blocks:true`, lấy các paragraph và vị trí `bbox`. Các dòng trong cùng paragraph được giữ liền và sắp theo vị trí.
 2. Chỉ chọn **một bản OCR chính** cho ô văn bản. Không tự nối OCR cắt cột và cắt nửa trang. Phần khác chỉ là phương án để Admin xem/nhấn thêm riêng.
 3. PDF text layer tách các cụm chữ cách xa nhau trên cùng một hàng trước khi sắp xếp các cột.
-4. Nguồn PDF gốc và OCR được giữ riêng. Admin có thể chọn bản dùng, bổ sung theo khối hoặc theo vùng, sửa thủ công và xác nhận.
-5. OCR lại thay thế bản OCR trước thay vì tích lũy lỗi của các lần quét.
+4. Nguồn PDF gốc và OCR được giữ riêng. Các khối được chuẩn hóa tọa độ và ghép theo vùng: ưu tiên text layer, thêm khối OCR khác biệt; Admin vẫn có thể chọn nguồn, bổ sung theo khối hoặc theo vùng, sửa thủ công và xác nhận.
+5. OCR lại thay thế bản OCR trước thay vì tích lũy lỗi của các lần quét. Không cắt thầm dữ liệu sau 14.000 ký tự/trang; tài liệu quá lớn phải được cảnh báo trước khi lưu.
 6. Tiêu đề chỉ được gợi ý từ paragraph có dấu hiệu là heading, không lấy đại dòng OCR đầu tiên.
 
 ### Giới hạn

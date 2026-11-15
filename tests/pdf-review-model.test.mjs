@@ -43,8 +43,8 @@ test('Titles and body retain evidence; no automatic source cropping or storage r
  assert.deepEqual(page.photos,[])
  assert.equal(page.original_page_path,null)
 })
-test('Adjacent duplicates collapse but nonadjacent repeats remain intact',()=>{
- assert.deepEqual(uniqueSourceLines('GALA DINNER\nGALA DINNER\nGala show\nGALA DINNER'),['GALA DINNER','Gala show','GALA DINNER'])
+test('Repeated visible lines remain available for manual page review',()=>{
+ assert.deepEqual(uniqueSourceLines('GALA DINNER\nGALA DINNER\nGala show\nGALA DINNER'),['GALA DINNER','GALA DINNER','Gala show','GALA DINNER'])
 })
 test('Approval of all extracted or image-only pages is required',()=>{
  const doc=buildReviewFromExtraction({name:'Portfolio A',sections:[

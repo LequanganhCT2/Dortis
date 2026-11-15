@@ -1,4 +1,5 @@
 import {slugifyArtist} from '../../../artistPdf.js'
+import {MAX_REVIEW_CHARACTERS} from './ocrReconciliation.js'
 
 /** Generic PDF Portfolio ingest. Never assumes a singer, a specific career,
  * a particular page count, or hand-authored names of events. All titles are
@@ -8,7 +9,9 @@ const plain=value=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,' ').repla
 const pagePlaceholder=value=>/^(?:trang\s*(?:bìa|\d+)|page\s*\d+|cover)$/iu.test(plain(value))
 export function uniqueSourceLines(body=''){
   const arr=String(body||'').split(/\n+/).map(plain).filter(Boolean)
-  return arr.filter((line,index)=>index===0||line!==arr[index-1])
+  // Distinct visual positions may legitimately repeat the same sentence.
+  // Deduplication belongs to coordinate-aware extractors, not plain text.
+  return arr
 }
 /** Conservative suggestions, backed by matching words or simple text density. */
 export function suggestPageLayout(page,title,body){
@@ -48,7 +51,7 @@ export function buildReviewFromExtraction(parsed={}){
     const title=suggested || (page===1?name:'')
     // Preserve every extracted line. It must remain visible in review, even if
     // it resembles a heading; automatic deletion risks losing artist facts.
-    const body=sourceLines.join('\n').slice(0,14000)
+    const body=sourceLines.join('\n')
     const textFound=body.length>0
     const warnings=[]
     if(!textFound)warnings.push('Trang không có lớp chữ đọc được. Nội dung có thể nằm trong ảnh; hãy nhìn bản PDF và nhập bằng tay.')
@@ -57,7 +60,12 @@ export function buildReviewFromExtraction(parsed={}){
     if(suggested&&page>1)warnings.push('Tiêu đề là gợi ý, hãy đối chiếu với PDF.')
     return {
       page,layout:suggestPageLayout(page,title,body),title,eyebrow:'',body,
-      pdfText:body,ocrText:'',ocrConfidence:null,ocrStatus:'not_run',
+      pdfText:body,
+      pdfBlocks:Array.isArray(source.pdfBlocks)?source.pdfBlocks:[],
+      sourceBlocks:Array.isArray(source.pdfBlocks)?source.pdfBlocks.map(block=>({
+        text:block.text,bbox:block.bbox,source:'pdf',confidence:null
+      })):[],
+      ocrText:'',ocrConfidence:null,ocrStatus:'not_run',
       highlights:[],metrics:[],links:[],media:[],photos:[],
       kind:textFound?'extracted_text_review_required':'pdf_image_text_review_required',
       textFound,sourceChars:body.length,reviewed:false,warnings
@@ -74,11 +82,21 @@ export function normalizeReviewedPage(page){
   return {
     page:Number(page.page)||1,layout:page.layout||'feature',
     title:plain(page.title).slice(0,240),eyebrow:plain(page.eyebrow).slice(0,160),
-    subtitle:'',body:String(page.body||'').slice(0,14000),
+    subtitle:'',body:String(page.body||''),
     kind:'reviewed_pdf_text',
     extraction:{source:page.ocrStatus==='done'?'text_layer_and_local_ocr':'text_layer_or_manual',
       ocrConfidence:page.ocrStatus==='done'?page.ocrConfidence:null,
+      manualEdited:page.editedFields?.body===true,
       reviewed:true},
+    // Preserve the structured source and provenance. Body remains the
+    // human-approved source of truth after any manual corrections.
+    text_blocks:(Array.isArray(page.sourceBlocks)?page.sourceBlocks:[])
+      .map(block=>({
+        text:String(block.text||''),
+        source:block.source==='ocr'?'ocr':'pdf',
+        bbox:block.bbox||null,
+        confidence:block.confidence??null
+      })).filter(block=>block.text),
     highlights:Array.isArray(page.highlights)?page.highlights.slice(0,24):[],
     metrics:Array.isArray(page.metrics)?page.metrics.slice(0,12):[],
     links:[],media:[],photos:[],
@@ -90,6 +108,9 @@ export function validateReviewedImport(review){
   if(!review?.pages?.length)return 'PDF chưa có trang nào để nhập.'
   if(!review.pages.every(p=>plain(p.title).length>0))
     return 'Mỗi trang phải có tiêu đề. Hãy kiểm tra các trang không đọc được chữ.'
+  const oversized=review.pages.find(p=>String(p.body||'').length>MAX_REVIEW_CHARACTERS)
+  if(oversized)return 'Trang '+oversized.page+' vượt '+MAX_REVIEW_CHARACTERS+
+    ' ký tự. Hãy chia nội dung thành nhiều hồ sơ hoặc rút gọn trước khi lưu; hệ thống sẽ không tự cắt chữ.'
   if(!review.pages.every(p=>p.reviewed))
     return 'Vui lòng kiểm tra và xác nhận từng trang trước khi lưu.'
   return null

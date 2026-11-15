@@ -133,8 +133,14 @@ export function normalizeArtistSection(row={}) {
     title:String(row.title||'').slice(0,240),
     eyebrow:String(row.eyebrow||'').slice(0,160),
     subtitle:String(row.subtitle||'').slice(0,280),
-    body:String(row.body||'').slice(0,14000),
+    body:String(row.body||''),
     kind:row.kind||'editorial',
+    extraction:row.extraction&&typeof row.extraction==='object'
+      ? {...row.extraction}:null,
+    text_blocks:Array.isArray(row.text_blocks)?row.text_blocks.map(block=>({
+      text:String(block?.text||''),source:block?.source==='ocr'?'ocr':'pdf',
+      bbox:block?.bbox||null,confidence:block?.confidence??null
+    })).filter(block=>block.text):[],
     highlights:Array.isArray(row.highlights)?row.highlights.map(s=>String(s).slice(0,240)).slice(0,24):[],
     metrics:Array.isArray(row.metrics)?row.metrics.filter(x=>Array.isArray(x)).map(x=>[String(x[0]||'').slice(0,40),String(x[1]||'').slice(0,100)]).slice(0,12):[],
     links:Array.isArray(row.links)?row.links.slice(0,6):[],

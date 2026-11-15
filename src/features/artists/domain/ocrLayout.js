@@ -29,11 +29,14 @@ function orderSpatially(paragraphs,pageWidth){
   // single-column and poster layouts use vertical reading order.
   const sorter=(a,b)=>a.bbox.y0-b.bbox.y0||a.bbox.x0-b.bbox.x0
   if(!twoCols)return [...valid.sort(sorter),...unlocated]
-  const topAcross=valid.filter(p=>p.bbox.x0<width*.18&&p.bbox.x1>width*.82)
-  const rest=valid.filter(p=>!topAcross.includes(p))
+  const maxY=Math.max(...valid.map(p=>p.bbox.y1),1)
+  const across=valid.filter(p=>p.bbox.x0<width*.18&&p.bbox.x1>width*.82)
+  const topAcross=across.filter(p=>p.bbox.y0<maxY*.27)
+  const bottomAcross=across.filter(p=>p.bbox.y0>maxY*.69)
+  const rest=valid.filter(p=>!topAcross.includes(p)&&!bottomAcross.includes(p))
   const l=rest.filter(p=>centerX(p)<width*.5).sort(sorter)
   const r=rest.filter(p=>centerX(p)>=width*.5).sort(sorter)
-  return [...topAcross.sort(sorter),...l,...r,...unlocated]
+  return [...topAcross.sort(sorter),...l,...r,...bottomAcross.sort(sorter),...unlocated]
 }
 export function paragraphsFromBlocks(blocks=[],pageWidth=0){
   if(!Array.isArray(blocks))return []
@@ -55,16 +58,22 @@ export function paragraphsFromBlocks(blocks=[],pageWidth=0){
         confidence:Number.isFinite(block.confidence)?block.confidence:null})
     }
   }
-  const seen=new Set()
+  const seen=[]
   return orderSpatially(entries,pageWidth).filter(p=>{
     const key=normalized(p.text)
-    if(!key||seen.has(key))return false
-    seen.add(key)
-    return true
-  }).slice(0,130)
+    if(!key)return false
+    // The same words can legitimately appear in multiple different places.
+    // Only remove exact duplicate text at nearly identical coordinates.
+    const duplicate=seen.some(prev=>prev.key===key &&
+      (!prev.bbox&&!p.bbox || prev.bbox&&p.bbox &&
+        Math.abs(prev.bbox.x0-p.bbox.x0)<7 &&
+        Math.abs(prev.bbox.y0-p.bbox.y0)<7))
+    if(!duplicate)seen.push({key,bbox:p.bbox})
+    return !duplicate
+  })
 }
 export function readableParagraphText(paragraphs=[]){
-  return paragraphs.map(p=>clean(p.text)).filter(Boolean).join('\n\n').slice(0,14000)
+  return paragraphs.map(p=>clean(p.text)).filter(Boolean).join('\n\n')
 }
 const tokens=s=>clean(s).split(/\s+/).filter(Boolean)
 export function guessOcrHeading(paragraphs=[],pageHeight=0){
@@ -110,5 +119,5 @@ export function appendReviewedParagraph(existing='',candidate=''){
   if(!base)return next
   const a=normalized(base),b=normalized(next)
   if(a===b||a.includes(b))return base
-  return (base+'\n\n'+next).slice(0,14000)
+  return base+'\n\n'+next
 }

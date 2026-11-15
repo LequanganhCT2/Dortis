@@ -90,9 +90,17 @@ export async function ocrPdfPages(file,pageNumbers,{
         if(signal?.aborted)break
         const usable=passes.filter(p=>p.text)
         const primary=selectPrimaryOcr(passes)
+        // Page boxes are stored in normalized top-left coordinates to
+        // align OCR paragraphs with PDF text layer regardless of render scale.
+        const paragraphs=(primary.paragraphs||[]).map(p=>({
+          ...p,bbox:p.bbox?{
+            x0:p.bbox.x0/canvas.width,y0:p.bbox.y0/canvas.height,
+            x1:p.bbox.x1/canvas.width,y1:p.bbox.y1/canvas.height
+          }:null
+        }))
         const result={
           page:pageNumber,text:primary.text,confidence:primary.confidence,
-          sourcePass:primary.kind,paragraphs:primary.paragraphs,
+          sourcePass:primary.kind,paragraphs,
           suggestedTitle:guessOcrHeading(primary.paragraphs,canvas.height),
           passes,quality,
           ...(usable.length?{}:{error:'Không nhận diện được chữ ở trang này. Hãy thử quét sâu hoặc nhập thủ công.'})

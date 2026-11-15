@@ -273,7 +273,8 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
           {page.ocrStatus==='done'&&<>
             <div className="pdf-import__reading-mode">
               <strong>NỘI DUNG ĐANG DÙNG: {page.ocrMainSource==='manual'?'BẠN ĐÃ SỬA':
-                page.ocrMainSource==='ocr'?'OCR THEO KHỐI':'LỚP CHỮ PDF GỐC'}</strong>
+                page.ocrMainSource==='ocr'?'OCR THEO KHỐI':
+                 page.ocrMainSource==='combined'?'PDF + OCR THEO VỊ TRÍ':'LỚP CHỮ PDF GỐC'}</strong>
               <p>Không tự nối kết quả quét toàn trang với cột trái, cột phải.
                 Chọn một nguồn hoặc thêm riêng từng đoạn cần thiết.</p>
               <div>
@@ -324,6 +325,19 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
               )}
             </details>
           </>}
+          {Array.isArray(page.sourceBlocks)&&page.sourceBlocks.length>0&&
+            <details className="pdf-import__ocr-blocks">
+              <summary>Thứ tự các khối chữ đã ghép ({page.sourceBlocks.length})</summary>
+              <p>Chữ PDF gốc được ưu tiên; chữ OCR trong ảnh được thêm theo vị trí.
+                Hãy kiểm tra các khối với PDF trước khi xác nhận.</p>
+              {page.sourceBlocks.map((block,index)=>
+                <div className="pdf-import__ocr-block" key={index}>
+                  <span>{String(index+1).padStart(2,'0')} · {block.source==='ocr'?
+                    'CHỮ TRONG ẢNH (OCR)':'CHỮ PDF GỐC'}
+                    {block.needsReview?' · CẦN KIỂM TRA ĐOẠN GIAO NHAU':''}</span>
+                  <p>{block.text}</p>
+                </div>)}
+            </details>}
           {page.warnings.length>0&&<p className="pdf-import__warning">
             {page.warnings.join(' ')}</p>}
           <label>Loại nội dung

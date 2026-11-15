@@ -1,3 +1,4 @@
+import {combinePositionedText} from './spatialMerge.js'
 /** PDF/OCR reconciliation used by all Portfolio types.
  * OCR is evidence to review, never a replacement for a human-approved claim.
  * The PDF text layer and every OCR pass remain inspectable separately.
@@ -25,9 +26,9 @@ function isRepeated(value,existing){
   }
   return false
 }
-export const AUTO_OCR_MAX_PAGES=24
+export const AUTO_OCR_MAX_PAGES=60
 export const OCR_SPARSE_CHARS=140
-export const MAX_REVIEW_CHARACTERS=14000
+export const MAX_REVIEW_CHARACTERS=200000
 export function needsOcrPage(page,limit=OCR_SPARSE_CHARS){
   return split(page?.rawText||page?.pdfText||page?.body).join(' ').length<limit
 }
@@ -42,7 +43,7 @@ export function combinePdfOcrText(pdfText='',ocrText=''){
   for(const value of split(ocrText)){
     if(!isRepeated(value,lines))lines.push(value)
   }
-  return lines.join('\n').slice(0,MAX_REVIEW_CHARACTERS)
+  return lines.join('\n')
 }
 export function mergeOcrPasses(passes=[]){
   // Each pass may see a different part of a poster; preserve the union.
@@ -51,7 +52,7 @@ export function mergeOcrPasses(passes=[]){
   const primary=usable[0]
   let output=primary?.text?.trim()||''
   for(const pass of usable.slice(1))output=combinePdfOcrText(output,pass.text)
-  return output.slice(0,MAX_REVIEW_CHARACTERS)
+  return output
 }
 /** Choose ONE coherent narrative for the editable field. Adding text from
  * extra zones must be an explicit Admin action, not automatic concatenation.
@@ -79,12 +80,22 @@ export function applyOcrToReview(review,results=[]){
     const recognized=String(result.text||'').trim()
     const ocrText=recognized
     const pdfText=page.pdfText??page.body
-    const selected=selectMainReviewText(pdfText,ocrText)
+    // Match by physical location first; preserve selectable text and add
+    // only distinct OCR paragraphs for rasterized sections of mixed pages.
+    const spatial=combinePositionedText(page.pdfBlocks,result.paragraphs)
+    const selected=spatial?.text?{
+      text:spatial.text,
+      source:spatial.added?'combined':(page.pdfBlocks?.length?'pdf':'ocr')
+    }:selectMainReviewText(pdfText,ocrText)
     const body=page.editedFields?.body===true?page.body:selected.text
     const c=Number(result.confidence)
     const confidence=result.confidence==null||!Number.isFinite(c)?null:Math.round(c)
     const warnings=(page.warnings||[])
       .filter(s=>!/OCR không tìm|Độ tin cậy OCR|OCR là nội dung|không có lớp chữ|Ít chữ/i.test(s))
+    if(spatial?.added)
+      warnings.push('Đã bổ sung '+spatial.added+' khối chữ OCR theo vị trí. Cần đối chiếu các đoạn giao nhau với PDF.')
+    if(spatial?.unverified?.length)
+      warnings.push(spatial.unverified.length+' khối OCR thiếu độ tin cậy; có thể xem nguồn OCR để bổ sung thủ công.')
     if(!ocrText)warnings.push('OCR chưa lấy được chữ từ trang này. Cần đọc lại trực tiếp hoặc nhập thủ công.')
     else if(confidence!==null && confidence<70)
       warnings.push('OCR độ tin cậy thấp: kiểm tra kỹ dấu, tên riêng và các con số.')
@@ -97,6 +108,7 @@ export function applyOcrToReview(review,results=[]){
     return {...page,title,body,pdfText,ocrText,ocrConfidence:confidence,
       ocrStatus:ocrText?'done':'empty',ocrError:null,
       ocrMainSource:page.editedFields?.body===true?'manual':selected.source,
+      sourceBlocks:spatial?.blocks||page.sourceBlocks||[],
       ocrBlocks:Array.isArray(result.paragraphs)?result.paragraphs.map(p=>({
         text:p.text,bbox:p.bbox,confidence:p.confidence??null
       })):[],

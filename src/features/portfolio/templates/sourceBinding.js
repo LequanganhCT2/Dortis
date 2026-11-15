@@ -50,7 +50,9 @@ export function suggestSourceForLayout(section,sourcePages,used=new Set()){
   if(section.id==='hero')return available.find(page=>page.page===1)||available[0]||null
   // No arbitrary page must be used to invent an approved booking endpoint.
   if(['contact','booking'].includes(section.id))return null
-  return available[0]||null
+  // Never populate an unrelated Portfolio section merely because some
+  // source page remains unused. Admin can explicitly link that page.
+  return null
 }
 export function copySourceSection(content={},sectionId,source){
   if(!source)return content
