@@ -101,7 +101,7 @@ export default function SiteHeader({ onAdminSignOut = null }) {
         onClick={close}>{title}</a>)}
     </nav>
     <a className="header-contact" href="/admin" onClick={close}>
-      ĐĂNG NHẬP <span className="arrow" aria-hidden="true">↗</span>
+      QUẢN TRỊ <span className="arrow" aria-hidden="true">↗</span>
     </a>
     <button className="menu-toggle" type="button" aria-label={menuOpen?'Đóng menu':'Mở menu'}
       aria-controls="dortis-primary-navigation" aria-expanded={menuOpen}

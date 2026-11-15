@@ -62,3 +62,16 @@ Dữ liệu/logic cần qua các module `core`, `features`, `infrastructure`; UI
 - Mọi thao tác cập nhật bảo vệ bằng `app_metadata.role`, RLS, mutation acknowledgement.
 - Giữ UX không full reload khi chuyển tab trong admin.
 - Thay đổi lớn làm trên feature branch; CI build/test rồi mới duyệt merge.
+
+## Phòng tránh lộ bản nháp Portfolio
+
+Bảng `site_content` hiện có policy SELECT công khai vì đó là dữ liệu website đã phát hành. **Không** ghi Portfolio Long Nhật chưa duyệt, nguồn nội bộ, thông tin booking riêng tư hay asset hạn chế quyền vào bảng này. Giai đoạn hiện tại chỉ đặt placeholder không nhạy cảm trong code. Khi nhận tài liệu thật, cần một repository/table nháp **private** có RLS admin-only, sau đó chỉ xuất snapshot đã duyệt sang bảng public.
+
+Các trang public và Admin được tách bằng `React.lazy`/dynamic import nhằm giảm JS của Guest; việc tách bundle **không thay thế RLS hoặc xác thực từ Supabase**.
+
+## Nguyên tắc kiểm thử/phát hành
+
+- `npm test`: route, roles, điều kiện release Long Nhật và bộ kiểm thử Media cũ.
+- `npm run build`: Vite build với lazy routes.
+- Chạy trên nhánh `feat/clean-architecture-long-nhat`; Vercel Preview, không tự gán alias `dortis.vercel.app`.
+- Chỉ merge sau khi nghiệm thu visual, kiểm tra login/logout, Back/Forward, sticky quick-edit, mobile và dữ liệu đang có.
