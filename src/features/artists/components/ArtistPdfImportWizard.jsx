@@ -309,7 +309,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             <button type="button" className="pdf-import__ocr-all"
               disabled={busy||!doc.pages.some(p=>p.ocrStatus==='not_run'&&!p.reviewed)}
               onClick={()=>runOcrForPages(doc.pages.filter(p=>p.ocrStatus==='not_run').map(p=>p.page),'standard')}>
-              ✧ OCR trên thiết bị · trang chưa đọc
+              ✧ Quét tiếp trang chưa OCR
             </button>
             <button type="button" className="pdf-import__ocr-all"
               disabled={busy||!doc.pages.some(p=>!p.reviewed)}
@@ -383,7 +383,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
                 <button type="button" disabled={busy||page.reviewed||!page.pdfText}
                   onClick={()=>patchPage('body',page.pdfText||'')}>Dùng chữ PDF gốc</button>
                 <button type="button" disabled={busy||page.reviewed||!page.ocrText}
-                  onClick={()=>patchPage('body',page.ocrText||'')}>Dùng chữ {page.ocrProvider==='mistral'?'Mistral AI':'OCR theo khối'}</button>
+                  onClick={()=>patchPage('body',page.ocrText||'')}>{page.ocrProvider==='mistral'?'Dùng chữ Mistral AI':'Dùng OCR đã sắp theo khối'}</button>
               </div>
             </div>
             {Array.isArray(page.ocrBlocks)&&page.ocrBlocks.length>0&&
