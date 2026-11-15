@@ -189,3 +189,25 @@
   margin-top:10px;cursor:pointer}
 .pdf-import__ocr-add:hover{background:#eaf5f8}
 .pdf-import__ocr-add:disabled{opacity:.45;cursor:default}
+
+/* OCR coverage v2 – full mixed-content scan + region-aware deep scan. */
+.pdf-import__ocr-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:15px}
+.pdf-import__ocr-actions .pdf-import__ocr-all{margin-top:0}
+.pdf-import__ocr-actions .pdf-import__ocr-all:last-child{
+  background:#16243a;border-color:#16243a;color:#fff;
+}
+.pdf-import__ocr-actions .pdf-import__ocr-all:last-child:not(:disabled):hover{
+  background:#304765;border-color:#304765;
+}
+.pdf-import__ocr-actions .pdf-import__ocr-all:disabled{opacity:.45;cursor:not-allowed}
+.pdf-import__ocr-failed{color:#a44543!important}
+.pdf-import__ocr-compare>div strong{display:inline-block}
+.pdf-import__ocr-compare>div:nth-child(n+3){background:#f8fafc}
+.pdf-import__ocr-compare>div:nth-child(n+3) pre{max-height:190px;overflow:auto}
+.pdf-import__page>em{max-width:100%;font-size:8px}
+.pdf-import__working>small{max-width:550px;line-height:1.8}
+.pdf-import__working h3{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800}
+@media(max-width:700px){
+ .pdf-import__ocr-actions{flex-direction:column;align-items:stretch}
+ .pdf-import__ocr-actions .pdf-import__ocr-all{width:100%}
+}

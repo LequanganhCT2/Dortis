@@ -22,6 +22,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
   const [dragging,setDragging]=useState(false)
   const [ocrRunning,setOcrRunning]=useState(false)
   const ocrController=useRef(null)
+  const runVersion=useRef(0)
   const inputRef=useRef(null)
   const [previewUrl,setPreviewUrl]=useState('')
   useEffect(()=>{
@@ -40,36 +41,67 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
         editedFields:['title','body'].includes(key)
           ?{...(p.editedFields||{}),[key]:true}:p.editedFields}:p)}))
   }
-  async function performOcr(fileToRead,targets,review){
+  async function performOcr(fileToRead,targets,review,{quality='standard'}={}){
     if(!targets.length){setStage('review');return}
     const controller=new AbortController()
+    const token=++runVersion.current
     ocrController.current=controller
     setOcrRunning(true);setBusy(true);setError('');setStage('ocr')
-    setProgress('Đang chuẩn bị bộ nhận dạng tiếng Việt và tiếng Anh…')
+    setProgress('Đang tải bộ nhận dạng tiếng Việt và tiếng Anh…')
+    const layerText=Object.fromEntries(
+      review.pages.map(page=>[page.page,page.pdfText??page.body??''])
+    )
     try{
       const {ocrPdfPages}=await import('../services/ocrPdfPages')
       const results=await ocrPdfPages(fileToRead,targets,{
-        signal:controller.signal,
+        quality,signal:controller.signal,layerText,
+        onResult:result=>{
+          if(token!==runVersion.current)return
+          setDoc(current=>applyOcrToReview(current||review,[result]))
+        },
         onProgress:info=>{
-          if(info.phase==='loading')setProgress('Đang tải bộ OCR tiếng Việt / tiếng Anh…')
-          else setProgress('OCR trang '+(info.page||targets[Math.min(info.done,targets.length-1)])+
-            ' · '+info.done+'/'+info.total+' trang'+(info.percent?' · '+info.percent+'%':''))
+          if(token!==runVersion.current)return
+          if(info.phase==='loading'){
+            setProgress('Đang tải dữ liệu OCR tiếng Việt / tiếng Anh…')
+          }else{
+            const done=info.done??0
+            const region=info.pass?({
+              full:'toàn trang',left:'cột trái',right:'cột phải',
+              top:'nửa trên',bottom:'nửa dưới'
+            }[info.pass]||info.pass):'đang xử lý'
+            setProgress('Trang '+(info.page||targets[Math.min(done,targets.length-1)])+
+              '/'+review.pageCount+' · '+region+' · hoàn tất '+done+'/'+targets.length+
+              (info.percent!=null?' · '+info.percent+'%':''))
+          }
         }
       })
-      if(!controller.signal.aborted)setDoc(applyOcrToReview(review,results))
+      const failed=results.filter(result=>result.error)
+      if(token===runVersion.current && failed.length){
+        setError('OCR chưa đọc được '+failed.length+' trang: '+
+          failed.map(item=>item.page).join(', ')+
+          '. Có thể bấm Quét sâu từng trang hoặc nhập tay sau khi xem PDF gốc.')
+      }
     }catch(e){
-      if(controller.signal.aborted)setError('Đã bỏ qua OCR. Bạn vẫn có thể đọc PDF và nhập thủ công.')
-      else setError('OCR chưa hoàn tất ('+e.message+'). Vẫn giữ chữ từ lớp PDF; bạn có thể chạy lại từng trang.')
+      if(token===runVersion.current){
+        setError(controller.signal.aborted?
+          'Đã dừng OCR. Những trang đã quét vẫn được giữ lại để kiểm tra.':
+          'Không thể hoàn tất OCR: '+e.message+
+          '. Văn bản PDF gốc vẫn được giữ; hãy thử quét lại hoặc nhập thủ công.')
+      }
     }finally{
-      if(ocrController.current===controller)ocrController.current=null
-      setOcrRunning(false);setBusy(false);setProgress('');setStage('review')
+      if(token===runVersion.current){
+        ocrController.current=null
+        setOcrRunning(false);setBusy(false);setProgress('');setStage('review')
+      }
     }
   }
-  async function runOcrForPages(targets){
+  async function runOcrForPages(targets,quality='deep'){
     if(!file||!doc||busy||ocrRunning)return
     const unreviewed=targets.filter(n=>!doc.pages.find(p=>p.page===n)?.reviewed)
-    if(!unreviewed.length){setError('Các trang này đã xác nhận. Bỏ xác nhận nếu muốn quét OCR lại.');return}
-    await performOcr(file,unreviewed,doc)
+    if(!unreviewed.length){
+      setError('Các trang đã xác nhận. Bỏ xác nhận một trang nếu muốn quét lại.');return
+    }
+    await performOcr(file,unreviewed,doc,{quality})
   }
   function skipOcr(){ocrController.current?.abort()}
   async function load(fileToRead){
@@ -86,7 +118,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       if(!review.pages.length)throw new Error('PDF không có trang hợp lệ.')
       setDoc(review)
       const targets=selectAutomaticOcrPages(review.pages)
-      if(targets.length)await performOcr(fileToRead,targets,review)
+      if(targets.length)await performOcr(fileToRead,targets,review,{quality:'standard'})
       else setStage('review')
     }catch(e){
       setError('Không phân tích được PDF: '+e.message)
@@ -94,7 +126,10 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
     }finally{setBusy(false);setProgress('')}
   }
   function cancel(){
+    ++runVersion.current
     ocrController.current?.abort()
+    ocrController.current=null
+    setOcrRunning(false);setBusy(false)
     setFile(null);setDoc(null);setPageIndex(0);setStage('pick');setError('')
   }
   async function uniqueSlug(name){
@@ -133,7 +168,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
     <header className="pdf-import__intro">
       <div><span className="pdf-import__eyebrow">01 / ARTIST SOURCE LIBRARY</span>
         <h2>Nhập Portfolio từ PDF<span>.</span></h2>
-        <p>Đọc lớp chữ PDF trước, sau đó tự OCR những trang ảnh hoặc thiếu chữ bằng tiếng Việt + tiếng Anh. Bạn kiểm tra kết quả trước khi lưu; không tải PDF nguồn lên Supabase.</p></div>
+        <p>Đọc lớp chữ gốc và quét OCR tất cả trang (kể cả trang có chữ và ảnh đan xen). Các trang thiết kế phức tạp được quét thêm từng cột; bạn duyệt kết quả trước khi lưu.</p></div>
       <div className="pdf-import__steps" aria-label="Các bước nhập PDF">
         {STEPS.map((name,i)=><span key={name} className={
           (i===0&&stage==='pick'||i===1&&['extract','ocr','review'].includes(stage)||i===2&&stage==='save')?'is-active':''}>
@@ -147,7 +182,7 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       onDrop={e=>{e.preventDefault();setDragging(false);load(e.dataTransfer.files?.[0])}}>
       <div className="pdf-import__drop-icon" aria-hidden="true">PDF<span>＋</span></div>
       <strong>Thả file PDF hoặc chọn từ máy</strong>
-      <p>Tệp tối đa 100 MB · Trích chữ + OCR ảnh trong trình duyệt · Không lưu PDF trên Supabase</p>
+      <p>Tối đa 100 MB · OCR tiếng Việt + Anh cho toàn bộ Portfolio · PDF không lưu lên Supabase</p>
       <button type="button" onClick={()=>inputRef.current?.click()}>+ CHỌN FILE PDF</button>
       <input ref={inputRef} type="file" accept=".pdf,application/pdf" hidden onChange={e=>{
         const picked=e.target.files?.[0];e.target.value='';load(picked)
@@ -159,23 +194,37 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
       <p>{progress||'Đọc từng trang, không lưu hình hoặc PDF lên server.'}</p>
       {stage==='ocr'&&<button type="button" className="pdf-import__ocr-skip"
         onClick={skipOcr}>Bỏ qua OCR, xem kết quả đã đọc</button>}
-      {stage==='ocr'&&<small>OCR dùng tài nguyên của trình duyệt. Lần đầu cần tải dữ liệu nhận dạng từ CDN.</small>}
+      {stage==='ocr'&&<small>Đã quét: {doc?.quality?.ocrPages||0}/{doc?.pageCount||'?'} trang.
+        Đang quét nhiều vùng để phát hiện thêm chữ. Có thể dừng mà không mất các trang đã đọc.</small>}
     </div>}
     {(stage==='review'||stage==='save')&&doc&&<div className="pdf-import__review">
       <div className="pdf-import__summary">
         <div className="pdf-import__summary-title">
           <span className="pdf-import__eyebrow">02 / REVIEW BEFORE SAVING</span>
           <h3>Kiểm tra dữ liệu trích xuất</h3>
-          <p>Chữ chọn được được giữ nguyên, chữ nằm trong ảnh được OCR bổ sung. Kiểm tra từng trang với PDF gốc vì OCR có thể đọc sai dấu, tên hoặc số liệu.</p>
-          <button type="button" className="pdf-import__ocr-all" disabled={busy||!doc.pages.some(p=>!p.reviewed)}
-            onClick={()=>runOcrForPages(doc.pages.map(p=>p.page))}>
-            <span aria-hidden="true">✧</span> OCR lại các trang chưa duyệt
-          </button>
+          <p>Hệ thống quét cả trang có chữ gốc lẫn chữ nằm trong ảnh và bố cục nhiều cột.
+            OCR vẫn có thể sót đoạn hoặc đọc sai dấu, số liệu. Đối chiếu với PDF trước khi duyệt.</p>
+          <div className="pdf-import__ocr-actions">
+            <button type="button" className="pdf-import__ocr-all"
+              disabled={busy||!doc.pages.some(p=>p.ocrStatus==='not_run'&&!p.reviewed)}
+              onClick={()=>runOcrForPages(doc.pages.filter(p=>p.ocrStatus==='not_run').map(p=>p.page),'standard')}>
+              ✧ Quét tiếp trang chưa OCR
+            </button>
+            <button type="button" className="pdf-import__ocr-all"
+              disabled={busy||!doc.pages.some(p=>!p.reviewed)}
+              onClick={()=>runOcrForPages(doc.pages.map(p=>p.page),'deep')}>
+              ✧ Quét sâu tất cả trang chưa duyệt
+            </button>
+          </div>
         </div>
         <div className="pdf-import__metrics">
           <div><strong>{doc.pageCount}</strong><span>Trang PDF</span></div>
           <div><strong>{doc.quality.extracted}</strong><span>Có chữ / OCR</span></div>
-          <div><strong>{doc.quality.ocrPages||0}</strong><span>Trang OCR</span></div>
+          <div><strong>{doc.quality.ocrPages||0}</strong><span>Trang đã OCR</span></div>
+          <div className={doc.quality.ocrPending||doc.quality.ocrFailed?'is-warning':''}>
+            <strong>{(doc.quality.ocrPending||0)+(doc.quality.ocrFailed||0)}</strong>
+            <span>Chưa quét / lỗi</span>
+          </div>
           <div className={doc.quality.imageOnly?'is-warning':''}>
             <strong>{doc.quality.imageOnly}</strong><span>Cần nhập tay</span></div>
           <div><strong>{complete}/{doc.pageCount}</strong><span>Đã duyệt</span></div>
@@ -198,19 +247,25 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
             onClick={()=>setPageIndex(i)} disabled={busy}>
             <span>{String(p.page).padStart(2,'0')}</span>
             <strong>{p.title||'Chưa có tiêu đề'}</strong>
-            <em>{p.reviewed?'✓':p.ocrStatus==='done'?'OCR · DUYỆT':p.textFound?'CHỜ DUYỆT':'CẦN NHẬP'}</em>
+            <em>{p.reviewed?'✓':p.ocrStatus==='failed'?'LỖI OCR':
+              p.ocrStatus==='done'?'ĐÃ OCR · DUYỆT':
+              p.ocrStatus==='not_run'?'CHƯA OCR':'CẦN KIỂM TRA'}</em>
           </button>)}
         </nav>
         <div className="pdf-import__fields">
           <div className="pdf-import__fields-head"><span>TRANG {page.page}/{doc.pageCount}</span>
             <b className={page.textFound?'':'is-warning'}>
               {page.ocrStatus==='done'?'ĐÃ OCR · CẦN ĐỐI CHIẾU':
-                page.textFound?'CÓ CHỮ PDF · CẦN ĐỐI CHIẾU':'CHƯA ĐỌC ĐƯỢC CHỮ'}</b></div>
+                page.ocrStatus==='failed'?'OCR BỊ LỖI':
+                page.textFound?'CÓ CHỮ PDF · CHƯA OCR':'CHƯA ĐỌC ĐƯỢC CHỮ'}</b></div>
           <div className="pdf-import__ocr-tools">
             <button type="button" disabled={busy||page.reviewed}
-              onClick={()=>runOcrForPages([page.page])}>✧ OCR trang này</button>
+              onClick={()=>runOcrForPages([page.page],'deep')}>✧ Quét sâu trang này (nhiều vùng)</button>
             {page.ocrStatus==='done'&&<span>
               OCR tiếng Việt + tiếng Anh · Độ tin cậy tham khảo {page.ocrConfidence??'?'}%
+            </span>}
+            {page.ocrStatus==='failed'&&<span className="pdf-import__ocr-failed">
+              {page.ocrError||'Trang này OCR chưa thành công'}
             </span>}
           </div>
           {page.ocrStatus==='done'&&<details className="pdf-import__ocr-compare">
@@ -223,6 +278,15 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
                 + Bổ sung các dòng OCR còn thiếu vào nội dung
               </button>
             </div>
+            {(page.ocrPasses||[]).filter(p=>p.text).map((pass,index)=>
+              <div key={index}>
+                <strong>Vùng {({full:'toàn trang',left:'trái',right:'phải',
+                  top:'trên',bottom:'dưới'})[pass.kind]||pass.kind}
+                  {pass.confidence!=null?' · '+Math.round(pass.confidence)+'%':''}
+                </strong>
+                <pre>{pass.text}</pre>
+              </div>
+            )}
           </details>}
           {page.warnings.length>0&&<p className="pdf-import__warning">
             {page.warnings.join(' ')}</p>}

@@ -1,68 +1,94 @@
-/** Pure text reconciliation for PDF text layers + local OCR.
- * Never labels a guess as verified. Keep both source streams for Admin review.
+/** PDF/OCR reconciliation used by all Portfolio types.
+ * OCR is evidence to review, never a replacement for a human-approved claim.
+ * The PDF text layer and every OCR pass remain inspectable separately.
  */
-const normalized=s=>String(s||'')
-  .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-  .replace(/đ/gi,'d')
-  .toLocaleLowerCase('vi')
-  .replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()
-const lines=s=>String(s||'').split(/\r?\n/)
-  .map(x=>x.replace(/\s+/g,' ').trim()).filter(Boolean)
-export const AUTO_OCR_MAX_PAGES=18
-export const OCR_SPARSE_CHARS=120
+const norm = value => String(value??'').normalize('NFD')
+ .replace(/[\u0300-\u036f]/g,'').replace(/[đĐ]/g,'d')
+ .toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\s+/g,' ').trim()
+const split = value => String(value??'').split(/\r?\n/)
+ .map(s=>s.replace(/\s+/g,' ').trim()).filter(Boolean)
+const tokens = value => new Set(norm(value).split(' ').filter(Boolean))
+function isRepeated(value,existing){
+  const key=norm(value)
+  if(key.length<2)return true
+  const words=tokens(value)
+  for(const raw of existing){
+    const compare=norm(raw)
+    if(key===compare || (key.length>=9 && compare.includes(key)))return true
+    if(compare.length>=9 && key.includes(compare) && compare.length/key.length>.78)return true
+    const other=tokens(raw)
+    if(words.size<3 || other.size<3)continue
+    let intersection=0
+    for(const word of words)if(other.has(word))intersection++
+    const similarity=intersection/Math.max(words.size,other.size)
+    if(similarity>.87 && Math.min(key.length,compare.length)/Math.max(key.length,compare.length)>.70)return true
+  }
+  return false
+}
+export const AUTO_OCR_MAX_PAGES=24
+export const OCR_SPARSE_CHARS=140
+export const MAX_REVIEW_CHARACTERS=14000
 export function needsOcrPage(page,limit=OCR_SPARSE_CHARS){
-  // OCR a sparse text layer, not only pages with zero selectable characters.
-  // Pages with partial PDF text are common in portfolios exported from Canva.
-  return lines(page?.rawText||page?.body).join(' ').length<limit
+  return split(page?.rawText||page?.pdfText||page?.body).join(' ').length<limit
 }
 export function selectAutomaticOcrPages(pages=[],max=AUTO_OCR_MAX_PAGES){
-  return pages.filter(p=>needsOcrPage(p)).slice(0,max).map(p=>Number(p.page))
+  // PDFs frequently contain embedded text PLUS large image-only paragraphs.
+  // Never skip pages just because they already contain >120 characters.
+  return pages.filter(p=>!p.reviewed && p.ocrStatus!=='done')
+    .slice(0,max).map(p=>Number(p.page))
 }
-/** Keep non-overlapping lines; do not replace reliable embedded PDF text with OCR.
- * Duplicated or contained lines are skipped. All raw strings remain available.
- */
 export function combinePdfOcrText(pdfText='',ocrText=''){
-  const original=lines(pdfText)
-  const additions=[]
-  const known=original.map(normalized)
-  for(const line of lines(ocrText)){
-    const key=normalized(line)
-    if(!key||key.length<2)continue
-    const same=known.some(other=>other===key||
-      (key.length>=8&&other.includes(key))||
-      (other.length>=8&&key.includes(other)&&other.length/key.length>.72))
-    if(same)continue
-    additions.push(line)
-    known.push(key)
+  const lines=split(pdfText)
+  for(const value of split(ocrText)){
+    if(!isRepeated(value,lines))lines.push(value)
   }
-  return [...original,...additions].join('\n').slice(0,14000)
+  return lines.join('\n').slice(0,MAX_REVIEW_CHARACTERS)
+}
+export function mergeOcrPasses(passes=[]){
+  // Each pass may see a different part of a poster; preserve the union.
+  // Slight OCR differences may remain: the reviewer can compare pass outputs.
+  const usable=passes.filter(p=>typeof p?.text==='string' && p.text.trim())
+  const primary=usable[0]
+  let output=primary?.text?.trim()||''
+  for(const pass of usable.slice(1))output=combinePdfOcrText(output,pass.text)
+  return output.slice(0,MAX_REVIEW_CHARACTERS)
 }
 export function applyOcrToReview(review,results=[]){
-  const ocrByPage=new Map(results.map(r=>[Number(r.page),r]))
+  const byPage=new Map(results.map(result=>[Number(result.page),result]))
   const pages=review.pages.map(page=>{
-    const result=ocrByPage.get(Number(page.page))
-    if(!result)return page
-    const ocrText=lines(result.text).join('\n')
-    const body=page.editedFields?.body===true?page.body:
-      combinePdfOcrText(page.pdfText??page.body,ocrText)
-    const confidence=Number.isFinite(Number(result.confidence))?Math.round(Number(result.confidence)):null
-    const warnings=[...(page.warnings||[]).filter(s=>!/không có lớp chữ|ít chữ|chưa nhận diện được tiêu đề/i.test(s))]
-    if(!ocrText)warnings.push('OCR không tìm thấy chữ ở trang này. Hãy đọc và nhập thủ công.')
-    else if(confidence!==null&&confidence<65)warnings.push('Độ tin cậy OCR thấp. Cần kiểm tra kỹ dấu tiếng Việt, chữ và số.')
-    else warnings.push('OCR là nội dung gợi ý, cần đối chiếu lại từng câu với PDF.')
-    const candidate=lines(ocrText)[0]||''
+    const result=byPage.get(Number(page.page))
+    if(!result || page.reviewed)return page
+    if(result.error)return {...page,ocrStatus:'failed',ocrError:String(result.error),
+      warnings:[...(page.warnings||[]),'OCR gặp lỗi ở trang này: '+String(result.error)]}
+    const recognized=split(result.text).join('\n')
+    const ocrText=combinePdfOcrText(page.ocrText||'',recognized)
+    const pdfText=page.pdfText??page.body
+    const body=page.editedFields?.body===true?page.body:combinePdfOcrText(pdfText,ocrText)
+    const c=Number(result.confidence)
+    const confidence=result.confidence==null||!Number.isFinite(c)?null:Math.round(c)
+    const warnings=(page.warnings||[])
+      .filter(s=>!/OCR không tìm|Độ tin cậy OCR|OCR là nội dung|không có lớp chữ|Ít chữ/i.test(s))
+    if(!ocrText)warnings.push('OCR chưa lấy được chữ từ trang này. Cần đọc lại trực tiếp hoặc nhập thủ công.')
+    else if(confidence!==null && confidence<70)
+      warnings.push('OCR độ tin cậy thấp: kiểm tra kỹ dấu, tên riêng và các con số.')
+    else warnings.push('OCR có thể thiếu hoặc sai: đối chiếu từng đoạn với trang PDF trước khi xác nhận.')
+    const first=split(recognized)[0]||''
     const title=page.editedFields?.title===true?page.title:
-      (page.title||(candidate.length>=4&&candidate.length<=75?candidate:''))
-    return {...page,title,body,pdfText:page.pdfText??page.body,ocrText,ocrConfidence:confidence,
-      ocrStatus:ocrText?'done':'empty',textFound:body.trim().length>0,
-      reviewed:false,warnings,sourceChars:body.length}
+      (page.title||(first.length>=4&&first.length<=75?first:''))
+    return {...page,title,body,pdfText,ocrText,ocrConfidence:confidence,
+      ocrStatus:ocrText?'done':'empty',ocrError:null,
+      ocrPasses:Array.isArray(result.passes)?result.passes.map(p=>({
+        kind:String(p.kind||'full'),text:String(p.text||''),confidence:p.confidence??null
+      })):page.ocrPasses||[],
+      textFound:Boolean(body.trim()),reviewed:false,warnings,sourceChars:body.length}
   })
-  return {...review,pages,pageCount:pages.length,
-    quality:{
-      ...review.quality,
-      extracted:pages.filter(p=>p.textFound).length,
-      imageOnly:pages.filter(p=>!p.textFound).length,
-      lowText:pages.filter(p=>p.textFound&&p.body.length<40).length,
-      ocrPages:pages.filter(p=>p.ocrStatus==='done').length
-    }}
+  return {...review,pages,pageCount:pages.length,quality:{
+    ...review.quality,
+    extracted:pages.filter(p=>p.textFound).length,
+    imageOnly:pages.filter(p=>!p.textFound).length,
+    lowText:pages.filter(p=>p.textFound && p.body.length<40).length,
+    ocrPages:pages.filter(p=>p.ocrStatus==='done').length,
+    ocrFailed:pages.filter(p=>p.ocrStatus==='failed').length,
+    ocrPending:pages.filter(p=>p.ocrStatus==='not_run').length
+  }}
 }
