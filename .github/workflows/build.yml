@@ -2,7 +2,7 @@ name: Dortis frontend build
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/clean-architecture-long-nhat']
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Verify PDF multipart storage roundtrip
+      - name: Run regression tests (auth, routes, media, portfolio)
         run: npm test
       - name: Build production frontend
         run: npm run build

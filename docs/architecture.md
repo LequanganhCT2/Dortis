@@ -1,0 +1,64 @@
+# DORTIS / Kiến trúc phát triển dài hạn
+
+**Bản định hướng v1** — nhánh phát triển, không tự thay production.  
+Nền tảng: React/Vite, Supabase Auth + Postgres/RLS, Vercel.
+
+## Phân quyền
+
+| Nghiệp vụ | Guest | Admin |
+|---|---:|---:|
+| Xem DORTIS public và hồ sơ đã xuất bản | ✓ | ✓ |
+| Đăng nhập | Không có UI đăng nhập guest | ✓ (email/password) |
+| Quản trị Media, nội dung, hồ sơ | ✗ | ✓ |
+| Xem bản nháp Long Nhật Singer | ✗ | ✓ |
+| Phát hành Long Nhật Singer | ✗ (chưa duyệt) | Chỉ khi đủ input & quyền phát hành |
+
+Quyền trên giao diện chỉ là UX. Quyền **ghi** phải được Supabase RLS kiểm tra bằng JWT `app_metadata.role=admin`. Không dùng `user_metadata` do người dùng có thể tự sửa. Không có signup/guest account, không public service-role key. Guest xem anonymous public data.
+
+## Phân lớp
+
+```text
+src/
+  app/
+    routes.js             # Định tuyến tường minh / điều kiện phát hành
+    AppRouter.jsx         # Chọn các trang, tách Admin khỏi Public
+  core/
+    auth/roles.js         # Quyền và chính sách khả năng truy cập (pure)
+  infrastructure/
+    supabase/client.js    # Một Supabase client dùng chung
+  features/
+    admin/AdminWorkspace.jsx     # Shell admin, navbar và quick-edit
+    media/
+      config/mediaGroups.js      # Cấu hình danh sách khu vực chỉnh sửa
+      hooks/useSiteImages.js     # Public read model
+    portfolio/long-nhat/
+      data.js                    # Trạng thái nguồn/chờ duyệt
+      LongNhatPortfolio.jsx     # Bản nháp nội bộ, Quick/Immersive
+  pages/
+    DortisHome.jsx              # Trang public cũ được tách khỏi entry
+  shared/ui/
+    index.jsx                   # UiButton/UiPanel/UiStatus/UiNavLink
+    ui.css                      # Một file style chung cho phần mới
+  main.jsx                     # Entry gọn, không chứa nghiệp vụ
+```
+
+Dữ liệu/logic cần qua các module `core`, `features`, `infrastructure`; UI dùng component `shared`. Lớp công khai không import `AdminPage` để lấy Supabase client nữa.
+
+## Lộ trình chuyển đổi phần legacy
+
+1. Hoàn thành **lớp nền**: route, RBAC, Admin Navbar, UI primitives, Portfolio draft, tests (đợt này).
+2. Trích xuất dần các component HomePage từ `src/pages/DortisHome.jsx` theo từng feature (Hero, Services, Projects, FAQ, Contact). Không làm lại tất cả CSS trong một commit để tránh lỗi layout.
+3. Chuẩn hóa Media repository/service và validation phía server/RLS; xóa logic upload trùng khi đã có regression test.
+4. Tách các editor legacy (`AdminMediaEditor`, `AdminHeroCards`, `AdminMediaSlots`, `AdminArtistProfiles`) thành module riêng theo use case; chuyển CSS cũ thành tokens + shared utilities có kiểm thử visual.
+5. Chỉ sau khi nhận và phân tích Portfolio: xây design system Long Nhật độc lập, hoàn thiện Quick EPK/Immersive và booking CTA đúng tài sản cấp phép.
+
+**Clean Architecture thực dụng:** Dependency direction `UI → use case → data contract → infrastructure` là đích đến. Đợt này đặt ranh giới chính, **chưa tuyên bố toàn bộ các editor cũ đã đạt Clean Architecture**.
+
+## Nguyên tắc thay đổi
+
+- Một cấu hình Media duy nhất trong `mediaGroups.js`; navbar và editor dùng chung.
+- Một Supabase client tại `infrastructure`; không import client từ component admin.
+- Không hardcode thông tin booking/artist vào component; public page chỉ đọc dữ liệu `published`.
+- Mọi thao tác cập nhật bảo vệ bằng `app_metadata.role`, RLS, mutation acknowledgement.
+- Giữ UX không full reload khi chuyển tab trong admin.
+- Thay đổi lớn làm trên feature branch; CI build/test rồi mới duyệt merge.

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import SiteHeader from './SiteHeader'
-import { supabase } from './AdminPage'
+import { supabase } from './infrastructure/supabase/client'
 import './artist-pages.css'
 import ArtistPortfolioViewer from './ArtistPortfolioViewer'
 import './artist-portfolio-view.css'

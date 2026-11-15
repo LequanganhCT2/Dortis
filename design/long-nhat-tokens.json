@@ -1,0 +1,45 @@
+{
+  "documentId": "DORTIS-LNS-WEB-001",
+  "artist": "Long Nhật Singer",
+  "status": "PENDING_PORTFOLIO_INPUT",
+  "lastReviewed": null,
+  "sourcePortfolio": null,
+  "sourcePageEvidence": {},
+  "themeOptions": {
+    "A_faithful": {
+      "status": "NOT_YET_PROPOSED",
+      "source": "portfolio required"
+    },
+    "B_digital_editorial": {
+      "status": "NOT_YET_PROPOSED",
+      "source": "portfolio required"
+    }
+  },
+  "colors": {
+    "primary": null,
+    "secondary": null,
+    "accent": null,
+    "background": null,
+    "surface": null,
+    "text": null,
+    "muted": null,
+    "overlay": null,
+    "accessibleAdjusted": null
+  },
+  "fonts": {
+    "display": null,
+    "heading": null,
+    "body": null,
+    "caption": null,
+    "status": "PROPOSED_FONT_PENDING"
+  },
+  "imagery": {
+    "heroDesktop": null,
+    "heroMobile": null,
+    "photoGrade": null,
+    "backgroundTexture": null
+  },
+  "layoutPrinciples": [],
+  "approvedBy": null,
+  "publicReady": false
+}

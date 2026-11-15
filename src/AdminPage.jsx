@@ -1,62 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { supabase, adminLoginEmail as ADMIN_EMAIL } from './infrastructure/supabase/client'
+import { canManageContent } from './core/auth/roles'
+import AdminWorkspace from './features/admin/AdminWorkspace'
 import './admin.css'
-import AdminMediaEditor from './AdminMediaEditor'
-import AdminArtistProfiles from './AdminArtistProfiles'
-
-const API_URL = (import.meta.env.VITE_SUPABASE_URL || 'https://whkqdusoowrrhtvejrie.supabase.co').replace(/\/+$/, '')
-const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
-const ADMIN_EMAIL = import.meta.env.VITE_DORTIS_ADMIN_EMAIL || ''
-export const supabase = API_KEY ? createClient(API_URL, API_KEY, {
-  auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: false },
-}) : null
 
 const getReadableError = (error, fallback = 'Không thể hoàn tất thao tác') => {
   if (!error) return fallback
   if (error.message?.includes('relation') || error.code === '42P01') return 'Chưa khởi tạo bảng site_images trên Supabase Dortis.'
   if (error.message?.includes('row-level security') || error.code === '42501') return 'Phiên đăng nhập chưa có quyền ghi. Hãy đăng xuất và đăng nhập lại để cập nhật quyền admin (RLS).'
   return error.message || fallback
-}
-
-export function useSiteImages() {
-  const [siteImages,setSiteImages]=useState({})
-  const [siteGalleries,setSiteGalleries]=useState({})
-  const [siteOpacities,setSiteOpacities]=useState({})
-  const [mediaReady,setMediaReady]=useState(false)
-
-  useEffect(()=>{
-    if(!supabase){setMediaReady(true);return}
-    let live=true
-    async function read(){
-      const [primary,gallery]=await Promise.all([
-        supabase.from('site_images').select('slot,image_url,opacity_percent'),
-        supabase.from('site_image_gallery').select('slot,image_url,opacity_percent,position,created_at').order('position').order('created_at'),
-      ])
-      if(!live)return
-      if(!primary.error){
-        setSiteImages(Object.fromEntries((primary.data||[]).map(row=>[row.slot,row.image_url])))
-      }
-      if(!gallery.error){
-        const groups={}
-        for(const item of gallery.data||[]) (groups[item.slot]??=[]).push(item.image_url)
-        setSiteGalleries(groups)
-      }
-      if(!primary.error&&!gallery.error){
-        const rows=[...(primary.data||[]),...(gallery.data||[])]
-        setSiteOpacities(Object.fromEntries(rows.filter(row=>
-          row.image_url&&row.opacity_percent!==null&&row.opacity_percent!==undefined)
-          .map(row=>[row.image_url,Number(row.opacity_percent)])))
-      }
-      setMediaReady(true)
-    }
-    read()
-    const subscription=supabase.channel('dortis-public-media-updates')
-      .on('postgres_changes',{event:'*',schema:'public',table:'site_images'},read)
-      .on('postgres_changes',{event:'*',schema:'public',table:'site_image_gallery'},read)
-      .subscribe()
-    return ()=>{live=false;supabase.removeChannel(subscription)}
-  },[])
-  return {siteImages,siteGalleries,siteOpacities,mediaReady}
 }
 
 
@@ -78,7 +30,7 @@ export default function AdminPage() {
         return
       }
       setUser(data.user)
-      const isAdmin = data.user.app_metadata?.role === 'admin'
+      const isAdmin = canManageContent(data.user)
       if (!isAdmin) { setAuthorized(false); return }
 
       // getUser() returns fresh app_metadata, but Storage RLS evaluates the
@@ -153,7 +105,7 @@ export default function AdminPage() {
   if (checking) return withHeader(<main className="admin-auth"><p>Đang xác thực quyền quản trị...</p></main>)
   if (!supabase) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Chưa kết nối Supabase.</h1><p>Thiếu <code>VITE_SUPABASE_PUBLISHABLE_KEY</code> trong môi trường frontend.</p><a href="/">← Trang chủ</a></div></main>)
   if (user && !authorized) return withHeader(<main className="admin-auth"><div className="admin-login"><span>DORTIS / ADMIN</span><h1>Không có quyền quản trị.</h1><p>Tài khoản hiện tại chưa được cấp vai trò admin trong Supabase Auth. Không thể chỉnh sửa ảnh.</p><button onClick={signOut}>Đăng xuất</button></div></main>)
-  if (authorized) return withHeader(location.pathname.startsWith('/admin/artists') ? <AdminArtistProfiles user={user} supabase={supabase}/> : <AdminMediaEditor user={user} supabase={supabase}/>)
+  if (authorized) return withHeader(<AdminWorkspace user={user} supabase={supabase} onSignOut={signOut}/>)
   return withHeader(<main className="admin-auth"><form className="admin-login" onSubmit={signIn}>
     <a href="/" className="admin-back">← TRỞ VỀ TRANG CHỦ</a><span>DORTIS / PRIVATE ACCESS</span><h1>Quản trị<br/><em>Dortis.</em></h1>
     <p>Đăng nhập để chỉnh sửa hình ảnh trang chủ và hồ sơ dự án.</p>
