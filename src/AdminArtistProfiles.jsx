@@ -23,10 +23,11 @@ const allPhotoPaths=sections=>[...new Set((sections||[]).flatMap(s=>[
   ...(Array.isArray(s.media)?s.media.map(x=>x.path):[])
 ]).filter(Boolean))]
 
-export default function AdminArtistProfiles({user,supabase}){
+export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
   const [profiles,setProfiles]=useState([])
   const [loadingProfiles,setLoadingProfiles]=useState(true)
   const editorRef=useRef(null)
+  const initialSelectionDone=useRef('')
   const [sources,setSources]=useState({})
   const [selected,setSelected]=useState(null)
   const [form,setForm]=useState(null)
@@ -63,6 +64,16 @@ export default function AdminArtistProfiles({user,supabase}){
       block:'start'
     }))
   }
+  useEffect(()=>{
+    if(!initialSlug||!profiles.length||initialSelectionDone.current===initialSlug)return
+    const profile=profiles.find(item=>item.slug===initialSlug)
+    if(!profile)return
+    initialSelectionDone.current=initialSlug
+    edit(profile)
+    window.requestAnimationFrame(()=>editorRef.current?.scrollIntoView({
+      behavior:'instant',block:'start'
+    }))
+  },[initialSlug,profiles])
   function edit(profile){
     setSelected(profile.id)
     setForm({

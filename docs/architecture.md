@@ -99,6 +99,15 @@ Các trang public và Admin được tách bằng `React.lazy`/dynamic import nh
 - Dashboard xuất hiện sau đăng nhập tại `/admin`, có hai khu vực chính: **Website DORTIS** và **Hồ sơ nghệ sĩ**.
 - Thanh điều hướng cố định bên trái trên desktop, ngăn kéo trên mobile; chọn Media nhanh trong sidebar, không tạo Navbar ngang thứ hai.
 - `/admin/artists` hiển thị **mọi Portfolio có thật** trong `artist_profiles`, lọc theo bản nháp/công khai và tìm kiếm; chọn thẻ để dùng editor PDF hiện có.
-- URL cũ `/admin/portfolio` chuyển về `/admin/artists`, không còn khu vực giả lập Long Nhật riêng trong menu.
+- Từ 15/11, `/admin/portfolio` là bản xem trước website nghệ sĩ Long Nhật truy cập qua nút trong thẻ Portfolio thật tại `/admin/artists`; vẫn chung Sidebar Hồ sơ nghệ sĩ.
 - Không tạo hồ sơ/ảnh/chứng thực giả. Cấu trúc Long Nhật Singer trong `features/portfolio/long-nhat` được giữ lại làm tài liệu kỹ thuật nội bộ nhưng không đại diện cho một record lưu trữ.
 - Chỉ dùng một file style cho workspace và tái sử dụng `UiButton`, `UiPanel`, `UiStatus`; phần danh sách được trích thành `ArtistPortfolioCatalog`.
+
+## Long Nhật Singer Artist Website Studio (15/11/2026)
+
+- `/admin/portfolio` — route **Admin-only** hiện rõ trong Sidebar Hồ sơ nghệ sĩ, thẻ Long Nhật của thư viện và Dashboard.
+- Đọc trực tiếp `artist_profiles` và metadata `artist_profile_sources` bằng Supabase client đã xác thực; không tạo hồ sơ thứ hai, không dùng private `pdf_storage_path` làm public URL.
+- Pure adapter `features/portfolio/long-nhat/websiteModel.js` mapping `sections` hiện có sang Hero, giới thiệu, thế mạnh, biểu diễn, video (nếu link thật), gallery và footer.
+- `LongNhatPortfolio.jsx` quản lý hai layout Quick EPK / Immersive, xem mobile/desktop, lightbox keyboard/Escape, báo cáo điều kiện phê duyệt. CSS riêng neutral provisional **không** phải palette Long Nhật đã được duyệt.
+- Existing `/artists/long-nhat` vẫn giữ nguyên; việc profile có `status=published` không mở khóa phát hành website nghệ sĩ mới. `/portfolio/long-nhat` tiếp tục hiển thị trạng thái chưa phát hành.
+- Chưa có PDF visual audit, media rights approval, contact booking được phê duyệt hoặc design tokens khóa: phải hoàn thành trước khi đăng website riêng công khai.

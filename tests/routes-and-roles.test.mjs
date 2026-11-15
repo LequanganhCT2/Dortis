@@ -15,7 +15,7 @@ test('Routes separate Guest, Admin and unpublished artist portfolio',()=>{
   assert.equal(resolveRoute('/artists/test-artist'), 'artists')
   assert.equal(resolveRoute('/portfolio/long-nhat'), 'portfolio-unpublished')
   assert.equal(resolveRoute('/unknown'), 'not-found')
-  assert.equal(resolveAdminView(ROUTES.portfolio), 'artists')
+  assert.equal(resolveAdminView(ROUTES.portfolio), 'portfolio')
   assert.equal(resolveAdminView(ROUTES.media), 'media')
   assert.equal(resolveAdminView(ROUTES.admin), 'overview')
   assert.equal(resolveAdminView(ROUTES.artists), 'artists')

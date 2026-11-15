@@ -34,8 +34,11 @@ export default function ArtistPortfolioCatalog({profiles=[],selected,onSelect,di
       {list.map(profile=>{
         const chosen=selected===profile.id
         const pageCount=Array.isArray(profile.sections)?profile.sections.length:0
-        return <button type="button" key={profile.id} disabled={disabled} onClick={()=>onSelect(profile)}
-          aria-pressed={chosen} className={'artist-catalog__card'+(chosen?' is-selected':'')}>
+        return <article key={profile.id}
+          className={'artist-catalog__card'+(chosen?' is-selected':'')}>
+          <button type="button" className="artist-catalog__select"
+            disabled={disabled} onClick={()=>onSelect(profile)}
+            aria-pressed={chosen} aria-label={'Chỉnh sửa hồ sơ '+profile.name}>
           <div className="artist-catalog__cover">
             {profile.cover_image_url?<img src={profile.cover_image_url}
               alt="" loading="lazy"/>:<span aria-hidden="true">DT</span>}
@@ -49,7 +52,13 @@ export default function ArtistPortfolioCatalog({profiles=[],selected,onSelect,di
             <p>{pageCount} trang · /artists/{profile.slug}</p>
             <span>{chosen?'Đang chỉnh sửa':'Xem và chỉnh sửa'} <span aria-hidden="true">↗</span></span>
           </div>
-        </button>
+          </button>
+          {profile.slug==='long-nhat'&&<a className="artist-catalog__website"
+            href="/admin/portfolio" aria-label={'Xem website mẫu của '+profile.name}>
+            <span>WEBSITE NGHỆ SĨ · XEM TRƯỚC</span>
+            <strong>Xem website mẫu ↗</strong>
+          </a>}
+        </article>
       })}
     </div>:<div className="artist-catalog__empty">
       {total?'Không tìm thấy Portfolio phù hợp với bộ lọc.':'Chưa có Portfolio nào. Tải PDF để tạo hồ sơ mới.'}

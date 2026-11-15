@@ -1,6 +1,6 @@
 # Visual DNA — Long Nhật Singer
 
-**Status:** `SOURCE_PENDING` · **Document ID:** DORTIS-LNS-WEB-001  
+**Status:** `SOURCE_DETECTED_UNAUDITED` · **Document ID:** DORTIS-LNS-WEB-001  
 Thiết kế hiện chưa được khóa. Không sử dụng bảng màu DORTIS làm màu Long Nhật.
 
 ## Bảng màu — cần bằng chứng từng trang
@@ -17,10 +17,10 @@ Thiết kế hiện chưa được khóa. Không sử dụng bảng màu DORTIS 
 | overlay | PENDING | Lớp phủ ảnh nếu phù hợp | PENDING | — |
 
 ### Phương án A — trung thành với Portfolio
-Chưa thể dựng palette vì thiếu Portfolio. Khi có dữ liệu, ghi mã HEX, vị trí chính xác trong nguồn, tương phản văn bản/CTA, các điều chỉnh accessible.
+Chưa thể dựng palette vì PDF nguồn chưa được kiểm tra trực tiếp từng trang (dù metadata PDF có trong Supabase). Khi có dữ liệu, ghi mã HEX, vị trí chính xác trong nguồn, tương phản văn bản/CTA, các điều chỉnh accessible.
 
 ### Phương án B — digital editorial
-Chưa thể dựng palette. Phương án B chỉ được phát triển **từ cùng DNA với A**, không vay mượn bảng màu DORTIS hoặc trang mẫu nghệ sĩ khác.
+Chưa thể dựng palette trước khi đọc và đối chiếu PDF nguồn. Phương án B chỉ được phát triển **từ cùng DNA với A**, không vay mượn bảng màu DORTIS hoặc trang mẫu nghệ sĩ khác.
 
 ## Typography
 

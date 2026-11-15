@@ -1,6 +1,8 @@
 # DORTIS — Artist Profile Platform
 
-> **Kiến trúc đang tái cấu trúc:** Xem [docs/architecture.md](docs/architecture.md) cho quyền Guest/Admin, Navbar quản trị và ranh giới các module. [Portfolio Long Nhật Singer](docs/portfolio-audit.md) chỉ là bản nháp nội bộ; chưa có Portfolio gốc và chưa phê duyệt visual/phát hành. Các phần cũ bên dưới là tài liệu lịch sử và có thể chưa phản ánh giao diện mới nhất.
+> **Xem Website Long Nhật Singer:** Đăng nhập `/login` → `/admin/artists` → mở thẻ Long Nhật → **Xem website mẫu**; hoặc mở thẳng `/admin/portfolio` khi đã có quyền Admin. Đây là bản dựng nội bộ, không thay thế hồ sơ hiện đang công khai tại `/artists/long-nhat`.
+
+> **Kiến trúc đang tái cấu trúc:** Xem [docs/architecture.md](docs/architecture.md) cho quyền Guest/Admin, Navbar quản trị và ranh giới các module. [Portfolio Long Nhật Singer](docs/portfolio-audit.md) chỉ là bản nháp nội bộ; đã tìm thấy PDF nguồn 8 trang trong Supabase nhưng chưa audit text + ảnh từng trang, chưa phê duyệt visual/phát hành website nghệ sĩ mới. Các phần cũ bên dưới là tài liệu lịch sử và có thể chưa phản ánh giao diện mới nhất.
 
 Giao diện trang chủ và hồ sơ nghệ sĩ công khai của **Dortis**, được dựng lại từ phần **HomePage** trong file `Capstone_SAW_FE.rar` mà người dùng cung cấp. Đây là dự án React + TypeScript + Vite riêng, **không** mang theo chức năng nghiệp vụ kho nông sản hay đăng nhập của SAW.
 

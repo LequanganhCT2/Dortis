@@ -215,3 +215,17 @@
  .dortis-admin-v4 .artist-catalog__filters{width:100%}
 }
 @media(prefers-reduced-motion:reduce){.dortis-admin-v4 .artist-catalog__card{transition:none}}
+
+/* Reusable artist website preview action lives on the real Portfolio card. */
+.dortis-admin-v4 .artist-catalog__select{border:0;background:transparent;
+  padding:0;width:100%;min-width:0;display:flex;flex-direction:column;align-items:stretch;
+  text-align:left;color:inherit;cursor:pointer;flex:1}
+.dortis-admin-v4 .artist-catalog__select:disabled{cursor:not-allowed;opacity:.55}
+.dortis-admin-v4 .artist-catalog__website{display:flex;align-items:center;
+  justify-content:space-between;gap:12px;text-decoration:none;
+  padding:13px 14px;border-top:1px solid #e0ebed;
+  background:#eaf5f5;color:#0d7180}
+.dortis-admin-v4 .artist-catalog__website:hover{background:#dff0f1}
+.dortis-admin-v4 .artist-catalog__website span{font-size:8px;font-weight:800;
+  color:#507982;letter-spacing:.04em}
+.dortis-admin-v4 .artist-catalog__website strong{font-size:10px;white-space:nowrap}

@@ -1,6 +1,7 @@
 import React,{useEffect,useState} from 'react'
 import AdminMediaEditor from '../../AdminMediaEditor'
 import AdminArtistProfiles from '../../AdminArtistProfiles'
+import LongNhatPortfolio from '../portfolio/long-nhat/LongNhatPortfolio'
 import {Brand} from '../../SiteHeader'
 import {MEDIA_GROUPS} from '../media/config/mediaGroups'
 import {portfolioCounts} from '../artists/domain/portfolioFilters'
@@ -80,6 +81,12 @@ function Dashboard({supabase,navigate}){
       <UiPanel title="Portfolio trong hệ thống"
         subtitle={loading?'Đang cập nhật dữ liệu...':error?'Không tải được dữ liệu Portfolio':total+' Portfolio · '+published+' đã xuất bản'}
         action={<UiButton variant="secondary" onClick={()=>navigate(ROUTES.artists)}>Tất cả</UiButton>}>
+        {rows.some(row=>row.slug==='long-nhat')&&<div className="ui-admin-v4-template-link">
+          <span>Website mẫu đang phát triển</span>
+          <button type="button" onClick={()=>navigate(ROUTES.portfolio)}>
+            Xem Website Long Nhật Singer ↗
+          </button>
+        </div>}
         {rows.length?<div className="ui-admin-v4-recent">{rows.slice(0,4).map(row=>
           <button type="button" key={row.id} onClick={()=>navigate(ROUTES.artists)}>
             <span className="ui-admin-v4-recent__avatar">{(row.name||'D').slice(0,1).toUpperCase()}</span>
@@ -101,8 +108,6 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
   const [routeValue,setRouteValue]=useState(()=>window.location.pathname+window.location.search)
   const [mobileNav,setMobileNav]=useState(false)
   useEffect(()=>{
-    if(window.location.pathname===ROUTES.portfolio)
-      clientNavigate(ROUTES.artists,{replace:true})
     const onRoute=()=>{setRouteValue(window.location.pathname+window.location.search);setMobileNav(false)}
     window.addEventListener(NAVIGATION_EVENT,onRoute)
     window.addEventListener('popstate',onRoute)
@@ -128,6 +133,7 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
     navigate(href)
   }
   const pageTitle=view==='overview'?'Dashboard':view==='artists'?'Hồ sơ nghệ sĩ':
+    view==='portfolio'?'Website Long Nhật Singer':
     MEDIA_GROUPS.find(item=>item.id===section)?.title||'Chỉnh sửa Website'
   return <div className="ui-admin-workspace dortis-admin-v4">
     {mobileNav&&<button type="button" className="ui-admin-v4-backdrop"
@@ -141,7 +147,8 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
         <SidebarLink href={ROUTES.admin} icon="dashboard" active={view==='overview'} onClick={navigateLink}>Dashboard</SidebarLink>
         <p className="ui-admin-v4-navlabel">KHÔNG GIAN QUẢN LÝ</p>
         <SidebarLink href={ROUTES.media+'?section=hero'} icon="website" active={view==='media'} onClick={navigateLink}>Website DORTIS</SidebarLink>
-        <SidebarLink href={ROUTES.artists} icon="artist" active={view==='artists'} onClick={navigateLink}>Hồ sơ nghệ sĩ</SidebarLink>
+        <SidebarLink href={ROUTES.artists} icon="artist"
+          active={view==='artists'||view==='portfolio'} onClick={navigateLink}>Hồ sơ nghệ sĩ</SidebarLink>
         {view==='media'&&<div className="ui-admin-v4-subnav" aria-label="Chỉnh sửa nhanh website">
           <p className="ui-admin-v4-navlabel">CHỈNH SỬA NHANH</p>
           {MEDIA_GROUPS.map(group=>{
@@ -150,9 +157,11 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
               onClick={navigateLink}>{group.title}</SidebarLink>
           })}
         </div>}
-        {view==='artists'&&<div className="ui-admin-v4-sidebar-hint">
-          <strong>Thư viện Portfolio</strong>
-          <span>Tất cả hồ sơ được quản lý tại đây, không tách riêng từng nghệ sĩ.</span>
+        {(view==='artists'||view==='portfolio')&&<div className="ui-admin-v4-subnav"
+          aria-label="Công cụ website nghệ sĩ">
+          <p className="ui-admin-v4-navlabel">WEBSITE NGHỆ SĨ</p>
+          <SidebarLink href={ROUTES.portfolio} active={view==='portfolio'}
+            onClick={navigateLink}>Long Nhật Singer · Bản xem trước</SidebarLink>
         </div>}
       </div>
       <div className="ui-admin-v4-sidebar__footer">
@@ -178,7 +187,11 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
         {view==='overview'?<Dashboard supabase={supabase} navigate={navigate}/>:
           view==='media'?<AdminMediaEditor user={user} supabase={supabase}
             initialSection={section} onSectionChange={()=>setRouteValue(window.location.pathname+window.location.search)}/>:
-          <AdminArtistProfiles user={user} supabase={supabase}/>}
+          view==='portfolio'?<LongNhatPortfolio supabase={supabase}
+            onBack={()=>navigate(ROUTES.artists)}
+            onEdit={()=>navigate(ROUTES.artists+'?select=long-nhat')}/>:
+          <AdminArtistProfiles user={user} supabase={supabase}
+            initialSlug={new URLSearchParams(url.search).get('select')||''}/>}
       </div>
     </div>
   </div>
