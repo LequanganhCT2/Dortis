@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { extractArtistPdf, renderPagesFromPdf, slugifyArtist, destroyArtistPdf } from './artistPdf'
+import { renderPagesFromPdf, slugifyArtist, destroyArtistPdf } from './artistPdf'
 import { designArtistPdf, identifyArtistLayout, normalizeArtistSection, ARTIST_LAYOUT_OPTIONS } from './artistLayouts'
 import { renderArtistPhotoCrops } from './artistPhotoCrops'
 import { renderPdfPageOriginal } from './artistPdfOriginal'
 import ArtistOriginalPages from './ArtistOriginalPages'
 import ArtistPortfolioSections from './ArtistPortfolioSections'
 import ArtistPortfolioCatalog from './features/artists/components/ArtistPortfolioCatalog'
-import { uploadArtistPdf, downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
+import ArtistPdfImportWizard from './features/artists/components/ArtistPdfImportWizard'
+import { downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
 import './admin-artists.css'
 
 const PAGE_BUCKET='dortis-artist-pages'
@@ -78,7 +79,7 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
     setSelected(profile.id)
     setForm({
       id:profile.id,name:profile.name,slug:profile.slug,role:profile.role,
-      render_mode:profile.render_mode||'original',
+      render_mode:profile.render_mode||'editorial',
       tagline:profile.tagline||'',intro:profile.intro||'',
       sections:Array.isArray(profile.sections)?profile.sections.map(cleanSection):[],
       status:profile.status,cover_image_url:profile.cover_image_url
@@ -123,7 +124,12 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
     if(!form||busy)return
     if(preview){setPreview(false);return}
     const source=sources[form.id]
-    if(!source){setError('Không có PDF nguồn để xem trước vùng ảnh.');return}
+    if(!source){
+      setPreviewData({...form,sections:form.sections.map(cleanSection)})
+      setPreview(true)
+      setNotice('Đang xem trước nội dung chữ đã duyệt. Ảnh sẽ được thêm riêng trong Mẫu Portfolio.')
+      return
+    }
     setBusy(true);setError('')
     let pdf
     const generated=[]
@@ -204,51 +210,6 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
   }
 
 
-
-  async function importFiles(files){
-    const list=Array.from(files||[])
-    if(!list.length)return
-    if(list.length>8){setError('Mỗi lượt nhập tối đa 8 PDF.');return}
-    setBusy(true);setError('');setNotice('')
-    let imported=0
-    const failed=[]
-    for(let i=0;i<list.length;i++){
-      const file=list[i]
-      let storageRef=null,createdId=null
-      try{
-        if(!/\.pdf$/i.test(file.name)||file.size>MAX_PDF)throw new Error('Chỉ nhận PDF tối đa 100 MB.')
-        setProgress('['+(i+1)+'/'+list.length+'] Đang trích xuất '+file.name+'...')
-        const parsed=await extractArtistPdf(file,(done,total)=>
-          setProgress('['+(i+1)+'/'+list.length+'] Đọc trang '+done+'/'+total+' · '+file.name))
-        const designed=designArtistPdf(parsed,file.name)
-        const slug=await uniqueSlug(slugifyArtist(designed.name))
-        const basePath='artist-pdfs/'+crypto.randomUUID()+'/'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-90)
-        setProgress('['+(i+1)+'/'+list.length+'] Đang lưu PDF riêng tư...')
-        const uploaded = await uploadArtistPdf(supabase,file,basePath,(done,total)=>
-          setProgress('['+(i+1)+'/'+list.length+'] Đã lưu phần '+done+'/'+total+' · '+file.name))
-        storageRef=uploaded.storageRef
-        const {data:created,error:insertError}=await supabase.from('artist_profiles')
-          .insert({name:designed.name,slug,role:designed.role,render_mode:'original',tagline:designed.tagline||'',
-            intro:designed.intro||'',sections:designed.sections,status:'draft',created_by:user.id})
-          .select('id').single()
-        if(insertError)throw insertError
-        createdId=created.id
-        const {error:sourceError}=await supabase.from('artist_profile_sources')
-          .insert({profile_id:createdId,original_filename:file.name,pdf_storage_path:storageRef,
-            page_count:parsed.page_count,uploaded_by:user.id})
-        if(sourceError)throw sourceError
-        imported++
-      }catch(e){
-        if(createdId)await supabase.from('artist_profiles').delete().eq('id',createdId)
-        if(storageRef)await removeArtistPdf(supabase,storageRef)
-        failed.push(file.name+': '+getError(e))
-      }
-    }
-    await load()
-    setBusy(false);setProgress('')
-    if(imported)setNotice('Đã tạo '+imported+' hồ sơ bản nháp. Hãy mở từng ca sĩ để kiểm tra nội dung và xuất bản.')
-    if(failed.length)setError(failed.slice(0,3).join(' • '))
-  }
 
   async function save(){
     if(!form||busy)return
@@ -421,20 +382,16 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
       {error&&<p className="admin-alert error" role="alert">{error}</p>}
       {notice&&<p className="admin-alert success" role="status">{notice}</p>}
       {busy&&<div className="artist-admin-progress" role="status"><span className="artist-admin-loader"/>{progress||'Đang xử lý...'}</div>}
+      <ArtistPdfImportWizard supabase={supabase} user={user}
+        onImported={async profile=>{
+          await load()
+          edit(profile)
+          window.requestAnimationFrame(()=>editorRef.current?.scrollIntoView({
+            behavior:'smooth',block:'start'
+          }))
+        }}/>
       <ArtistPortfolioCatalog profiles={profiles} loading={loadingProfiles}
         selected={selected} onSelect={openPortfolio} disabled={busy}/>
-      <section className="artist-admin-upload" id="artist-upload">
-        <div><span>01 / IMPORT PDF</span><h2>Nhập hồ sơ từ PDF.</h2>
-          <p>Chọn tối đa 8 PDF trong một lượt. Mỗi file là một ca sĩ/nghệ sĩ, có thể gồm nhiều trang. PDF gốc được lưu riêng tư; hồ sơ mới luôn ở trạng thái bản nháp.</p></div>
-        <label className={'artist-admin-file'+(busy?' is-disabled':'')}>
-          <input type="file" accept=".pdf,application/pdf" multiple disabled={busy} onChange={e=>{
-            const files=Array.from(e.target.files||[])
-            e.target.value=''
-            importFiles(files)
-          }}/>
-          <span>+ TẢI PDF NGHỆ SĨ</span><small>PDF · TỐI ĐA 100 MB / FILE · TỰ CHIA NHỎ</small>
-        </label>
-      </section>
       <section className="artist-admin-content">
         <div className="artist-admin-editor" id="artist-editor" ref={editorRef}>
           {!form?<div className="artist-admin-empty"><span>✳ DORTIS / PROFILE EDITOR</span><h2>Chọn một hồ sơ để chỉnh sửa.</h2><p>Thay tên nghệ sĩ, sửa nội dung trích xuất từng trang, kiểm duyệt rồi xuất bản để tạo website riêng.</p></div>:
@@ -442,7 +399,7 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
             <div className="artist-admin-editor-head"><div><span>02 / EDIT & REVIEW</span><h2>Biên tập hồ sơ</h2></div>
               <span className={'artist-admin-status '+form.status}>{form.status==='published'?'ĐÃ XUẤT BẢN':'BẢN NHÁP'}</span>
             </div>
-            <fieldset className="artist-admin-render-mode" disabled={busy||form.status==='published'}>
+            {sources[form.id]&&<fieldset className="artist-admin-render-mode" disabled={busy||form.status==='published'}>
               <legend>CHẾ ĐỘ HIỂN THỊ PORTFOLIO</legend>
               <label className={form.render_mode==='original'?'chosen':''}>
                 <input type="radio" name="portfolio-mode" value="original" checked={form.render_mode!=='editorial'}
@@ -455,7 +412,7 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
                 <span><strong>THIẾT KẾ WEB HTML/CSS</strong><small>Chữ và ảnh có thể chỉnh sửa riêng; bố cục có thể khác PDF gốc</small></span>
               </label>
               {form.status==='published'&&<p>Để thay đổi chế độ, hãy chuyển hồ sơ về bản nháp rồi xuất bản lại.</p>}
-            </fieldset>
+            </fieldset>}
             <div className="artist-admin-fields">
               <label>TÊN NGHỆ SĨ<input value={form.name} disabled={busy} onChange={e=>updateField('name',e.target.value)} maxLength={160}/></label>
               <label>VAI TRÒ<input value={form.role} disabled={busy} onChange={e=>updateField('role',e.target.value)} maxLength={120} placeholder="Ca sĩ, biên đạo, nghệ sĩ..."/></label>
@@ -464,11 +421,13 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
               <label className="span-2">GIỚI THIỆU<textarea value={form.intro} rows={5} disabled={busy} onChange={e=>updateField('intro',e.target.value)} maxLength={4000}/></label>
             </div>
             <div className="artist-admin-source">
-              <span>PDF NGUỒN</span><strong>{sources[form.id]?.original_filename||'Không có bản PDF gốc'}</strong>
-              <small>Chỉ Admin có quyền tải PDF gốc. Bản công khai không hiển thị file này.</small>
+              <span>NGUỒN DỮ LIỆU</span><strong>{sources[form.id]?.original_filename||'Nội dung đã trích xuất và kiểm tra từ PDF'}</strong>
+              <small>{sources[form.id]
+                ? 'Hồ sơ nhập theo quy trình cũ, có tệp nguồn trong Storage.'
+                : 'Hồ sơ mới chỉ lưu chữ và các mục. PDF gốc không được lưu trên Supabase.'}</small>
             </div>
             <div className="artist-admin-pages-heading">
-              <div><h3>{form.render_mode==='original'?'Trang PDF nguyên bản':'Thiết kế từng section HTML/CSS'}</h3>
+              <div><h3>{form.render_mode==='original'?'Trang PDF nguyên bản':'Các mục nội dung đã trích xuất'}</h3>
                 <p>{form.render_mode==='original'
                   ? form.sections.length+' trang sẽ được hiển thị đúng thứ tự và tỷ lệ gốc, không đổi vị trí các thành phần.'
                   : form.sections.length+' trang PDF tương ứng các section HTML/CSS có thể chỉnh sửa.'}</p></div>
@@ -523,7 +482,7 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
                     onChange={e=>updateSection(i,'metrics',toMetrics(e.target.value))}
                     placeholder={'4+ | Năm kinh nghiệm\n500+ | Show diễn'} />
                 </label>
-                <div className="artist-admin-region-head"><strong>VÙNG ẢNH RIÊNG TỪ PDF</strong>
+                {sources[form.id]&&<><div className="artist-admin-region-head"><strong>VÙNG ẢNH RIÊNG TỪ PDF</strong>
                   <button type="button" disabled={busy||(section.photos||[]).length>=8} onClick={()=>addPhoto(i)}>+ THÊM VÙNG ẢNH</button></div>
                 <p className="artist-admin-region-notice">Chỉ chọn vùng có ảnh nghệ sĩ hoặc tư liệu; KHÔNG chọn nguyên trang hay vùng chứa tiêu đề/chữ. Toạ độ theo tỷ lệ % của trang PDF.</p>
                 {(section.photos||[]).map((photo,j)=><div className="artist-admin-region-row" key={j}>
@@ -536,6 +495,7 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
                   <button type="button" aria-label={'Xóa vùng ảnh '+(j+1)} disabled={busy}
                     onClick={()=>removePhoto(i,j)}>×</button>
                 </div>)}
+                </>}
                 {Array.isArray(section.media)&&section.media.length>0&&<div className="artist-admin-extracted-media">
                   {section.media.map((image,j)=><img src={image.url} key={image.path||j}
                     alt={'Ảnh được tách riêng '+(j+1)} loading="lazy" />)}
@@ -553,12 +513,18 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
             </section>}
             <div className="artist-admin-editor-actions">
               <button type="button" className="artist-admin-save" disabled={busy} onClick={save}>LƯU NỘI DUNG</button>
-              {form.status==='draft'?<button type="button" className="artist-admin-publish" disabled={busy} onClick={publish}>XUẤT BẢN HỒ SƠ ↗</button>:
+              {form.status==='draft'?(sources[form.id]?
+                <button type="button" className="artist-admin-publish" disabled={busy} onClick={publish}>XUẤT BẢN HỒ SƠ ↗</button>:
+                <a className="artist-admin-publish" href={'/admin/templates?artist='+encodeURIComponent(form.slug)}>
+                  GÁN VÀO MẪU PORTFOLIO ↗
+                </a>):
                 <button type="button" className="artist-admin-unpublish" disabled={busy} onClick={unpublish}>CHUYỂN VỀ BẢN NHÁP</button>}
               {form.status==='published'&&<a href={'/artists/'+form.slug} target="_blank" rel="noreferrer">XEM TRANG CÔNG KHAI ↗</a>}
               <button type="button" className="artist-admin-delete" disabled={busy} onClick={()=>setDeleteTarget(profiles.find(x=>x.id===form.id))}>XÓA HỒ SƠ</button>
             </div>
-            <p className="artist-admin-warning">Chế độ Giữ nguyên PDF hiển thị ảnh từng trang để bảo toàn bố cục nhưng chữ trong ảnh không chỉnh sửa trực tiếp được. Chế độ HTML/CSS sử dụng nội dung từ PDF và vùng ảnh riêng. Một số trang PDF dùng ảnh raster có thể không tách được chữ tự động; hãy đối chiếu với PDF gốc và sửa nội dung trước khi xuất bản. Chỉ đăng nội dung bạn có quyền sử dụng. Chỉ những vùng ảnh riêng đã duyệt mới có đường dẫn công khai. Website không hiển thị ảnh chụp toàn trang PDF.</p>
+            <p className="artist-admin-warning">{sources[form.id]
+              ? 'Hồ sơ cũ còn PDF nguồn phục vụ xuất bản theo chế độ cũ. Bạn có thể chỉnh nội dung riêng và gán form.'
+              : 'Hồ sơ được nhập từ lớp chữ PDF, đã duyệt từng trang và chỉ lưu dữ liệu chữ. Không có PDF nguyên bản trên server. Ảnh riêng được tải trong phần Mẫu Portfolio; nếu PDF có chữ nằm trong ảnh, hãy nhập tay các mục thiếu trước khi gán form.'}</p>
           </div>}
         </div>
       </section>

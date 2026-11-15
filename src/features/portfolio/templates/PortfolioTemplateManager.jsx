@@ -1,6 +1,7 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
+import {hydrateInstanceFromArtist} from './sourceBinding'
 import './template-admin.css'
 
 /** Shared form => many artist instances. All data is protected by Admin RLS.
@@ -24,7 +25,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     const [t,i,p]=await Promise.all([
       supabase.from('artist_website_templates').select('*').order('created_at',{ascending:true}),
       supabase.from('artist_website_instances').select('*').order('updated_at',{ascending:false}),
-      supabase.from('artist_profiles').select('id,name,role,slug,status').order('name',{ascending:true})
+      supabase.from('artist_profiles').select('id,name,role,slug,status,sections').order('name',{ascending:true})
     ])
     if(t.error||i.error||p.error)throw (t.error||i.error||p.error)
     setTemplates(t.data||[]);setInstances(i.data||[]);setProfiles(p.data||[])
@@ -56,7 +57,8 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     setWorking(true);setError('');setNotice('')
     try{
       const {data,error:e}=await supabase.from('artist_website_instances')
-        .insert({template_id:t.id,profile_id:profileId,content:{sections:{},images:{}},
+        .insert({template_id:t.id,profile_id:profileId,
+          content:hydrateInstanceFromArtist(t,profiles.find(p=>p.id===profileId)),
           updated_by:user.id,status:'draft'}).select().single()
       if(e)throw e
       setInstances(current=>[data,...current]);setSelection(data.id)
@@ -133,8 +135,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>
         <h1>Thư viện mẫu Portfolio<span>.</span></h1>
-        <p>Một form, nhiều nghệ sĩ cùng kế thừa bố cục. Mỗi người tự có ảnh,
-          chữ và nội dung riêng. Không nhập ảnh từ PDF.</p></div>
+        <p>Đầu tiên nhập PDF ở Hồ sơ nghệ sĩ để lấy tên, chữ và các mục. Sau đó gán nghệ sĩ vào một form: hệ thống tự nạp các mục có sẵn, bạn chọn ảnh gốc từng vị trí.</p></div>
       <div><span className="pt-status">{templates.length} FORM · {instances.length} LƯỢT SỬ DỤNG</span>
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
@@ -210,12 +211,12 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
               <div className="pt-template__people">
-                <strong>NGHỆ SĨ ĐANG KẾ THỪA FORM</strong>
+                <strong>NGHỆ SĨ KẾ THỪA FORM · CHỮ TỪ HỒ SƠ PDF</strong>
                 {group.people.length?group.people.map(({artist,instance})=>
                   <button type="button" key={instance.id} className="pt-template__person"
                     onClick={()=>setSelection(instance.id)}>
                     <span className="pt-template__avatar">{artist.name.slice(0,1)}</span>
-                    <span><b>{artist.name}</b><small>Nội dung & ảnh riêng</small></span>
+                    <span><b>{artist.name}</b><small>{Array.isArray(artist.sections)?artist.sections.length:0} mục PDF · Ảnh riêng</small></span>
                     <em>Mở chỉnh sửa ↗</em>
                   </button>):<p className="pt-template__empty">Chưa có nghệ sĩ sử dụng.</p>}
               </div>
@@ -226,7 +227,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                     </select></label>
                     <button type="button" className="pt-btn" disabled={working}
                       onClick={()=>assign(group)}>+ Gán form</button></>:
-                  <span className="pt-template__empty">{profiles.length?'Mọi nghệ sĩ hiện có đã được gán form này.':'Chưa có hồ sơ nghệ sĩ.'}</span>}
+                  <span className="pt-template__empty">{profiles.length?'Mọi nghệ sĩ hiện có đã được gán form này.':'Chưa có hồ sơ nghệ sĩ. Hãy nhập PDF ở /admin/artists trước.'}</span>}
               </div>
             </div>
           </article>

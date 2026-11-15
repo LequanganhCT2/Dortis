@@ -53,12 +53,17 @@ function extractLines(content){
     return printable(parts.join(''))
   }).filter(Boolean).filter((line,index,array)=>index===0||line!==array[index-1])
 }
-function inferTitle(lines,pageNumber){
-  if(pageNumber===1) return {title:'Trang bìa',rest:lines}
-  const first=lines.find(line=>line.length<80)
-  if(!first) return {title:'Trang '+pageNumber,rest:lines}
-  const idx=lines.indexOf(first)
-  return {title:first,rest:lines.filter((_,i)=>i!==idx)}
+export function inferTitle(lines,pageNumber){
+  if(pageNumber===1)return {title:'Trang bìa',rest:lines}
+  const first=lines[0]
+  // Only the FIRST text line can be a heading. Older behavior selected any
+  // short line anywhere in the paragraph and silently removed real bio text.
+  // Very short tokens ("NĂM", "+4") are not safely identifiable as headings.
+  const isHeading=typeof first==='string'&&first.length>5&&first.length<=65&&
+    !/[.!?;,]$/.test(first)&&
+    (lines.length<=3||first===first.toUpperCase()||lines[1]?.length>first.length+15)
+  return isHeading?{title:first,rest:lines.slice(1)}:
+    {title:'Trang '+pageNumber,rest:lines}
 }
 export async function loadPdfBytes(file){
   if(!file||!/\.pdf$/i.test(file.name))throw new Error('Vui lòng chọn tệp PDF.')
@@ -93,11 +98,14 @@ export async function extractArtistPdf(file,onProgress=()=>{}){
       const lines=extractLines(content)
       const inferred=inferTitle(lines,index)
       const body=inferred.rest.join('\n').slice(0,14000)
+      // Keep raw text independent of the title guess. A heuristic headline
+      // may be wrong; reviewers need the unmodified evidence to compare.
+      const rawText=lines.join('\n').slice(0,14000)
       total+=body.length
       sections.push({
         page:index,
         title:inferred.title,
-        body,
+        body,rawText,
         kind:index===1?'cover':lines.length>2?'editorial':'visual',
         image_url:null,
         image_storage_path:null
@@ -107,7 +115,8 @@ export async function extractArtistPdf(file,onProgress=()=>{}){
     }
     return {
       name:artistNameFromFilename(file.name),
-      role:/biên đạo|dance/i.test(file.name)?'Biên đạo múa':'Ca sĩ',
+      // Never assume all Portfolio owners are singers; Admin selects the role.
+      role:'Nghệ sĩ',
       slug:slugifyArtist(artistNameFromFilename(file.name)),
       page_count:pdf.numPages,
       sections,

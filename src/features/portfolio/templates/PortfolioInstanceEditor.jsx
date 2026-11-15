@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useState} from 'react'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {normalizeBlueprint,setSectionField,setSlotImage} from './model'
+import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist} from './sourceBinding'
 import './template-site.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -12,8 +13,12 @@ const getSlot=(section,index)=>section.id+':'+index
 export default function PortfolioInstanceEditor({
   supabase,user,template,instance,profile,onBack,onSaved
 }){
-  const [content,setContent]=useState(()=>instance.content||{})
+  // Backfill existing assigned portfolios (including legacy empty drafts) from
+  // verified artist profile text, without ever replacing artist-specific photos.
+  const [content,setContent]=useState(()=>hydrateInstanceFromArtist(
+    template,profile,instance.content||{},true))
   const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
+  const [sourcePage,setSourcePage]=useState('')
   const [device,setDevice]=useState('desktop')
   const [urls,setUrls]=useState({})
   const [dirty,setDirty]=useState(false)
@@ -22,10 +27,16 @@ export default function PortfolioInstanceEditor({
   const [notice,setNotice]=useState('')
   const sections=useMemo(()=>normalizeBlueprint(template.blueprint).sections,[template.blueprint])
   const current=sections.find(s=>s.id===active)||sections[0]
+  const sourcePages=useMemo(()=>artistSourcePages(profile),[profile])
   useEffect(()=>{
-    setContent(instance.content||{})
+    const inferred=hydrateInstanceFromArtist(template,profile,instance.content||{},true)
+    const changed=JSON.stringify(inferred)!==JSON.stringify(instance.content||{})
+    setContent(inferred)
     setActive(normalizeBlueprint(template.blueprint).sections[0]?.id||'')
-    setDirty(false);setNotice('');setError('')
+    setSourcePage('')
+    setDirty(changed)
+    setNotice(changed?'Đã tự lấy chữ và các mục từ Hồ sơ nghệ sĩ. Nhấn Lưu thay đổi để lưu bản nháp.':'')
+    setError('')
   },[instance.id,template.id])
   useEffect(()=>{
     let alive=true
@@ -57,6 +68,17 @@ export default function PortfolioInstanceEditor({
   function changeText(field,value){
     setContent(prev=>setSectionField(prev,current.id,field,value))
     setDirty(true);setNotice('')
+  }
+  function importCurrentSource(){
+    if(!current||!sourcePage)return
+    const chosen=sourcePages.find(p=>p.page===Number(sourcePage))
+    if(!chosen)return
+    setContent(prev=>copySourceSection(prev,current.id,chosen))
+    setDirty(true);setNotice('Đã nạp mục từ hồ sơ PDF. Nhấn Lưu thay đổi để ghi nhận.')
+  }
+  function importAllBlank(){
+    setContent(prev=>hydrateInstanceFromArtist(template,profile,prev,true))
+    setDirty(true);setNotice('Các khu vực còn trống đã được điền từ hồ sơ nghệ sĩ. Ảnh riêng không thay đổi.')
   }
   async function save(){
     if(busy)return
@@ -115,8 +137,10 @@ export default function PortfolioInstanceEditor({
         <p className="pt-overline">DORTIS / PORTFOLIO INSTANCE</p>
         <h1>{profile.name}</h1>
         <p>Đang kế thừa <strong>{template.name}</strong> · phiên bản {template.version}.
-          Thay ảnh/chữ của người này không ảnh hưởng nghệ sĩ khác.</p></div>
+          Nội dung được liên kết với {sourcePages.length} mục của hồ sơ nghệ sĩ; ảnh do bạn tự tải lên, độc lập với PDF gốc.</p></div>
       <div className="pt-editor__actions">
+        <button type="button" className="pt-btn pt-btn--light" disabled={busy||!sourcePages.length}
+          onClick={importAllBlank}>↓ Lấy dữ liệu còn trống từ PDF</button>
         <span className="pt-status">BẢN NHÁP · ADMIN ONLY</span>
         <button type="button" className="pt-btn" disabled={!dirty||busy}
           onClick={save}>{busy?'Đang xử lý...':dirty?'Lưu thay đổi':'Đã lưu'}</button>
@@ -130,13 +154,33 @@ export default function PortfolioInstanceEditor({
         <div className="pt-editor__sections">
           {sections.map((section,i)=><button key={section.id} type="button"
             className={current?.id===section.id?'is-selected':''}
-            onClick={()=>setActive(section.id)}>
+            onClick={()=>{setActive(section.id);setSourcePage('')}}>
             <span>{String(i+1).padStart(2,'0')}</span>{section.label}
             <small>{section.slots} ảnh</small>
           </button>)}
         </div>
         {current&&<div className="pt-editor__form" key={current.id}>
           <h2>02 / Nội dung: {current.label}</h2>
+          <div className="pt-editor__source">
+            <span className="pt-overline">KẾ THỪA CÁC MỤC TỪ HỒ SƠ PDF</span>
+            <p>{sourcePages.length?sourcePages.length+' mục đã đọc và lưu ở Hồ sơ nghệ sĩ.':
+              'Hồ sơ nghệ sĩ chưa có mục chữ. Tải PDF từ trang Hồ sơ nghệ sĩ.'}</p>
+            <label>Chọn mục nguồn để điền vào phần này
+              <select value={sourcePage||String(currentOwn.sourcePage||'')} disabled={busy||!sourcePages.length}
+                onChange={e=>setSourcePage(e.target.value)}>
+                <option value="">Chọn trang PDF / mục nội dung</option>
+                {sourcePages.map(p=><option key={p.page} value={p.page}>
+                  Trang {String(p.page).padStart(2,'0')} · {p.title||'Chưa có tiêu đề'}
+                </option>)}
+              </select>
+            </label>
+            <button type="button" className="pt-btn pt-btn--light"
+              disabled={busy||!sourcePage} onClick={importCurrentSource}>
+              Lấy chữ của mục đã chọn ↓
+            </button>
+            {currentOwn.sourcePage&&<small>Đang dùng dữ liệu từ trang {currentOwn.sourcePage} ·
+              Bạn vẫn có thể sửa nội dung bên dưới mà không sửa PDF gốc.</small>}
+          </div>
           <label>Nhãn phụ
             <input type="text" value={currentOwn.eyebrow||''}
               onChange={e=>changeText('eyebrow',e.target.value)} placeholder="Ví dụ: Nghệ sĩ / Giới thiệu"/>

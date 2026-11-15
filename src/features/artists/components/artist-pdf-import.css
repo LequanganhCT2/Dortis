@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap');
+/* PDF ingestion: structured content only, no original PDF on the server.
+ * Sophisticated editorial upload, derived from stage-poster hierarchy while
+ * remaining independent of any particular artist's identity. */
+.pdf-import{--pdf-ink:#172132;--pdf-muted:#76838f;--pdf-gold:#c29a62;--pdf-line:#e4e9ee;
+  background:#fff;border:1px solid var(--pdf-line);border-radius:18px;overflow:hidden;
+  font-family:'Be Vietnam Pro',system-ui,sans-serif;color:var(--pdf-ink);margin-bottom:26px}
+.pdf-import *{box-sizing:border-box}
+.pdf-import__intro{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+  gap:20px;padding:clamp(24px,3vw,36px);background:linear-gradient(114deg,#0c1426,#1e2a40);
+  color:white}
+.pdf-import__intro>div:first-child{max-width:690px}
+.pdf-import__eyebrow{display:block;font-weight:800;font-size:10px;letter-spacing:.16em;
+  color:var(--pdf-gold);text-transform:uppercase}
+.pdf-import__intro h2{font:700 clamp(27px,3.4vw,46px)/1.12 'Barlow Condensed','Arial Narrow',sans-serif;
+  letter-spacing:-.018em;text-transform:uppercase;margin:12px 0}
+.pdf-import__intro h2 span{color:var(--pdf-gold)}
+.pdf-import__intro p{font:400 12px/1.85 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#bdcad5;margin:0}
+.pdf-import__steps{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pdf-import__steps>span{display:flex;align-items:center;gap:8px;border:1px solid #ffffff31;
+  color:#aab7c3;border-radius:40px;padding:9px 11px;font-size:9px;font-weight:700;white-space:nowrap}
+.pdf-import__steps>span b{font:700 11px 'Barlow Condensed',sans-serif;letter-spacing:.09em}
+.pdf-import__steps>span.is-active{color:#fff;border-color:#c29a62;background:#c29a6222}
+.pdf-import__drop{border:1px dashed #bed0da;background:repeating-linear-gradient(135deg,#f8fafb,
+  #f8fafb 16px,#f4f8fa 16px,#f4f8fa 32px);border-radius:13px;
+  min-height:270px;margin:24px;display:flex;align-items:center;justify-content:center;
+  text-align:center;flex-direction:column;gap:12px;padding:27px}
+.pdf-import__drop.is-dragging{border-color:var(--pdf-gold);background:#fffbf5}
+.pdf-import__drop-icon{width:65px;height:75px;border:1px solid #cad7e0;background:#fff;
+  border-radius:8px;position:relative;display:grid;place-items:center;
+  font:800 18px 'Barlow Condensed',sans-serif;letter-spacing:.1em;color:#1c3750}
+.pdf-import__drop-icon span{position:absolute;right:-11px;bottom:-7px;background:#c29a62;
+  color:#0e1929;border-radius:50%;display:grid;place-items:center;width:28px;height:28px;font-size:18px}
+.pdf-import__drop>strong{font:700 24px/1.25 'Barlow Condensed',sans-serif}
+.pdf-import__drop>p{font-size:11px;color:#7c8b9b;margin:0;line-height:1.7}
+.pdf-import__drop>button,.pdf-import__footer>div button{background:#142338;color:white;border:0;
+  padding:13px 20px;border-radius:8px;font:800 11px 'Be Vietnam Pro',system-ui,sans-serif;
+  cursor:pointer}
+.pdf-import__drop>button:hover,.pdf-import__footer>div button:hover{background:#2c4665}
+.pdf-import__working{min-height:240px;display:flex;align-items:center;justify-content:center;
+  gap:9px;flex-direction:column;padding:30px}
+.pdf-import__working h3{font:700 23px 'Barlow Condensed',sans-serif;margin:9px 0 0}
+.pdf-import__working p{font-size:11px;color:#738695}
+.pdf-import__spinner{width:36px;height:36px;border-radius:50%;border:3px solid #e6ecef;
+  border-top-color:#bc9867;animation:pdf-spin .85s linear infinite}
+@keyframes pdf-spin{to{transform:rotate(360deg)}}
+.pdf-import__error{margin:14px 21px;border:1px solid #eabec3;border-radius:7px;
+  background:#fff3f3;color:#a0454b;padding:11px 15px;font-size:11px;line-height:1.7}
+.pdf-import__review{padding:clamp(14px,2vw,25px);display:flex;flex-direction:column;gap:18px}
+.pdf-import__summary{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;flex-wrap:wrap}
+.pdf-import__summary-title h3{font:700 29px/1.15 'Barlow Condensed',sans-serif;
+  margin:8px 0;color:#182437}
+.pdf-import__summary-title p{color:#718596;font-size:11px;line-height:1.75;margin:0}
+.pdf-import__metrics{display:flex;gap:8px;flex-wrap:wrap}
+.pdf-import__metrics>div{min-width:82px;background:#f3f7f9;border:1px solid #e4ecf0;
+  padding:10px;border-radius:9px;display:flex;flex-direction:column;gap:3px}
+.pdf-import__metrics>div strong{font:700 24px 'Barlow Condensed',sans-serif;color:#17354c}
+.pdf-import__metrics>div span{font-size:9px;color:#768b99;font-weight:700}
+.pdf-import__metrics>div.is-warning{background:#fff5e9;border-color:#f2e0c1}
+.pdf-import__metrics>div.is-warning strong{color:#976a2d}
+.pdf-import__identity{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.pdf-import__identity label,.pdf-import__fields label{display:flex;flex-direction:column;gap:7px;
+  font-size:10px;font-weight:800;color:#596e7f;min-width:0}
+.pdf-import__identity input,.pdf-import__fields input:not([type=checkbox]),
+.pdf-import__fields select,.pdf-import__fields textarea{
+  width:100%;border:1px solid #d7e2e9;border-radius:8px;background:white;
+  color:#183146;outline:none;padding:11px 12px;font:500 11px/1.55 'Be Vietnam Pro',system-ui,sans-serif;
+  min-width:0}
+.pdf-import__fields input:focus,.pdf-import__fields select:focus,
+.pdf-import__fields textarea:focus,.pdf-import__identity input:focus{border-color:#ba975d;
+  box-shadow:0 0 0 3px #bd9a5e18}
+.pdf-import__workspace{display:grid;grid-template-columns:205px minmax(260px,.98fr) minmax(230px,1fr);
+  gap:12px;align-items:start;min-width:0}
+.pdf-import__pages{display:flex;flex-direction:column;gap:7px;padding:12px;
+  border:1px solid #e2eaf0;background:#f7fafb;border-radius:12px;min-width:0}
+.pdf-import__pages>.pdf-import__eyebrow{margin:4px 3px 9px;color:#72899c}
+.pdf-import__page{display:flex;align-items:center;flex-wrap:wrap;text-align:left;gap:8px;
+  border:1px solid transparent;background:transparent;color:#4b6375;border-radius:7px;
+  padding:11px 9px;cursor:pointer;min-width:0}
+.pdf-import__page>span{font:700 12px 'Barlow Condensed',sans-serif;color:#9bafbb}
+.pdf-import__page>strong{font:750 10px/1.5 'Be Vietnam Pro',system-ui,sans-serif;flex:1;
+  min-width:105px;overflow:hidden;text-overflow:ellipsis}
+.pdf-import__page>em{font:700 8px 'Be Vietnam Pro',system-ui,sans-serif;color:#c08b4d;
+  white-space:nowrap;font-style:normal}
+.pdf-import__page.is-current{background:white;border-color:#aabdc8}
+.pdf-import__page.is-done>em{color:#3d946d}
+.pdf-import__fields{border:1px solid #e2e9ee;border-radius:12px;padding:15px;
+  display:flex;flex-direction:column;gap:14px;min-width:0}
+.pdf-import__fields-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  align-items:center}
+.pdf-import__fields-head>span{font:800 10px 'Be Vietnam Pro',system-ui,sans-serif;color:#778b98}
+.pdf-import__fields-head>b{font:800 9px 'Be Vietnam Pro',system-ui,sans-serif;
+  padding:6px 8px;background:#e9f5ef;color:#378564;border-radius:6px}
+.pdf-import__fields-head>b.is-warning{color:#996a26;background:#fff0d9}
+.pdf-import__warning{background:#fffbf2;border:1px solid #efdfc4;border-radius:8px;
+  padding:9px 12px;color:#956827;font-size:10px;line-height:1.7;margin:0}
+.pdf-import__fields textarea{resize:vertical;max-height:380px;min-height:150px}
+.pdf-import__confirm{flex-direction:row!important;align-items:flex-start;gap:9px!important;
+  border:1px solid #dfe9eb;background:#f6faf9;border-radius:8px;padding:12px;font-size:10px!important;
+  line-height:1.7}
+.pdf-import__confirm input{accent-color:#167d69;margin-top:3px}
+.pdf-import__page-actions{display:flex;justify-content:space-between;gap:8px}
+.pdf-import__page-actions>button{background:#f1f6f8;border:1px solid #dbe5e9;
+  border-radius:7px;padding:9px 11px;cursor:pointer;font:750 10px 'Be Vietnam Pro',system-ui,sans-serif}
+.pdf-import__page-actions button:disabled{opacity:.4;cursor:not-allowed}
+.pdf-import__preview{border:1px solid #dfe6ea;background:#f3f5f6;border-radius:11px;padding:11px;
+  min-width:0}
+.pdf-import__preview>div{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;
+  padding:3px 1px 10px}
+.pdf-import__preview strong,.pdf-import__preview span{font-size:9px;color:#60798a}
+.pdf-import__preview iframe{display:block;width:100%;height:535px;border:0;border-radius:6px;
+  background:white}
+.pdf-import__preview>p{font-size:9px;line-height:1.7;color:#8497a3;margin:9px 0 0}
+.pdf-import__footer{border-top:1px solid #e6edf0;padding-top:15px;
+  display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.pdf-import__footer>div{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pdf-import__footer>div>span{font-size:10px;color:#718796;font-weight:700}
+.pdf-import__footer>div button:disabled{background:#d7e1e7;cursor:not-allowed}
+.pdf-import__cancel{background:none;border:0;color:#68818e;cursor:pointer;
+  font:750 10px 'Be Vietnam Pro',system-ui,sans-serif;padding:10px}
+.pdf-import__footnote{font-size:10px;color:#8998a3;line-height:1.8;margin:0}
+@media(max-width:1300px){
+ .pdf-import__workspace{grid-template-columns:180px minmax(250px,1fr)}
+ .pdf-import__preview{grid-column:2}
+ .pdf-import__preview iframe{height:410px}
+}
+@media(max-width:850px){
+ .pdf-import__workspace{grid-template-columns:1fr}
+ .pdf-import__pages{flex-direction:row;overflow:auto}
+ .pdf-import__pages>.pdf-import__eyebrow{display:none}
+ .pdf-import__page{flex:0 0 145px}
+ .pdf-import__preview{grid-column:auto}
+ .pdf-import__identity{grid-template-columns:1fr}
+ .pdf-import__preview iframe{height:440px}
+}
+@media(max-width:550px){
+ .pdf-import__intro{padding:20px}
+ .pdf-import__steps{gap:5px}
+ .pdf-import__steps>span{font-size:8px;padding:8px}
+ .pdf-import__drop{margin:14px;padding:20px;min-height:240px}
+ .pdf-import__review{padding:13px}
+ .pdf-import__summary-title h3{font-size:24px}
+ .pdf-import__metrics>div{min-width:70px}
+ .pdf-import__preview iframe{height:390px}
+ .pdf-import__footer>div{width:100%;justify-content:space-between}
+}
+@media(prefers-reduced-motion:reduce){.pdf-import__spinner{animation:none}}

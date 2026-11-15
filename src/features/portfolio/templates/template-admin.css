@@ -172,3 +172,43 @@
 @media(prefers-reduced-motion:reduce){
  .pt-btn,.pt-template__person{transition:none}
 }
+
+/* Shared premium Portfolio template studio, not tied to one artist. */
+.pt-manager__header h1,.pt-editor__head h1{
+  font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+  font-size:clamp(35px,4.5vw,64px);font-weight:800;line-height:.99;
+  text-transform:uppercase;letter-spacing:-.022em}
+.pt-template__visual{min-height:223px;position:relative;padding:25px;isolation:isolate}
+.pt-template__visual>span{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(34px,3.3vw,55px);font-weight:650;line-height:.95;letter-spacing:-.06em}
+.pt-template__visual--cinematic{
+  background:radial-gradient(ellipse at 92% 21%,#9a796a55,transparent 40%),
+  linear-gradient(120deg,#16191d,#2c3235 65%,#101618);color:#f5f0e7}
+.pt-template__visual--cinematic>span{
+  font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+  font-size:clamp(43px,5vw,71px);line-height:.82;letter-spacing:-.02em;
+  text-transform:uppercase;font-weight:800}
+.pt-template__visual--cinematic>small{color:#d7bc8c;opacity:1}
+.pt-template__visual--cinematic .pt-template__skeleton i{background:#d3bd9855}
+.pt-template__visual--editorial{background:linear-gradient(140deg,#efe9df,#dcd2be);color:#293540}
+.pt-template__visual--editorial .pt-template__skeleton i{background:#aa98827d}
+.pt-template__visual--minimal{background:linear-gradient(130deg,#f8fafb,#e3ebf0);color:#111f2b}
+.pt-template__visual--minimal>span{font-family:'Be Vietnam Pro',system-ui,sans-serif;
+  font-weight:800;line-height:1.08;letter-spacing:-.07em;
+  font-size:clamp(28px,3.2vw,42px)}
+.pt-editor__source{display:flex;flex-direction:column;gap:12px;border:1px solid #d5e6e8;
+  background:linear-gradient(145deg,#f0faf9,#f9fbfc);border-radius:10px;padding:13px}
+.pt-editor__source>p{font-size:10px;line-height:1.8;color:#728892;margin:0}
+.pt-editor__source>small{font-size:9px;line-height:1.7;color:#678b91}
+.pt-editor__source select{width:100%;padding:10px 11px;border:1px solid #d3e2e8;
+  border-radius:7px;background:#fff;color:#30485b;font:500 11px 'Be Vietnam Pro',system-ui,sans-serif}
+.pt-editor__source .pt-btn{width:100%;white-space:normal}
+.pt-editor__preview-head>div:first-child strong{letter-spacing:.13em}
+.pt-editor__form>h2,.pt-editor__sidebar>h2{font:800 15px 'Barlow Condensed','Arial Narrow',sans-serif;
+  text-transform:uppercase;letter-spacing:.06em}
+@media(max-width:650px){
+  .pt-template__visual{min-height:190px}
+  .pt-editor__source{padding:11px}
+  .pt-template__visual--cinematic>span{font-size:51px}
+}
