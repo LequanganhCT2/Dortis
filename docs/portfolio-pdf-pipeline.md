@@ -21,9 +21,9 @@ Hệ thống nhận nhiều lĩnh vực và số trang khác nhau (hiện giới
 
 ### Giới hạn chính xác và bảo toàn bằng chứng
 
-- `extractArtistPdf` sử dụng PDF.js để đọc **lớp chữ chọn được** của PDF, không dùng OCR.
-- Khi PDF là ảnh quét / chữ đã flatten, hàm không bịa nội dung. Trang được đánh dấu thiếu và phải nhập thủ công.
-- `sections.rawText` giữ văn bản theo từng trang, kể cả khi tiêu đề do thuật toán gợi ý sai.
+- `extractArtistPdf` sử dụng PDF.js để đọc **lớp chữ chọn được** của PDF trước. Sau đó OCR tiếng Việt + tiếng Anh bằng Tesseract.js chạy trong trình duyệt cho những trang không có chữ hoặc có ít chữ (tối đa 18 trang tự động/lượt). Admin có thể chạy OCR từng trang hoặc quét lại các trang chưa duyệt.
+- Khi PDF là ảnh quét / chữ đã flatten, OCR dùng ảnh render của PDF để gợi ý văn bản. Không đảm bảo chính xác 100%, nhất là tên riêng, dấu và số liệu. Nếu OCR không nhận diện được thì vẫn phải nhập thủ công.
+- `sections.rawText` giữ văn bản từ PDF theo từng trang. Trong màn hình duyệt có `pdfText`, `ocrText`, độ tin cậy và văn bản ghép có lọc trùng. Sửa tay không bị tự động ghi đè khi quét lại.
 - Cả tiêu đề gợi ý và loại bố cục đều phải được Admin đối chiếu. `reviewed=true` mới cho phép lưu.
 - Người dùng có thể đổi tên, vai trò, từng tiêu đề, từng phần text. Hệ thống không khẳng định OCR chính xác tuyệt đối.
 - Chỉ lưu `artist_profiles` (bản nháp) sau khi đã xác nhận mọi trang.
@@ -50,3 +50,13 @@ Hệ thống nhận nhiều lĩnh vực và số trang khác nhau (hiện giới
 6. Gán hồ sơ mới vào 2 form: chữ lấy đúng nguồn, không lẫn với người khác.
 7. Chỉnh form gốc không ghi đè ảnh, chữ từng instance.
 8. Hạn chế sản phẩm: cần kiểm thử tích hợp có session Admin thật, Safari/mobile và PDF scan nhiều trang.
+
+## OCR trong trình duyệt (bổ sung 15/11/2026)
+
+- Bộ nhận dạng: Tesseract.js 7, `createWorker(['vie','eng'])` dùng một worker cho nhiều trang. Ảnh trang render bằng PDF.js với giới hạn 3,5 triệu pixel để tránh tràn bộ nhớ.
+- Dữ liệu nhận dạng (traineddata) và engine WebAssembly có thể được tải từ CDN vào trình duyệt ở lần OCR đầu. PDF/trang ảnh **không được tải lên Supabase hay dịch vụ OCR**.
+- Chỉ tự OCR trang có dưới 120 ký tự trong text layer, tối đa 18 trang/lần nhập để không làm nghẽn máy; nếu thiếu thì Admin bấm "OCR lại các trang chưa duyệt".
+- Kết quả PDF và OCR được lưu riêng trong bộ nhớ của màn hình duyệt, giúp so sánh; sau khi xác nhận, database lưu nội dung đã duyệt và chỉ số xuất xứ/độ tin cậy OCR.
+- Nếu lỗi tải mô hình/không hỗ trợ WebAssembly, luồng nhập PDF vẫn hoạt động theo chế độ đọc lớp chữ và nhập tay. Không tự đoán chữ.
+- OCR chạy trong trình duyệt, có thể mất thêm thời gian và tiêu hao CPU/bộ nhớ tùy số trang/độ phân giải.
+- Các con số và tên người cần đối chiếu với PDF. Không thể cam kết không sai sót tuyệt đối; hệ thống bắt buộc xác nhận từng trang.

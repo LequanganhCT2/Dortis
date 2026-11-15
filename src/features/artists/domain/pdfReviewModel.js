@@ -57,6 +57,7 @@ export function buildReviewFromExtraction(parsed={}){
     if(suggested&&page>1)warnings.push('Tiêu đề là gợi ý, hãy đối chiếu với PDF.')
     return {
       page,layout:suggestPageLayout(page,title,body),title,eyebrow:'',body,
+      pdfText:body,ocrText:'',ocrConfidence:null,ocrStatus:'not_run',
       highlights:[],metrics:[],links:[],media:[],photos:[],
       kind:textFound?'extracted_text_review_required':'pdf_image_text_review_required',
       textFound,sourceChars:body.length,reviewed:false,warnings
@@ -66,7 +67,8 @@ export function buildReviewFromExtraction(parsed={}){
     tagline:'',intro:'',pages,pageCount:pages.length,
     quality:{imageOnly:pages.filter(p=>!p.textFound).length,
       lowText:pages.filter(p=>p.textFound&&p.sourceChars<40).length,
-      extracted:pages.filter(p=>p.textFound).length}}
+      extracted:pages.filter(p=>p.textFound).length,
+      ocrPages:0}}
 }
 export function normalizeReviewedPage(page){
   return {
@@ -74,6 +76,9 @@ export function normalizeReviewedPage(page){
     title:plain(page.title).slice(0,240),eyebrow:plain(page.eyebrow).slice(0,160),
     subtitle:'',body:String(page.body||'').slice(0,14000),
     kind:'reviewed_pdf_text',
+    extraction:{source:page.ocrStatus==='done'?'text_layer_and_local_ocr':'text_layer_or_manual',
+      ocrConfidence:page.ocrStatus==='done'?page.ocrConfidence:null,
+      reviewed:true},
     highlights:Array.isArray(page.highlights)?page.highlights.slice(0,24):[],
     metrics:Array.isArray(page.metrics)?page.metrics.slice(0,12):[],
     links:[],media:[],photos:[],
