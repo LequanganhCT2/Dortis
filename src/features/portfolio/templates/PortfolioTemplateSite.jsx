@@ -1,6 +1,8 @@
 import React,{useEffect,useRef} from 'react'
 import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
+import {getScene} from './sectionDesign'
+import SectionArtboard from './SectionArtboard'
 import './portfolio-effects.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -80,26 +82,40 @@ function MotionSection({section,index,styleName,urls,artistRole}){
     <span className="pt-fx__detail" aria-hidden="true"/>
   </section>
 }
-export default function PortfolioTemplateSite({template,instance,profile,urls={},device='desktop'}){
+export default function PortfolioTemplateSite({
+  template,instance,profile,urls={},device='desktop',
+  focusedSectionId='',editSectionId='',selectedLayer='',
+  onSelectLayer,onPatchLayer
+}){
   const view=resolveArtistPortfolio(template,instance,profile)
   const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
-  return <div className={'pt-device pt-device--'+device}>
+  const visibleSections=focusedSectionId?
+    view.sections.filter(s=>s.id===focusedSectionId):view.sections
+  return <div className={'pt-device pt-device--'+device+
+    (focusedSectionId?' pt-device--focused':'')}>
     <main className={'pt-site pt-site--'+view.style} aria-label={'Xem trước '+view.templateName}>
-      <header className="pt-site__nav">
+      {!focusedSectionId&&<header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
           {activeSections.slice(0,4).map(s=><a key={s.id}
             href={'#pt-'+s.id}>{s.title?s.title.slice(0,27):s.label}</a>)}
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
-      </header>
-      {view.sections.map((section,index)=><MotionSection
-        key={section.id} section={section} index={index}
-        styleName={view.style} urls={urls} artistRole={view.artistRole}/>)}
-      <footer className="pt-site__footer">
+      </header>}
+      {visibleSections.map((section,index)=>{
+        const scene=getScene(instance?.content||{},section,device)
+        return scene?<SectionArtboard key={section.id}
+          section={section} scene={scene} device={device} urls={urls}
+          editable={editSectionId===section.id}
+          selectedLayer={selectedLayer}
+          onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}/>:
+          <MotionSection key={section.id} section={section} index={index}
+            styleName={view.style} urls={urls} artistRole={view.artistRole}/>
+      })}
+      {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>
         <small>Hồ sơ nghệ sĩ / Bản xem trước nội bộ · Nội dung từ PDF đã xác nhận.</small>
-      </footer>
+      </footer>}
     </main>
   </div>
 }

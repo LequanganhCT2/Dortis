@@ -1,0 +1,59 @@
+/* Scoped layer inspector for individual artist-portfolio instances. */
+.pt-layer-panel{display:flex;flex-direction:column;gap:13px;border:1px solid #d6e2e6;
+  background:#fcfdfd;border-radius:12px;padding:14px;min-width:0}
+.pt-layer-panel *{box-sizing:border-box}
+.pt-layer-panel__head{display:flex;align-items:start;gap:8px;justify-content:space-between}
+.pt-layer-panel__head>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.pt-layer-panel__head strong{color:#213c4a;font:850 11px 'Be Vietnam Pro',sans-serif;
+  letter-spacing:.03em}
+.pt-layer-panel__head small{font:500 9px/1.6 'Be Vietnam Pro',sans-serif;color:#76909b}
+.pt-layer-panel__head>button,.pt-layer-panel__disable{border:1px solid #dce6e8;
+  background:#fff;color:#516e7c;font:700 9px 'Be Vietnam Pro',sans-serif;
+  padding:7px 8px;border-radius:6px;cursor:pointer}
+.pt-layer-panel label{display:flex;flex-direction:column;gap:6px;
+  color:#547183;font:750 10px/1.4 'Be Vietnam Pro',sans-serif}
+.pt-layer-panel select,.pt-layer-panel input:not([type=range]):not([type=color]),
+.pt-layer-panel textarea{width:100%;min-width:0;background:#fff;border:1px solid #d5e3e8;
+  border-radius:6px;padding:9px 8px;color:#263e4d;
+  font:550 10px/1.45 'Be Vietnam Pro',sans-serif;resize:vertical}
+.pt-layer-panel select:focus,.pt-layer-panel input:focus,
+.pt-layer-panel textarea:focus{outline:2px solid #76b7c4;outline-offset:1px}
+.pt-layer-panel__layer-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pt-layer-panel__layer-head strong{font:800 10px/1.4 'Be Vietnam Pro',sans-serif;
+  color:#27495c}
+.pt-layer-panel__layer-head>button{border:1px solid #b9d8de;background:#eaf6f7;
+  color:#0b6875;font:800 10px 'Be Vietnam Pro',sans-serif;
+  border-radius:6px;cursor:pointer;padding:8px 9px}
+.pt-layer-panel__layer-head>button:disabled{opacity:.4;cursor:not-allowed}
+.pt-layer-panel__layers{display:flex;flex-direction:column;gap:4px;max-height:300px;overflow:auto;
+  padding:5px;border-radius:8px;background:#eef3f5}
+.pt-layer-panel__layers button{display:flex;align-items:center;gap:9px;text-align:left;width:100%;
+  padding:9px 8px;background:#fff;border:1px solid transparent;border-radius:6px;cursor:pointer;
+  color:#334e60;font:700 10px 'Be Vietnam Pro',sans-serif}
+.pt-layer-panel__layers button.is-active{background:#dfeff0;border-color:#8ebec6}
+.pt-layer-panel__layers button.is-hidden{opacity:.45}
+.pt-layer-panel__layers button>span:nth-child(2){flex:1;display:flex;flex-direction:column;
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-layer-panel__layers button>span:nth-child(2) small{font:500 9px 'Be Vietnam Pro',sans-serif;
+  color:#8a9ca5;text-overflow:ellipsis;overflow:hidden}
+.pt-layer-panel__kind{display:grid;place-items:center;width:22px;height:22px;border-radius:5px;
+  background:#e6eef1;color:#3e7d91;font-size:11px}
+.pt-layer-panel__layers em{font:700 9px 'Be Vietnam Pro',sans-serif;font-style:normal;color:#8fa2aa}
+.pt-layer-panel__layers b{font-size:12px;color:#81a9ac}
+.pt-layer-panel__properties{display:flex;flex-direction:column;gap:13px;
+  border-top:1px solid #d8e7eb;padding-top:15px}
+.pt-layer-panel__properties-head{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  flex-wrap:wrap}
+.pt-layer-panel__properties-head>strong{font:800 14px 'Barlow Condensed',sans-serif;
+  letter-spacing:.04em;text-transform:uppercase}
+.pt-layer-panel__quick{display:flex;gap:5px}
+.pt-layer-panel__quick button{border:1px solid #c9d9df;background:#fff;color:#416576;
+  border-radius:5px;padding:6px 8px;font:800 10px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.pt-layer-panel__quick button.is-danger{color:#ab4450;border-color:#f0ced1}
+.pt-layer-panel__numbers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.pt-layer-panel__range input{width:100%;accent-color:#067e86}
+.pt-layer-panel__numbers .pt-layer-panel__color{padding:2px!important;min-height:34px}
+.pt-layer-panel__help{margin:0;font:500 10px/1.75 'Be Vietnam Pro',sans-serif;
+  color:#728995;background:#f1f5f6;border-radius:7px;padding:9px}
+.pt-layer-panel__disable{padding:12px;width:100%;font-size:10px}
+@media(max-width:680px){.pt-layer-panel{padding:11px}}

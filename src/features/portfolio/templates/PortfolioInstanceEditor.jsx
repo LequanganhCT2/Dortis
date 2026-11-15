@@ -3,6 +3,11 @@ import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {normalizeBlueprint,setSectionField,setSlotImage} from './model'
 import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist} from './sourceBinding'
 import {sourceBoundField,restoreLinkedFields} from './resolvedPortfolio'
+import SceneLayerInspector from './SceneLayerInspector'
+import {
+  getScene,enableSectionScene,resetSectionScene,disableSectionScene,
+  patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote
+} from './sectionDesign'
 import './template-site.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -23,6 +28,8 @@ export default function PortfolioInstanceEditor({
   const [sourceProfile,setSourceProfile]=useState(profile)
   const [refreshingProfile,setRefreshingProfile]=useState(false)
   const [device,setDevice]=useState('desktop')
+  const [visualEditing,setVisualEditing]=useState(false)
+  const [selectedLayer,setSelectedLayer]=useState('title')
   const [urls,setUrls]=useState({})
   const [dirty,setDirty]=useState(false)
   const [busy,setBusy]=useState(false)
@@ -38,6 +45,8 @@ export default function PortfolioInstanceEditor({
     setContent(inferred)
     setActive(normalizeBlueprint(template.blueprint).sections[0]?.id||'')
     setSourcePage('')
+    setVisualEditing(false)
+    setSelectedLayer('title')
     setDirty(changed)
     setNotice(changed?'Đã tự lấy chữ và các mục từ Hồ sơ nghệ sĩ. Nhấn Lưu thay đổi để lưu bản nháp.':'')
     setError('')
@@ -152,6 +161,54 @@ export default function PortfolioInstanceEditor({
     setDirty(true)
   }
   const currentOwn=content.sections?.[current?.id]||{}
+  const scene=current?getScene(content,current,device):null
+  function beginVisualEdit(){
+    if(!current)return
+    if(!getScene(content,current,device)){
+      setContent(prev=>enableSectionScene(prev,current))
+      setDirty(true)
+    }
+    setSelectedLayer('title')
+    setVisualEditing(true);setNotice('')
+  }
+  function patchLayer(layerId,patch){
+    if(!current)return
+    setContent(prev=>patchSceneLayer(prev,current,device,layerId,patch))
+    setDirty(true);setNotice('')
+  }
+  function changeBackground(background){
+    if(!current)return
+    setContent(prev=>patchSceneBackground(prev,current,device,background))
+    setDirty(true)
+  }
+  function addNote(){
+    if(!current)return
+    const id=crypto.randomUUID()
+    setContent(prev=>addSceneNote(prev,current,'Dòng chữ nghệ thuật',id))
+    setSelectedLayer('note:'+id);setDirty(true);setNotice('')
+  }
+  function editNote(id,text){
+    if(!current)return
+    setContent(prev=>patchSceneNote(prev,current,device,id,text))
+    setDirty(true)
+  }
+  function deleteNote(id){
+    if(!current)return
+    setContent(prev=>removeSceneNote(prev,current,id))
+    setSelectedLayer('title');setDirty(true)
+  }
+  function resetPage(){
+    if(!current)return
+    setContent(prev=>resetSectionScene(prev,current,device))
+    setDirty(true);setSelectedLayer('title')
+    setNotice('Đã đặt lại vị trí lớp ở '+(device==='mobile'?'mobile':'desktop')+'. Lưu để ghi nhận.')
+  }
+  function disablePageDesign(){
+    if(!current)return
+    setContent(prev=>disableSectionScene(prev,current.id))
+    setVisualEditing(false);setDirty(true)
+    setNotice('Đã trở về bố cục Form chung của khu vực này. Lưu để ghi nhận.')
+  }
   return <div className="pt-editor">
     <header className="pt-editor__head">
       <div><button type="button" onClick={onBack} className="pt-link">← Thư viện form</button>
@@ -180,7 +237,8 @@ export default function PortfolioInstanceEditor({
         <div className="pt-editor__sections">
           {sections.map((section,i)=><button key={section.id} type="button"
             className={current?.id===section.id?'is-selected':''}
-            onClick={()=>{setActive(section.id);setSourcePage('')}}>
+            onClick={()=>{setActive(section.id);setSourcePage('');
+              setVisualEditing(false);setSelectedLayer('title')}}>
             <span>{String(i+1).padStart(2,'0')}</span>{section.label}
             <small>{section.slots} ảnh</small>
           </button>)}
@@ -225,7 +283,23 @@ export default function PortfolioInstanceEditor({
             <textarea rows={4} value={sourceBoundField(sourceProfile,content,current.id,'body')}
               onChange={e=>changeText('body',e.target.value)} placeholder="Nội dung từ mục PDF đã duyệt..."/>
           </label>
-          <h3>03 / Ảnh của khu vực ({current.slots})</h3>
+          <div className="pt-editor__design-toggle">
+            <div><strong>03 / THIẾT KẾ LAYER RIÊNG</strong>
+              <small>Vẫn kế thừa Form {template.name}. Chỉ đổi cách dàn trang của {sourceProfile.name}.</small></div>
+            <button type="button" onClick={beginVisualEdit} className="pt-btn"
+              disabled={busy}>{scene?'✥ Chỉnh layer trực tiếp':'✦ Bắt đầu thiết kế trang'}</button>
+          </div>
+          {scene&&<SceneLayerInspector
+            scene={scene} section={current}
+            selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer}
+            onPatchLayer={patchLayer} onPatchBackground={changeBackground}
+            onAddNote={addNote} onPatchNote={editNote}
+            onRemoveNote={deleteNote} onReset={resetPage}
+            onDisable={disablePageDesign}
+            onChangeText={changeText}
+            textForField={field=>sourceBoundField(sourceProfile,content,current.id,field)||
+              (field==='title'&&current.id==='hero'?sourceProfile.name:'')}/>}
+          <h3>04 / Ảnh riêng của khu vực ({current.slots})</h3>
           <p>Chọn ảnh gốc từ máy, tối đa 4 MB/ảnh. Không cắt hoặc nhập ảnh từ PDF.</p>
           {current.slots===0&&<p className="pt-editor__hint">Khu vực chỉ có chữ. Có thể thêm vị trí ảnh khi chỉnh bố cục form gốc.</p>}
           <div className="pt-editor__uploads">
@@ -254,15 +328,27 @@ export default function PortfolioInstanceEditor({
       </aside>
       <section className="pt-editor__preview">
         <div className="pt-editor__preview-head"><div>
-          <strong>LIVE PREVIEW · 3D</strong><span> Hiển thị chữ từ Hồ sơ nghệ sĩ · Ảnh gốc tự tải · 3D nhẹ trên desktop</span>
-        </div><div className="pt-segment">
+          <strong>{visualEditing?'ART STUDIO · KÉO THẢ LAYER':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
+          <span> {visualEditing?'Đang chỉnh riêng trang '+current.label+' · thay đổi chỉ lưu vào nghệ sĩ này':
+            'Xem toàn bộ Form với nội dung và ảnh riêng của nghệ sĩ'}</span>
+        </div><div className="pt-editor__preview-controls">
+          <button type="button" className={'pt-editor__view-button'+(visualEditing?' is-active':'')}
+            disabled={busy} onClick={()=>visualEditing?setVisualEditing(false):beginVisualEdit()}>
+            {visualEditing?'◧ Xem toàn bộ bản hiện tại':'✥ Chỉnh trực tiếp trang này'}
+          </button>
+          <div className="pt-segment">
           <button type="button" className={device==='desktop'?'is-active':''}
             onClick={()=>setDevice('desktop')}>Desktop</button>
           <button type="button" className={device==='mobile'?'is-active':''}
-            onClick={()=>setDevice('mobile')}>Mobile</button>
-        </div></div>
+            onClick={()=>{setDevice('mobile');setSelectedLayer('title')}}>Mobile</button>
+        </div></div></div>
         <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
-          urls={urls} device={device}/>
+          urls={urls} device={device}
+          focusedSectionId={visualEditing?current.id:''}
+          editSectionId={visualEditing?current.id:''}
+          selectedLayer={selectedLayer}
+          onSelectLayer={setSelectedLayer}
+          onPatchLayer={patchLayer}/>
       </section>
     </div>
   </div>

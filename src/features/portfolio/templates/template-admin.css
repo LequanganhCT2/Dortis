@@ -235,3 +235,30 @@
   .pt-blueprint__row>label:nth-child(5){grid-column:2}
   .pt-blueprint__row .pt-blueprint__moves{grid-column:3}
 }
+
+/* Artist-only artboard panel: reusable template structure remains unchanged. */
+.pt-editor__design-toggle{display:flex;flex-direction:column;gap:11px;padding:14px;
+  border:1px solid #cbdcdd;background:linear-gradient(145deg,#f5faf8,#e8f4f4);
+  border-radius:10px}
+.pt-editor__design-toggle>div{display:flex;flex-direction:column;gap:5px}
+.pt-editor__design-toggle strong{font:850 11px/1.4 'Be Vietnam Pro',sans-serif;
+  color:#205264;letter-spacing:.07em}
+.pt-editor__design-toggle small{font:500 10px/1.7 'Be Vietnam Pro',sans-serif;
+  color:#63818e}
+.pt-editor__design-toggle button{width:100%;font-size:11px}
+.pt-editor__preview-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.pt-editor__view-button{display:inline-flex;align-items:center;justify-content:center;
+  gap:6px;border:1px solid #adc9d0;background:#fff;color:#305466;
+  border-radius:8px;padding:10px 12px;font:800 10px 'Be Vietnam Pro',sans-serif;
+  cursor:pointer}
+.pt-editor__view-button.is-active{background:#163c4a;color:#fff;border-color:#163c4a}
+.pt-editor__view-button:disabled{opacity:.5;cursor:not-allowed}
+.pt-editor .pt-device--focused{border:1px solid #9fc1c6;box-shadow:0 14px 36px #122f3820;
+  max-height:none;overflow:visible}
+.pt-editor .pt-device--focused .pt-site{min-height:0}
+.pt-editor .pt-device--focused.pt-device--mobile{max-width:390px;margin:0 auto}
+.pt-editor .pt-device--focused.pt-device--desktop{width:100%}
+.pt-editor__preview:has(.pt-device--focused){position:sticky;top:85px}
+@media(max-width:1000px){
+  .pt-editor__preview:has(.pt-device--focused){position:static}
+}
