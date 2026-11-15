@@ -10,8 +10,15 @@ create table if not exists public.artist_website_templates (
   version integer not null default 1 check(version>=1),
   status text not null default 'active' check(status in ('active','archived')),
   created_by uuid references auth.users(id),
+  created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+-- Existing projects may already have the table from a previous migration.
+alter table public.artist_website_templates
+  add column if not exists created_at timestamptz not null default now();
+create index if not exists artist_website_templates_created_at_idx
+  on public.artist_website_templates(created_at asc, id asc);
+
 create table if not exists public.artist_website_instances (
   id uuid primary key default gen_random_uuid(),
   template_id uuid not null references public.artist_website_templates(id) on delete restrict,
