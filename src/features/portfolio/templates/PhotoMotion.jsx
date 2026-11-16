@@ -106,7 +106,7 @@ export default function PhotoMotion({
             dur="7s" repeatCount="indefinite"/>
         </feDisplacementMap>
       </filter></defs>
-    </svg>
+    </svg>}
     <div className="pt-photo-motion__hover">
       <div className="pt-photo-motion__animated">
         {children}
