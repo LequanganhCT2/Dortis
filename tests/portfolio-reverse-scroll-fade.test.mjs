@@ -74,15 +74,13 @@ test('Reversing direction at the exact same scroll position cannot jump',()=>{
   assert.deepEqual(descending,ascending)
 })
 
-test('One geometry-driven RAF updates both masks and directions, not a timer',()=>{
+test('Reverse scrolling now switches whole sections, not per-pixel animation poses',()=>{
   const canvas=file('ScrollTextAtmosphere.jsx')
   const css=file('scroll-text-atmosphere.css')
-  assert.match(canvas,/scrollTextPose\(progress,kind,envelope\)/)
-  assert.match(canvas,/scrollImagePose\(progress,envelope\)/)
-  assert.match(canvas,/--pt-scroll-clip-top/)
-  assert.match(canvas,/--pt-scroll-clip-bottom/)
-  assert.match(css,/clip-path:inset\(var\(--pt-scroll-clip-top,0%\) 0 var\(--pt-scroll-clip-bottom,0%\) 0\)/)
-  assert.match(canvas,/requestAnimationFrame\(update\)/)
-  assert.match(css,/pt-site--motion-paused/)
+  assert.match(canvas,/blockTravelDirection\(lastScroll,next,direction\)/)
+  assert.match(canvas,/new IntersectionObserver\(/)
+  assert.match(canvas,/section\.dataset\.ptBlockState=state/)
+  assert.match(css,/@keyframes pt-block-enter-top/)
+  assert.match(css,/@keyframes pt-block-exit-bottom/)
   assert.match(css,/prefers-reduced-motion:reduce/)
 })

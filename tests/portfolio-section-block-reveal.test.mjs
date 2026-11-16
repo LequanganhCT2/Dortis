@@ -1,0 +1,86 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+import {
+  classifyPortfolioBlock,blockTravelDirection,blockAnimationName
+} from '../src/features/portfolio/templates/blockRevealState.js'
+
+const source=name=>readFileSync(new URL('../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
+
+test('Whole sections switch visibility at the viewport boundary, not per scroll pixel',()=>{
+  const viewport=[0,800]
+  assert.equal(classifyPortfolioBlock({top:900,bottom:1600},...viewport),'hidden-bottom')
+  assert.equal(classifyPortfolioBlock({top:710,bottom:1200},...viewport),'hidden-bottom')
+  assert.equal(classifyPortfolioBlock({top:620,bottom:1250},...viewport),'visible')
+  assert.equal(classifyPortfolioBlock({top:300,bottom:900},...viewport),'visible')
+  assert.equal(classifyPortfolioBlock({top:-390,bottom:130},...viewport),'visible')
+  assert.equal(classifyPortfolioBlock({top:-750,bottom:55},...viewport),'hidden-top')
+  assert.equal(classifyPortfolioBlock({top:5,bottom:600},700,700),'visible')
+})
+test('Reverse wheel direction gives matching entry and exit animations',()=>{
+  assert.equal(blockTravelDirection(200,320),'down')
+  assert.equal(blockTravelDirection(320,190),'up')
+  assert.equal(blockTravelDirection(190,190.2,'up'),'up')
+  assert.equal(blockAnimationName('visible','down'),'pt-block-enter-bottom')
+  assert.equal(blockAnimationName('visible','up'),'pt-block-enter-top')
+  assert.equal(blockAnimationName('hidden-top','down'),'pt-block-exit-top')
+  assert.equal(blockAnimationName('hidden-bottom','up'),'pt-block-exit-bottom')
+})
+test('Only one observer controls every section, with no per-letter progress loop',()=>{
+  const component=source('ScrollTextAtmosphere.jsx')
+  assert.equal((component.match(/new IntersectionObserver\(/g)||[]).length,1)
+  assert.match(component,/root\.querySelectorAll\(':scope > section\[id\^="pt-"\]'\)/)
+  assert.match(component,/sections\.forEach\(section=>observer\.observe\(section\)\)/)
+  assert.match(component,/function mark\(section,state,entryDirection=direction\)/)
+  assert.match(component,/if\(section\.dataset\.ptBlockState===state\)return/)
+  assert.match(component,/root\.classList\.add\('pt-site--block-reveal-active'\)/)
+  assert.match(component,/blockTravelDirection\(lastScroll,next,direction\)/)
+  assert.match(component,/root:scrollingHost/)
+  assert.doesNotMatch(component,/scrollRevealEnvelope|scrollTextPose|scrollImagePose/)
+  assert.doesNotMatch(component,/for\(const element of fields\)/)
+})
+test('Block bloom is synchronized across entire text and media groups',()=>{
+  const css=source('scroll-text-atmosphere.css')
+  assert.match(css,/\.pt-ribbon__copy/)
+  assert.match(css,/\.pt-ribbon__media/)
+  assert.match(css,/\.pt-site__copy/)
+  assert.match(css,/\.pt-site__media/)
+  assert.match(css,/\.pt-artboard__layer/)
+  assert.match(css,/animation-duration:840ms/)
+  assert.match(css,/@keyframes pt-block-enter-bottom/)
+  assert.match(css,/@keyframes pt-block-enter-top/)
+  assert.match(css,/scale:1\.025/)
+  assert.match(css,/animation-delay:70ms/)
+  assert.doesNotMatch(css,/opacity:var\(--pt-scroll-alpha/)
+  assert.doesNotMatch(css,/--pt-media-alpha/)
+})
+test('Unified continuous silk and sticky navigation are never animated away',()=>{
+  const site=source('PortfolioTemplateSite.jsx')
+  const css=source('scroll-text-atmosphere.css')
+  assert.equal((site.match(/<ScrollTextAtmosphere /g)||[]).length,1)
+  assert.match(site,/<SilkStageBackdrop layout=/)
+  assert.match(site,/pt-site__nav pt-site__nav--sticky/)
+  assert.doesNotMatch(css,/section\[data-pt-block-state\]\{opacity/)
+  assert.doesNotMatch(css,/pt-site__nav.*animation-name:pt-block/)
+  assert.match(css,/pointer-events:none!important/)
+})
+test('Edit mode and reduced-motion show complete content without animations',()=>{
+  const css=source('scroll-text-atmosphere.css')
+  const observer=source('ScrollTextAtmosphere.jsx')
+  assert.match(observer,/if\(!root\|\|paused\|\|!canvas\)return undefined/)
+  assert.match(observer,/if\(motion\?\.matches\)return undefined/)
+  assert.match(observer,/delete section\.dataset\.ptBlockState/)
+  assert.match(css,/pt-site--motion-paused/)
+  assert.match(css,/\.pt-scene-section\.is-editing/)
+  assert.match(css,/prefers-reduced-motion:reduce/)
+  assert.match(css,/animation:none!important/)
+})
+test('Gold highlight stays lightweight: one viewport-sized Canvas for each Portfolio',()=>{
+  const component=source('ScrollTextAtmosphere.jsx')
+  assert.match(component,/scrollCanvasBounds\(rootRect,hostRect,window\.innerHeight\)/)
+  assert.match(component,/getContext\('2d',\{alpha:true\}\)/)
+  assert.match(component,/requestAnimationFrame\(drawGoldBurst\)/)
+  assert.match(component,/if\(age>930\)/)
+  assert.match(component,/bursts\.clear\(\)/)
+  assert.match(component,/cancelAnimationFrame\(burstFrame\)/)
+})
