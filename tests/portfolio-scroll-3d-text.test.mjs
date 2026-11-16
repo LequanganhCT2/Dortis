@@ -77,7 +77,7 @@ test('3D headings remain semantic text and existing typography does not get repl
   assert.match(styles,/rotateX\(var\(--pt-scroll-tilt,0deg\)\)/)
   assert.match(styles,/translate3d\(0,var\(--pt-scroll-rise,0px\),var\(--pt-scroll-depth,0px\)\)/)
   assert.match(styles,/opacity:var\(--pt-scroll-alpha,1\)/)
-  assert.match(styles,/clip-path:inset\(0 0 var\(--pt-scroll-clip,0%\) 0\)/)
+  assert.match(styles,/clip-path:inset\(var\(--pt-scroll-clip-top,0%\) 0 var\(--pt-scroll-clip-bottom,0%\) 0\)/)
   assert.match(styles,/pointer-events:none!important/)
   assert.match(styles,/prefers-reduced-motion:reduce/)
   assert.match(styles,/pt-site--motion-paused/)

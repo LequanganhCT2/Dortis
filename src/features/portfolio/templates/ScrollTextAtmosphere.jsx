@@ -99,10 +99,11 @@ export default function ScrollTextAtmosphere({
       for(const {element,kind,rect} of measurements){
         const order=kind==='image'?Number(element.dataset.ptRevealOrder)||0:
           kind==='title'?1:kind==='body'?2:0
-        const {progress}=scrollRevealEnvelope(
+        const envelope=scrollRevealEnvelope(
           rect.top,rect.bottom,bounds.top,bounds.bottom,kind,order)
+        const {progress}=envelope
         if(kind==='image'){
-          const pose=scrollImagePose(progress)
+          const pose=scrollImagePose(progress,envelope)
           element.style.setProperty('--pt-media-alpha',String(pose.alpha))
           element.style.setProperty('--pt-media-scale',pose.scale)
           element.style.setProperty('--pt-media-rise',pose.rise)
@@ -111,12 +112,14 @@ export default function ScrollTextAtmosphere({
           element.style.setProperty('--pt-media-glow',String(pose.glow))
           continue
         }
-        const pose=scrollTextPose(progress,kind)
+        const pose=scrollTextPose(progress,kind,envelope)
         element.style.setProperty('--pt-scroll-alpha',String(pose.alpha))
         element.style.setProperty('--pt-scroll-rise',pose.rise)
         element.style.setProperty('--pt-scroll-tilt',pose.tilt)
         element.style.setProperty('--pt-scroll-depth',pose.depth)
         element.style.setProperty('--pt-scroll-clip',pose.clip)
+        element.style.setProperty('--pt-scroll-clip-top',pose.clipTop)
+        element.style.setProperty('--pt-scroll-clip-bottom',pose.clipBottom)
         element.style.setProperty('--pt-scroll-glow',String(pose.glow))
         if(kind==='title'&&progress>.10&&rect.bottom>bounds.top&&rect.top<bounds.bottom){
           decorations.push({
@@ -160,7 +163,8 @@ export default function ScrollTextAtmosphere({
       root.classList.remove('pt-site--scroll-text-active')
       for(const field of fields){
         for(const property of ['--pt-scroll-alpha','--pt-scroll-rise','--pt-scroll-tilt',
-          '--pt-scroll-depth','--pt-scroll-clip','--pt-scroll-glow',
+          '--pt-scroll-depth','--pt-scroll-clip','--pt-scroll-clip-top',
+          '--pt-scroll-clip-bottom','--pt-scroll-glow',
           '--pt-media-alpha','--pt-media-scale','--pt-media-rise',
           '--pt-media-tilt','--pt-media-blur','--pt-media-glow']){
           field.style.removeProperty(property)

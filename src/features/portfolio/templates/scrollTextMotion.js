@@ -15,16 +15,32 @@ export function scrollRevealProgress(elementTop,viewportTop,viewportBottom){
   const finished=top+range*.30
   return clamp01((starts-elementTop)/Math.max(1,starts-finished))
 }
-export function scrollTextPose(progress,kind='body'){
+/**
+ * Both viewport edges have their own fade/translation channels.
+ *
+ * Scrolling down: bottom enter (+Y) -> visible -> top exit (-Y).
+ * Scrolling up:   top enter (-Y)    -> visible -> bottom exit (+Y).
+ *
+ * This is derived only from the DOM position. No sticky direction flag is
+ * needed, so wheel reversals in the middle of an animation never jump.
+ */
+export function scrollEdgeOffsets(envelope={enter:1,exit:1}){
+  const bottom=1-clamp01(envelope.enter)
+  const top=1-clamp01(envelope.exit)
+  return {bottom,top,travel:bottom-top}
+}
+export function scrollTextPose(progress,kind='body',envelope={enter:progress,exit:1}){
   const p=clamp01(progress)
   const weight=kind==='title'?1:kind==='eyebrow'?.68:.85
-  const unseen=1-p
+  const {bottom,top,travel}=scrollEdgeOffsets(envelope)
   return {
     alpha:Number(Math.pow(p,.82).toFixed(4)),
-    rise:(unseen*38*weight).toFixed(2)+'px',
-    tilt:(unseen*-13*weight).toFixed(2)+'deg',
-    depth:(unseen*-48*weight).toFixed(2)+'px',
-    clip:(unseen*76).toFixed(2)+'%',
+    rise:(travel*38*weight).toFixed(2)+'px',
+    tilt:(travel*-13*weight).toFixed(2)+'deg',
+    depth:((bottom+top)*-48*weight).toFixed(2)+'px',
+    clip:(Math.max(bottom,top)*76).toFixed(2)+'%',
+    clipTop:(top*76).toFixed(2)+'%',
+    clipBottom:(bottom*76).toFixed(2)+'%',
     glow:Number((Math.sin(p*Math.PI)*.46).toFixed(4))
   }
 }
@@ -49,15 +65,19 @@ export function scrollRevealEnvelope(elementTop,elementBottom,viewportTop,viewpo
   const exit=clamp01((Number(elementBottom)-exitEnd)/Math.max(1,exitStart-exitEnd))
   return {progress:Number((enter*exit).toFixed(4)),enter,exit}
 }
-export function scrollImagePose(progress){
+export function scrollImagePose(progress,envelope={enter:progress,exit:1}){
   const p=clamp01(progress)
+  const {bottom,top,travel}=scrollEdgeOffsets(envelope)
   const eased=1-Math.pow(1-p,3)
   const bloom=Math.sin(Math.PI*p)
+  // The top edge is the reverse of bottom entrance: the photo comes in from
+  // above, slightly enlarged, rather than shrinking upward from below.
+  const base=top>bottom?1+.12*top:.86+.14*eased
   return {
     alpha:Number(Math.pow(p,.86).toFixed(4)),
-    scale:(.86+.14*eased+.035*bloom*bloom).toFixed(4),
-    rise:((1-p)*66).toFixed(2)+'px',
-    tilt:((1-p)*-9).toFixed(2)+'deg',
+    scale:(base+.035*bloom*bloom).toFixed(4),
+    rise:(travel*66).toFixed(2)+'px',
+    tilt:(travel*-9).toFixed(2)+'deg',
     blur:((1-p)*4.2).toFixed(2)+'px',
     glow:Number((bloom*.36).toFixed(4))
   }

@@ -24,7 +24,9 @@
     perspective(960px)
     translate3d(0,var(--pt-scroll-rise,0px),var(--pt-scroll-depth,0px))
     rotateX(var(--pt-scroll-tilt,0deg));
-  clip-path:inset(0 0 var(--pt-scroll-clip,0%) 0);
+  /* At the top edge mask from above, at the bottom edge mask from below.
+     Reversing the scroll direction reverses this reveal without jumps. */
+  clip-path:inset(var(--pt-scroll-clip-top,0%) 0 var(--pt-scroll-clip-bottom,0%) 0);
   transform-origin:50% 85%;
   transition:opacity .12s linear,transform .16s ease-out,clip-path .12s linear;
   /* Retain existing letter styling. A glow appears only at the reveal edge. */
