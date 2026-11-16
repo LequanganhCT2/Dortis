@@ -4,6 +4,7 @@ import {
 } from './sectionDesign.js'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
+import {isCutoutArtwork} from './imagePresentation'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
@@ -106,6 +107,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     aria-label={editable?'Kéo layer '+label+', dùng phím mũi tên để di chuyển':undefined}
     aria-pressed={editable?Boolean(selected):undefined}
     className={'pt-artboard__layer '+(type==='image'?'is-image':'is-text')+
+      (type==='image'&&isCutoutArtwork(image)?' is-cutout':'')+
       (selected&&editable?' is-selected':'')+
       (editable?' is-editable':'')+
       (layer.hidden?' is-hidden':'')}
@@ -121,7 +123,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           filter:layer.blur?'blur('+layer.blur+'px)':'none'
         }}>
           {url?<img src={url} alt={image?.alt||label}
-            loading="lazy" decoding="async" style={{objectFit:layer.fit}}/>:
+            loading="lazy" decoding="async" style={{objectFit:isCutoutArtwork(image)?'contain':layer.fit}}/>:
             <div className="pt-artboard__empty">+<small>{label}<br/>Tải ảnh ở bảng bên trái</small></div>}
         </div>
       : <div className="pt-artboard__text" style={textStyle}>

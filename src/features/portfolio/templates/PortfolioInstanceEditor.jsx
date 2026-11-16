@@ -5,6 +5,7 @@ import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sour
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
+import {isCutoutArtwork} from './imagePresentation'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
   SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
@@ -196,6 +197,15 @@ export default function PortfolioInstanceEditor({
     const slot=getSlot(section,index),previous=content.images?.[slot]
     if(!previous?.path)return
     setContent(v=>setSlotImage(v,slot,{...previous,alt:text.slice(0,240)}))
+    setDirty(true)
+  }
+  function changeCutout(section,index,value){
+    const slot=getSlot(section,index)
+    if(!content.images?.[slot]?.path)return
+    setContent(prev=>{
+      const image=prev.images?.[slot]
+      return image?.path?setSlotImage(prev,slot,{...image,cutout:value}):prev
+    })
     setDirty(true)
   }
   const currentOwn=content.sections?.[current?.id]||{}
@@ -487,8 +497,15 @@ export default function PortfolioInstanceEditor({
                       e.target.value=''
                     }}/>
                 </label>
-                {image?.path&&<input type="text" value={image.alt||''}
-                  placeholder="Mô tả ảnh (alt text)" onChange={e=>changeAlt(current,index,e.target.value)}/>}
+                {image?.path&&<>
+                  <input type="text" value={image.alt||''}
+                    placeholder="Mô tả ảnh (alt text)" onChange={e=>changeAlt(current,index,e.target.value)}/>
+                  <label className="pt-upload__cutout-option">
+                    <input type="checkbox" checked={isCutoutArtwork(image)}
+                      disabled={busy} onChange={e=>changeCutout(current,index,e.target.checked)}/>
+                    <span>Ảnh tách nền — không khung, không bóng đổ</span>
+                  </label>
+                </>}
               </div>
             })}
           </div>

@@ -324,3 +324,14 @@
 .pt-blueprint__themes{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:560px){.pt-template__ribbon-choice{grid-template-columns:1fr}
   .pt-blueprint__themes{grid-template-columns:1fr}}
+
+
+.pt-upload__cutout-option{
+  display:flex!important;flex-direction:row!important;align-items:center;
+  gap:9px;font:600 10px/1.5 'Be Vietnam Pro',sans-serif;
+  color:#445968;cursor:pointer;padding:8px 2px;
+}
+.pt-upload__cutout-option input[type=checkbox]{
+  width:15px!important;height:15px!important;margin:0;flex:none;
+  accent-color:#376c69;
+}

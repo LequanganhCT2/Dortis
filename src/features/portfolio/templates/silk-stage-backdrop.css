@@ -122,7 +122,8 @@
 .pt-site.pt-site--continuous-silk .pt-ribbon__copy>small,
 .pt-site.pt-site--continuous-silk .pt-ribbon__source{color:#f7d295}
 .pt-site.pt-site--continuous-silk .pt-ribbon__copy p{color:#fff2e5}
-.pt-site.pt-site--continuous-silk .pt-ribbon-section{border-bottom:1px solid #ffe7c22c}
+/* Do not draw a horizontal rule under the transparent portrait / between sections. */
+.pt-site.pt-site--continuous-silk .pt-ribbon-section{border-bottom:0!important}
 .pt-site.pt-site--continuous-silk .pt-site__nav{
   background:linear-gradient(90deg,#3c010c9a,#5b051047)!important;
   color:#fdf0d8;border-color:#f6d08b35;backdrop-filter:blur(4px);
@@ -163,4 +164,23 @@
 @media(prefers-reduced-motion:reduce){
   .pt-silk-stage__fabric,.pt-silk-stage__lightfield,
   .pt-silk-stage__spark{animation:none!important;transform:none!important}
+}
+
+
+/* Override the standard photo-card frame on a cutout portrait. Specificity
+ * beats the general Silk Atelier frame and any template depth effect. */
+.pt-site.pt-site--continuous-silk .pt-ribbon-section .pt-ribbon__tile.pt-ribbon__tile--cutout{
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  overflow:visible;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon-section .pt-ribbon__tile.pt-ribbon__tile--cutout img{
+  object-fit:contain!important;
+  object-position:center bottom;
+  box-shadow:none!important;
+  background:transparent!important;
 }

@@ -86,3 +86,23 @@
   color:#ffe5b2;border-color:#e9c07999}
 .pt-artboard--ribbon .pt-artboard__layer.is-text .pt-artboard__text{
   text-shadow:0 4px 18px #10000575}
+
+
+/* Cut-out PNG / image with cutout:true is a transparent layer, not a card. */
+.pt-artboard__layer.is-image.is-cutout,
+.pt-artboard--ribbon .pt-artboard__layer.is-image.is-cutout{
+  border:0!important;box-shadow:none!important;
+  background:transparent!important;filter:none!important;
+}
+.pt-artboard__layer.is-image.is-cutout .pt-artboard__photo{
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;background:transparent!important;
+  backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  overflow:visible!important;filter:none!important;
+}
+.pt-artboard__layer.is-image.is-cutout .pt-artboard__photo img{
+  object-fit:contain!important;
+  object-position:center bottom;
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;background:transparent!important;
+}

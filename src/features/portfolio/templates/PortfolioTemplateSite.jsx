@@ -9,6 +9,7 @@ import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
+import {isCutoutArtwork} from './imagePresentation'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 
@@ -264,7 +265,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         const url=asset?.path?urls[asset.path]:null
         if(isPublic&&!url)return null
         return <div key={section.id+':'+i} data-image-slot={onUploadImage?i:undefined} {...positionProps('image:'+i)}
-          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(asset?.cutout?' is-cutout':'')}
+          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout':'')}
           data-ribbon-slot={effect==='ribbon'?i:undefined}
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
           {url?<img src={url} draggable={onMoveElement?false:undefined} alt={asset?.alt||section.title||section.label}
