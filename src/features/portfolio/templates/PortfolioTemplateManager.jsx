@@ -99,6 +99,10 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     }catch(e){setError('Không gán được form: '+e.message)}
     finally{setWorking(false)}
   }
+  // Preserve the ribbon-selector API used by the existing form controls.
+  function updateRibbonChoice(form,patch){
+    return updateTemplateChoice(form,patch)
+  }
   /** Save ribbon direction or palette directly on the catalog card.
    * Version comparison prevents a stale card from overwriting the shared Form.
    */
@@ -327,7 +331,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                   <select aria-label={'Kiểu dải lụa '+group.name}
                     value={normalizeBlueprint(group.blueprint).ribbonLayout}
                     disabled={working}
-                    onChange={e=>updateTemplateChoice(group,{ribbonLayout:e.target.value})}>
+                    onChange={e=>updateRibbonChoice(group,{ribbonLayout:e.target.value})}>
                     {FORM_RIBBON_LAYOUTS.map(item=>
                       <option key={item.id} value={item.id}>{item.label}</option>)}
                   </select>
@@ -336,7 +340,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                   <select aria-label={'Hướng dải lụa '+group.name}
                     value={normalizeBlueprint(group.blueprint).ribbonDirection}
                     disabled={working}
-                    onChange={e=>updateTemplateChoice(group,{ribbonDirection:e.target.value})}>
+                    onChange={e=>updateRibbonChoice(group,{ribbonDirection:e.target.value})}>
                     {ribbonDirectionOptions(normalizeBlueprint(group.blueprint).ribbonLayout)
                       .map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
                   </select>
