@@ -2,12 +2,13 @@ import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
+import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
 
 /** Shared form => many artist instances. All data is protected by Admin RLS.
  * A template stores only layout. Its instances store independently edited text/photos.
  */
-export default function PortfolioTemplateManager({supabase,user,initialArtistSlug='',onArtistList}){
+export default function PortfolioTemplateManager({supabase,user,initialArtistSlug='',initialInstanceId='',onArtistList}){
   const [templates,setTemplates]=useState([])
   const [profiles,setProfiles]=useState([])
   const [instances,setInstances]=useState([])
@@ -16,6 +17,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
   const [selection,setSelection]=useState(null)
+  const [linkedTemplate,setLinkedTemplate]=useState(null)
   const [choice,setChoice]=useState({})
   const [editingTemplate,setEditingTemplate]=useState(null)
   const [blueprint,setBlueprint]=useState(null)
@@ -34,11 +36,52 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
       .finally(()=>{if(active)setLoading(false)})
     return ()=>{active=false}
   },[load])
+  // Public portfolio edit links target this exact Admin editor by instance ID.
+  // Archived templates are loaded only for the selected legacy publication;
+  // they remain hidden from the active Form catalog.
+  useEffect(()=>{
+    if(!initialInstanceId||loading)return
+    if(!/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(initialInstanceId)){
+      setError('Đường dẫn chỉnh sửa Portfolio không hợp lệ.')
+      return
+    }
+    const record=instances.find(instance=>instance.id===initialInstanceId)
+    if(!record){
+      setError('Không tìm thấy Portfolio cần chỉnh sửa hoặc bạn không có quyền truy cập.')
+      return
+    }
+    setSelection(record.id)
+    if(templates.some(t=>t.id===record.template_id)||linkedTemplate?.id===record.template_id)return
+    let active=true
+    setError('')
+    supabase.from('artist_website_templates').select('*')
+      .eq('id',record.template_id).single().then(({data,error:readError})=>{
+        if(!active)return
+        if(readError||!data){
+          setError('Không tải được Form gốc của Portfolio này: '+
+            (readError?.message||'Không tìm thấy Form.'))
+          return
+        }
+        setLinkedTemplate(data)
+      }).catch(e=>{
+        if(active)setError('Không mở được Form đã lưu trữ: '+e.message)
+      })
+    return ()=>{active=false}
+  },[initialInstanceId,loading,instances,templates,linkedTemplate,supabase])
   const groups=useMemo(()=>templateAssignments(templates,instances,profiles),[templates,instances,profiles])
   const selected=instances.find(i=>i.id===selection)
   const artist=selected&&profiles.find(p=>p.id===selected.profile_id)
-  const template=selected&&templates.find(t=>t.id===selected.template_id)
+  const template=selected&&(templates.find(t=>t.id===selected.template_id)||
+    (linkedTemplate?.id===selected.template_id?linkedTemplate:null))
   const desired=profiles.find(p=>p.slug===initialArtistSlug)
+  function closeInstanceEditor(){
+    setSelection(null)
+    // Removing the deep-link prevents the editor reopening on subsequent
+    // navigation or refresh, while keeping the Admin workspace mounted.
+    if(new URLSearchParams(window.location.search).has('edit')){
+      clientNavigate('/admin/templates',{replace:true})
+    }
+  }
   async function assign(t){
     const profileId=choice[t.id]
     if(!profileId){setError('Cần có hồ sơ nghệ sĩ trước khi gán form.');return}
@@ -138,10 +181,15 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     return <main className="pt-manager">
       <PortfolioInstanceEditor key={selected.id} supabase={supabase} user={user}
         template={template} instance={selected} profile={artist}
-        onBack={()=>setSelection(null)} onSaved={record=>
+        onBack={closeInstanceEditor} onSaved={record=>
           setInstances(list=>list.map(item=>item.id===record.id?record:item))}/>
     </main>
   }
+  if(selected&&artist&&!template&&initialInstanceId)return <main className="pt-manager">
+    <p role={error?'alert':'status'}>{error||'Đang tải Form gốc của Portfolio...'}</p>
+    <button type="button" className="pt-btn pt-btn--light"
+      onClick={closeInstanceEditor}>← Quay về thư viện mẫu</button>
+  </main>
   return <main className="pt-manager">
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>

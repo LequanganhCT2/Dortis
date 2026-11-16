@@ -1,7 +1,7 @@
 import React,{useEffect,useState} from 'react'
 import {supabase} from '../../../infrastructure/supabase/client'
 import {canManageContent} from '../../../core/auth/roles'
-import PortfolioInstanceEditor from './PortfolioInstanceEditor'
+import {clientNavigate} from '../../../app/navigation'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import './template-admin.css'
 
@@ -12,11 +12,8 @@ export default function PublishedPortfolio(){
   const [publication,setPublication]=useState(null)
   const [urls,setUrls]=useState({})
   const [admin,setAdmin]=useState(null)
-  const [editor,setEditor]=useState(null)
   const [loading,setLoading]=useState(true)
-  const [opening,setOpening]=useState(false)
   const [error,setError]=useState('')
-  const [version,setVersion]=useState(0)
   const [mobile,setMobile]=useState(()=>window.matchMedia('(max-width: 680px)').matches)
 
   useEffect(()=>{
@@ -65,36 +62,19 @@ export default function PublishedPortfolio(){
     }
     load()
     return ()=>{active=false}
-  },[id,version])
+  },[id])
 
-  async function editWebsite(){
-    if(!admin||opening)return
-    setOpening(true);setError('')
-    try{
-      const {data:instance,error:instanceError}=await supabase.from('artist_website_instances')
-        .select('*').eq('id',id).single()
-      if(instanceError)throw instanceError
-      const [template,profile]=await Promise.all([
-        supabase.from('artist_website_templates').select('*').eq('id',instance.template_id).single(),
-        supabase.from('artist_profiles').select('id,name,role,sections').eq('id',instance.profile_id).single()
-      ])
-      if(template.error||profile.error)throw (template.error||profile.error)
-      setEditor({instance,template:template.data,profile:profile.data})
-    }catch(e){setError('Không mở được trình chỉnh sửa: '+e.message)}
-    finally{setOpening(false)}
+  function editWebsite(){
+    if(!admin)return
+    // Reuse the authenticated Admin workspace/editor, never mount a second
+    // editor instance inside the publicly visible portfolio route.
+    clientNavigate('/admin/templates?edit='+encodeURIComponent(id))
   }
 
-  if(admin&&editor)return <main className="pt-manager">
-    <PortfolioInstanceEditor {...editor} supabase={supabase} user={admin}
-      backLabel="← Về website"
-      onBack={()=>setEditor(null)}
-      onSaved={instance=>setEditor(previous=>({...previous,instance}))}
-      onPublished={()=>{setEditor(null);setVersion(value=>value+1)}}/>
-  </main>
   return <div className="pt-published">
     {admin&&publication&&<div className="pt-published__toolbar">
-      <button type="button" className="pt-btn" onClick={editWebsite} disabled={opening}>
-        {opening?'Đang mở…':'Chỉnh sửa website'}
+      <button type="button" className="pt-btn" onClick={editWebsite}>
+        Chỉnh sửa website
       </button>
     </div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}

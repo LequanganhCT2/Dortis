@@ -198,6 +198,7 @@ export default function AdminWorkspace({user,supabase,onSignOut}){
             initialSection={section} onSectionChange={()=>setRouteValue(window.location.pathname+window.location.search)}/>:
           view==='templates'?<PortfolioTemplateManager supabase={supabase} user={user}
             initialArtistSlug={new URLSearchParams(url.search).get('artist')||''}
+            initialInstanceId={new URLSearchParams(url.search).get('edit')||''}
             onArtistList={()=>navigate(ROUTES.artists)}/>:
           <AdminArtistProfiles user={user} supabase={supabase}
             initialSlug={new URLSearchParams(url.search).get('select')||''}/>}
