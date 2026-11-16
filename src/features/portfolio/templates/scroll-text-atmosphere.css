@@ -17,7 +17,8 @@
   mix-blend-mode:screen;
   contain:paint;
 }
-.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused) [data-pt-scroll-reveal]{
+.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused)
+  [data-pt-scroll-reveal]:not([data-pt-scroll-reveal="image"]){
   opacity:var(--pt-scroll-alpha,1);
   transform:
     perspective(960px)
@@ -25,6 +26,7 @@
     rotateX(var(--pt-scroll-tilt,0deg));
   clip-path:inset(0 0 var(--pt-scroll-clip,0%) 0);
   transform-origin:50% 85%;
+  transition:opacity .12s linear,transform .16s ease-out,clip-path .12s linear;
   /* Retain existing letter styling. A glow appears only at the reveal edge. */
   text-shadow:
     0 4px 18px rgba(41,3,14,.5),
@@ -68,4 +70,40 @@
     transition:none!important;
   }
   .pt-site > .pt-scroll-text-canvas{display:none!important}
+}
+
+
+/* Images fade in, bloom past full size for a moment, then settle to their
+   saved geometry. The transform is on the PhotoMotion wrapper only: it never
+   overwrites photo hover, 3D motion, PNG silhouette shadow, or drag positions. */
+.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused)
+  .pt-photo-motion[data-pt-scroll-reveal="image"]{
+  opacity:var(--pt-media-alpha,1);
+  transform:
+    perspective(1150px)
+    translate3d(0,var(--pt-media-rise,0px),0)
+    rotateY(var(--pt-media-tilt,0deg))
+    scale(var(--pt-media-scale,1));
+  filter:blur(var(--pt-media-blur,0px));
+  transform-origin:50% 62%;
+  transition:opacity .12s linear,transform .18s cubic-bezier(.18,.8,.23,1),
+    filter .13s linear;
+  backface-visibility:hidden;
+}
+.pt-site.pt-site--motion-paused
+  .pt-photo-motion[data-pt-scroll-reveal="image"],
+.pt-site :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing)
+  .pt-photo-motion[data-pt-scroll-reveal="image"]{
+  opacity:1!important;
+  transform:none!important;
+  filter:none!important;
+  transition:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site .pt-photo-motion[data-pt-scroll-reveal="image"]{
+    opacity:1!important;
+    transform:none!important;
+    filter:none!important;
+    transition:none!important;
+  }
 }

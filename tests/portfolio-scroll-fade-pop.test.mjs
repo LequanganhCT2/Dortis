@@ -1,0 +1,80 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+import {
+  scrollRevealEnvelope,scrollImagePose,scrollTextPose
+} from '../src/features/portfolio/templates/scrollTextMotion.js'
+const source=name=>readFileSync(new URL('../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
+
+test('Fade-in during entrance, fade-out near top exit, fully visible while reading',()=>{
+  const atEntry=scrollRevealEnvelope(740,940,0,800,'image')
+  const inView=scrollRevealEnvelope(300,600,0,800,'image')
+  const atExit=scrollRevealEnvelope(-500,60,0,800,'image')
+  const gone=scrollRevealEnvelope(-800,-10,0,800,'image')
+  assert.ok(atEntry.progress>0&&atEntry.progress<.2)
+  assert.equal(inView.progress,1)
+  assert.ok(atExit.progress>0&&atExit.progress<.2)
+  assert.equal(gone.progress,0)
+  assert.equal(scrollRevealEnvelope(300,600,0,0,'image').progress,1)
+  // Scrolling up through the same positions reverses exactly the progression.
+  assert.deepEqual(scrollRevealEnvelope(740,940,0,800,'image'),atEntry)
+})
+test('Images unfold with a gentle overshoot instead of resizing saved photo slots',()=>{
+  const hidden=scrollImagePose(0)
+  const halfway=scrollImagePose(.5)
+  const visible=scrollImagePose(1)
+  assert.equal(hidden.alpha,0)
+  assert.equal(hidden.scale,'0.8600')
+  assert.equal(visible.alpha,1)
+  assert.equal(visible.scale,'1.0000')
+  assert.equal(visible.rise,'0.00px')
+  assert.equal(visible.tilt,'0.00deg')
+  assert.equal(visible.blur,'0.00px')
+  assert.ok(Number(halfway.scale)>1)
+  assert.ok(halfway.alpha>0&&halfway.alpha<1)
+  assert.ok(Number.parseFloat(halfway.blur)>0)
+  assert.ok(scrollTextPose(.5,'title').alpha>0)
+})
+test('Stagger makes later gallery images appear after the first',()=>{
+  const first=scrollRevealEnvelope(680,1040,0,800,'image',0).progress
+  const fourth=scrollRevealEnvelope(680,1040,0,800,'image',3).progress
+  assert.ok(first>fourth)
+  assert.equal(scrollRevealEnvelope(300,700,0,800,'image',4).progress,1)
+})
+test('One existing Canvas drives both text and images without per-image canvases',()=>{
+  const canvas=source('ScrollTextAtmosphere.jsx')
+  const image=source('PhotoMotion.jsx')
+  const ribbon=source('RibbonPortfolioSection.jsx')
+  const board=source('SectionArtboard.jsx')
+  const site=source('PortfolioTemplateSite.jsx')
+  assert.match(canvas,/scrollRevealEnvelope\(/)
+  assert.match(canvas,/scrollImagePose\(progress\)/)
+  assert.match(canvas,/anchor=kind==='image'\?element\.parentElement\|\|element:element/)
+  assert.match(canvas,/kind==='image'/)
+  assert.match(canvas,/--pt-media-alpha/)
+  assert.match(canvas,/--pt-media-scale/)
+  assert.match(canvas,/--pt-media-blur/)
+  assert.equal((site.match(/<ScrollTextAtmosphere /g)||[]).length,1)
+  assert.match(image,/data-pt-scroll-reveal="image"/)
+  assert.match(image,/data-pt-reveal-order=\{revealOrder\}/)
+  assert.match(ribbon,/revealOrder=\{position\}/)
+  assert.match(board,/revealOrder=\{index>=0\?index:0\}/)
+  assert.match(site,/revealOrder=\{i\}/)
+  assert.match(site,/s\.images\|\|\[\]/)
+  assert.doesNotMatch(image,/<canvas/)
+})
+test('Fade/3D only affects inner image wrapper; editing and reduced motion show original',()=>{
+  const css=source('scroll-text-atmosphere.css')
+  const canvas=source('ScrollTextAtmosphere.jsx')
+  assert.match(css,/\.pt-photo-motion\[data-pt-scroll-reveal="image"\]/)
+  assert.match(css,/var\(--pt-media-alpha,1\)/)
+  assert.match(css,/scale\(var\(--pt-media-scale,1\)\)/)
+  assert.match(css,/var\(--pt-media-blur,0px\)/)
+  assert.match(css,/pt-site--motion-paused/)
+  assert.match(css,/\.pt-scene-section\.is-editing/)
+  assert.match(css,/prefers-reduced-motion:reduce/)
+  assert.match(css,/opacity:1!important/)
+  assert.match(canvas,/for\(const property of \['--pt-scroll-alpha'/)
+  assert.match(canvas,/--pt-media-scale/)
+  assert.doesNotMatch(canvas,/onMoveElement|setSlotImage|fontSize/)
+})

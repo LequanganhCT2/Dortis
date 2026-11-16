@@ -10,7 +10,7 @@ import './photo-motion.css'
  * Transform is isolated from parent translate/scale, so Admin edits survive.
  */
 export default function PhotoMotion({
-  asset,paused=false,children
+  asset,paused=false,revealOrder=0,children
 }){
   const host=useRef(null),frame=useRef(0),pending=useRef(null)
   const svgId='pt-water-'+useId().replace(/:/g,'')
@@ -77,6 +77,8 @@ export default function PhotoMotion({
     className={'pt-photo-motion pt-photo-motion--'+mode+
       (enabled?'':' is-photo-paused')}
     data-photo-motion={mode}
+    data-pt-scroll-reveal="image"
+    data-pt-reveal-order={revealOrder}
     style={{
       '--pm-amp':(power*14).toFixed(2)+'px',
       '--pm-orbit':(power*9).toFixed(2)+'px',

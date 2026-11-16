@@ -87,11 +87,11 @@ test('Exactly the same photo motion renderer is used by silk Form and legacy For
   const legacy=source('PortfolioTemplateSite.jsx')
   const scene=source('SectionArtboard.jsx')
   assert.match(silk,/import PhotoMotion from '.\/PhotoMotion'/)
-  assert.match(silk,/<PhotoMotion asset=\{asset\} paused=\{editing\}>/)
+  assert.match(silk,/<PhotoMotion asset=\{asset\} paused=\{editing\} revealOrder=\{position\}>/)
   assert.match(legacy,/import PhotoMotion from '.\/PhotoMotion'/)
-  assert.match(legacy,/<PhotoMotion asset=\{asset\} paused=\{motionPaused\|\|Boolean\(onMoveElement\)\}>/)
+  assert.match(legacy,/<PhotoMotion asset=\{asset\} paused=\{motionPaused\|\|Boolean\(onMoveElement\)\} revealOrder=\{i\}>/)
   assert.match(scene,/import PhotoMotion from '.\/PhotoMotion'/)
-  assert.match(scene,/<PhotoMotion asset=\{image\} paused=\{editable\}>/)
+  assert.match(scene,/<PhotoMotion asset=\{image\} paused=\{editable\} revealOrder=\{index>=0\?index:0\}>/)
 })
 
 test('Admin lets each photo independently select effect, strength and mouse interaction',()=>{

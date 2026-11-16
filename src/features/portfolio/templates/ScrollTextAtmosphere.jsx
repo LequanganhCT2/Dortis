@@ -1,5 +1,5 @@
 import React,{useEffect,useRef} from 'react'
-import {scrollCanvasBounds,scrollRevealProgress,scrollTextPose} from './scrollTextMotion'
+import {scrollCanvasBounds,scrollRevealEnvelope,scrollTextPose,scrollImagePose} from './scrollTextMotion'
 import './scroll-text-atmosphere.css'
 
 /**
@@ -19,7 +19,8 @@ export default function ScrollTextAtmosphere({
     const context=canvas.getContext('2d',{alpha:true})
     if(!context)return undefined
     const fields=Array.from(root.querySelectorAll('[data-pt-scroll-reveal]'))
-      .filter(node=>Boolean(node.textContent?.trim()))
+      .filter(node=>node.dataset.ptScrollReveal==='image'||
+        Boolean(node.textContent?.trim()))
     if(!fields.length)return undefined
 
     root.classList.add('pt-site--scroll-text-active')
@@ -87,10 +88,29 @@ export default function ScrollTextAtmosphere({
       }
       width=cssWidth;height=cssHeight
       const decorations=[]
-      for(const element of fields){
-        const rect=element.getBoundingClientRect()
+      // Measure every element before writing CSS variables to avoid
+      // layout thrashing. Image geometry comes from its stable outer slot,
+      // not the inner 3D transform currently applied to PhotoMotion.
+      const measurements=fields.map(element=>{
         const kind=element.dataset.ptScrollReveal||'body'
-        const progress=scrollRevealProgress(rect.top,bounds.top,bounds.bottom)
+        const anchor=kind==='image'?element.parentElement||element:element
+        return {element,kind,rect:anchor.getBoundingClientRect()}
+      })
+      for(const {element,kind,rect} of measurements){
+        const order=kind==='image'?Number(element.dataset.ptRevealOrder)||0:
+          kind==='title'?1:kind==='body'?2:0
+        const {progress}=scrollRevealEnvelope(
+          rect.top,rect.bottom,bounds.top,bounds.bottom,kind,order)
+        if(kind==='image'){
+          const pose=scrollImagePose(progress)
+          element.style.setProperty('--pt-media-alpha',String(pose.alpha))
+          element.style.setProperty('--pt-media-scale',pose.scale)
+          element.style.setProperty('--pt-media-rise',pose.rise)
+          element.style.setProperty('--pt-media-tilt',pose.tilt)
+          element.style.setProperty('--pt-media-blur',pose.blur)
+          element.style.setProperty('--pt-media-glow',String(pose.glow))
+          continue
+        }
         const pose=scrollTextPose(progress,kind)
         element.style.setProperty('--pt-scroll-alpha',String(pose.alpha))
         element.style.setProperty('--pt-scroll-rise',pose.rise)
@@ -140,7 +160,9 @@ export default function ScrollTextAtmosphere({
       root.classList.remove('pt-site--scroll-text-active')
       for(const field of fields){
         for(const property of ['--pt-scroll-alpha','--pt-scroll-rise','--pt-scroll-tilt',
-          '--pt-scroll-depth','--pt-scroll-clip','--pt-scroll-glow']){
+          '--pt-scroll-depth','--pt-scroll-clip','--pt-scroll-glow',
+          '--pt-media-alpha','--pt-media-scale','--pt-media-rise',
+          '--pt-media-tilt','--pt-media-blur','--pt-media-glow']){
           field.style.removeProperty(property)
         }
       }

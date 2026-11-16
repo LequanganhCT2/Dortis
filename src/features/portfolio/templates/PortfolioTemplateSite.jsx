@@ -307,7 +307,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
           className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(asset):'')}
           data-ribbon-slot={effect==='ribbon'?i:undefined}
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
-          {url?<PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)}>
+          {url?<PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)} revealOrder={i}>
             <img src={url} draggable={false} alt={asset?.alt||section.title||section.label}
               loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>
           </PhotoMotion>:
@@ -351,7 +351,8 @@ export default function PortfolioTemplateSite({
   const resyncNavigationRef=useRef(null)
   const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
   const navIds=navSections.map(s=>s.id).join('|')
-  const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body].join('::')).join('|')
+  const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body,
+    ...(s.images||[]).map(asset=>asset?.path||'')].join('::')).join('|')
   useEffect(()=>{
     const root=rootRef.current
     if(!root||focusedSectionId)return undefined

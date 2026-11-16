@@ -248,7 +248,7 @@ export default function RibbonPortfolioSection({
         data-image-selected={editing&&selectedLayer==='image:'+position?'true':undefined}
         key={section.id+':'+position}
         {...draggableProps('image:'+position)}>
-        {url?<PhotoMotion asset={asset} paused={editing}>
+        {url?<PhotoMotion asset={asset} paused={editing} revealOrder={position}>
           <img src={url}
             alt={asset?.alt||section.title||section.label}
             loading={index===0&&position===0?'eager':'lazy'}

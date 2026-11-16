@@ -131,7 +131,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           borderRadius:layer.radius+'px',
           filter:layer.blur?'blur('+layer.blur+'px)':'none'
         }}>
-          {url?<PhotoMotion asset={image} paused={editable}>
+          {url?<PhotoMotion asset={image} paused={editable} revealOrder={index>=0?index:0}>
             <img src={url} alt={image?.alt||label} draggable={false}
               loading="lazy" decoding="async"
               style={{objectFit:isCutoutArtwork(image)?'contain':layer.fit}}/>
