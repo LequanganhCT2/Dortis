@@ -29,8 +29,8 @@ test('Every ribbon layout exposes unique valid directions',()=>{
 test('The Silk Atelier Form retains layout + direction in normalized blueprint',()=>{
   for(const form of PRESET_FORMS){
     const preset=blueprintFor(form)
-    assert.equal(preset.ribbonLayout,'vertical')
-    assert.equal(preset.ribbonDirection,'right')
+    assert.equal(preset.ribbonLayout,'diagonal')
+    assert.equal(preset.ribbonDirection,'down-right')
     for(const layout of FORM_RIBBON_LAYOUTS){
       for(const option of ribbonDirectionOptions(layout.id)){
         const blueprint=normalizeBlueprint({...preset,
