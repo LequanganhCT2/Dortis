@@ -342,20 +342,8 @@
   opacity: .18;
 }
 
-@keyframes pt-portfolio-enter {
-  from { opacity: .35; translate: 0 32px; }
-  to { opacity: 1; translate: 0 0; }
-}
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .pt-site .pt-fx-section { view-timeline-name: --pt-section; }
-    .pt-site:not(.pt-site--motion-paused) .pt-fx-section:not(.is-first) > :is(.pt-site__copy,.pt-site__media) {
-      animation: pt-portfolio-enter linear both;
-      animation-timeline: --pt-section;
-      animation-range: entry 0% cover 25%;
-    }
-  }
-}
+/* Section reveal is controlled by ScrollTextAtmosphere using a discrete
+   viewport event. Never scrub copy or photos with CSS view timelines. */
 @container (max-width: 680px) {
   .pt-site .pt-fx-section.is-first,
   .pt-site .pt-fx-section:not(.is-first) { grid-template-columns: minmax(0,1fr); min-height: auto; }

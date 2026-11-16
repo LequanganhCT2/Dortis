@@ -36,6 +36,7 @@ test('Only one observer controls every section, with no per-letter progress loop
   assert.match(component,/root\.classList\.add\('pt-site--block-reveal-active'\)/)
   assert.match(component,/blockTravelDirection\(lastScroll,next,direction\)/)
   assert.match(component,/root:scrollingHost/)
+  assert.match(component,/classifyPortfolioBlock\(entry\.boundingClientRect,/)
   assert.doesNotMatch(component,/scrollRevealEnvelope|scrollTextPose|scrollImagePose/)
   assert.doesNotMatch(component,/for\(const element of fields\)/)
 })
@@ -83,4 +84,12 @@ test('Gold highlight stays lightweight: one viewport-sized Canvas for each Portf
   assert.match(component,/if\(age>930\)/)
   assert.match(component,/bursts\.clear\(\)/)
   assert.match(component,/cancelAnimationFrame\(burstFrame\)/)
+})
+
+test('Block animation is time based; old scroll-progress CSS cannot scrub it',()=>{
+  const legacy=source('template-site.css')
+  const css=source('scroll-text-atmosphere.css')
+  assert.doesNotMatch(legacy,/animation-timeline\s*:|view-timeline-name\s*:/)
+  assert.match(css,/animation-timeline:auto!important/)
+  assert.match(css,/animation-range:normal!important/)
 })

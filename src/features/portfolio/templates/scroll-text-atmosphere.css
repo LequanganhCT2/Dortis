@@ -24,6 +24,9 @@
   animation-timing-function:cubic-bezier(.18,.84,.26,1);
   animation-fill-mode:both;
   animation-iteration-count:1;
+  /* Never bind reveal progression to the number of scroll pixels. */
+  animation-timeline:auto!important;
+  animation-range:normal!important;
   backface-visibility:hidden;
   transform-origin:center 55%;
 }

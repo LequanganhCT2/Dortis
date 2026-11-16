@@ -120,10 +120,12 @@ export default function ScrollTextAtmosphere({
       new IntersectionObserver(entries=>{
         if(disposed)return
         changeDirection()
+        const area=viewport()
         for(const entry of entries){
-          const state=entry.isIntersecting?'visible':
-            entry.boundingClientRect.bottom<=viewport().top+45?'hidden-top':'hidden-bottom'
-          mark(entry.target,state)
+          // Match both viewport edges to the same discrete reveal thresholds.
+          // In particular, scrolling past the top must exit upwards.
+          mark(entry.target,classifyPortfolioBlock(entry.boundingClientRect,
+            area.top,area.bottom))
         }
       },{
         root:scrollingHost,
