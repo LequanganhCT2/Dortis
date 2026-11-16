@@ -13,7 +13,7 @@ function overlaps(a,b){
   return horizontal&&vertical
 }
 test('Every shared template inherits the same animated ribbon background by default',()=>{
-  assert.equal(PRESET_FORMS.length,3)
+  assert.equal(PRESET_FORMS.length,1)
   for(const form of PRESET_FORMS){
     const b=normalizeBlueprint(blueprintFor(form))
     assert.equal(b.visualTheme,'ribbon-luxury')

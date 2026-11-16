@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
-import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
+import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import './template-admin.css'
@@ -19,11 +19,9 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   const [choice,setChoice]=useState({})
   const [editingTemplate,setEditingTemplate]=useState(null)
   const [blueprint,setBlueprint]=useState(null)
-  const [createName,setCreateName]=useState('')
-  const [createFrom,setCreateFrom]=useState('')
   const load=useCallback(async()=>{
     const [t,i,p]=await Promise.all([
-      supabase.from('artist_website_templates').select('*').order('created_at',{ascending:true}),
+      supabase.from('artist_website_templates').select('*').eq('status','active').order('created_at',{ascending:true}),
       supabase.from('artist_website_instances').select('*').order('updated_at',{ascending:false}),
       supabase.from('artist_profiles').select('id,name,role,slug,status,sections').order('name',{ascending:true})
     ])
@@ -135,24 +133,6 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     }catch(e){setError('Không lưu được bố cục: '+e.message)}
     finally{setWorking(false)}
   }
-  async function createTemplate(){
-    const name=createName.trim()
-    if(name.length<3){setError('Tên form phải có ít nhất 3 ký tự.');return}
-    const base=templates.find(t=>t.id===createFrom)||templates[0]
-    if(!base){setError('Không có form gốc để kế thừa.');return}
-    setWorking(true);setError('');setNotice('')
-    try{
-      const slug='custom-'+crypto.randomUUID().slice(0,10)
-      const {data,error:e}=await supabase.from('artist_website_templates')
-        .insert({slug,name,description:'Form riêng được tạo từ '+base.name,
-          blueprint:normalizeBlueprint(base.blueprint),created_by:user.id,status:'active'})
-        .select().single()
-      if(e)throw e
-      setTemplates(list=>[data,...list]);setCreateName('')
-      setNotice('Đã tạo form "'+name+'". Bạn có thể tùy chỉnh bố cục và gán cho nhiều nghệ sĩ.')
-    }catch(e){setError('Không tạo được form: '+e.message)}
-    finally{setWorking(false)}
-  }
   if(loading)return <main className="pt-manager"><p role="status">Đang tải các form Portfolio...</p></main>
   if(selected&&artist&&template){
     return <main className="pt-manager">
@@ -165,13 +145,15 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   return <main className="pt-manager">
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>
-        <h1>Thư viện mẫu Portfolio<span>.</span></h1>
-        <p>Nhập PDF ở Hồ sơ nghệ sĩ, xác nhận chữ theo từng trang. Gán hồ sơ vào bất kỳ mẫu nào: bố cục 3D dùng chung, nội dung luôn đến từ hồ sơ đó, ảnh do bạn tự tải lên.</p></div>
-      <div><span className="pt-status">{templates.length} FORM · {instances.length} LƯỢT SỬ DỤNG</span>
+        <h1>Dortis Silk Atelier<span>.</span></h1>
+        <p>Một Form nghệ thuật duy nhất. Dải lụa đỏ-vàng vắt chéo xuyên suốt Portfolio;
+          quầng sáng bán trong suốt nằm ở lớp trên cùng.
+          Nội dung lấy từ Hồ sơ nghệ sĩ và ảnh được quản lý riêng theo từng khu vực.</p></div>
+      <div><span className="pt-status">{templates.length} FORM · {groups.reduce((sum,group)=>sum+group.people.length,0)} HỒ SƠ ĐƯỢC GÁN</span>
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
     {desired&&<div className="pt-manager__focus">Đang chọn mẫu cho <strong>{desired.name}</strong>.
-      Bạn có thể tạo mẫu từ bố cục có sẵn hoặc chọn hồ sơ này trên một mẫu để gán.</div>}
+      Hãy chọn Form Silk Atelier bên dưới để gán hồ sơ nghệ sĩ này.</div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
     {editingTemplate&&blueprint?
@@ -219,6 +201,14 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             </select>
           </label>
         </div>
+        <div className="pt-blueprint__glow">
+          <label htmlFor="pt-glow-opacity">Quầng sáng trên cùng · {Math.round((blueprint.glowOpacity??.28)*100)}%</label>
+          <input id="pt-glow-opacity" type="range" min="0" max="55" step="1"
+            value={Math.round((blueprint.glowOpacity??.28)*100)}
+            onChange={event=>setBlueprint(value=>({...value,glowOpacity:Number(event.target.value)/100}))}/>
+          <small>Hiệu ứng nằm phủ trên chữ và ảnh nhưng không cản thao tác.
+            Có thể hạ độ đậm để giữ khả năng đọc.</small>
+        </div>
         <p className="pt-blueprint__visual-note">
           Kiểu và hướng lụa được áp dụng cho một dòng lụa liền mạch từ đầu đến cuối Form,
           không lặp lại ở mỗi trang. Các nhánh chuyển động độc lập, cắt chéo chiều ngang;
@@ -253,24 +243,10 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           disabled={blueprint.sections.length>=24}>+ Thêm khu vực vào form</button>
       </section>:
     <>
-      <section className="pt-create">
-        <div><span className="pt-overline">EXTEND / REUSABLE FORM</span>
-          <h2>Tạo mẫu Portfolio từ mẫu có sẵn</h2>
-          <p>Chọn mẫu có sẵn để sao chép bố cục. Sau khi tạo, bạn có thể gán mẫu mới cho nhiều hồ sơ nghệ sĩ.</p></div>
-        <div className="pt-create__fields">
-          <input type="text" value={createName} onChange={e=>setCreateName(e.target.value)}
-            placeholder="Tên form mới, ví dụ: Nghệ sĩ Acoustic"/>
-          <select aria-label="Mẫu Portfolio làm nền" value={createFrom||templates[0]?.id||''}
-            onChange={e=>setCreateFrom(e.target.value)}>
-            {templates.map(t=><option key={t.id} value={t.id}>Kế thừa từ {t.name}</option>)}
-          </select>
-          <button type="button" className="pt-btn" disabled={working||!templates.length}
-            onClick={createTemplate}>Tạo form mới</button>
-        </div>
-      </section>
       <section className="pt-catalog">
-        <div className="pt-catalog__heading"><h2>Các form có thể tái sử dụng</h2>
-          <p>Mỗi mẫu có thể dùng cho nhiều nghệ sĩ. Chọn từng hồ sơ để gán hoặc mở bản chỉnh sửa riêng.</p></div>
+        <div className="pt-catalog__heading"><h2>Form Silk Atelier</h2>
+          <p>Một Form chung cho nhiều nghệ sĩ. Bạn có thể thay đổi bố cục và kiểu dải lụa ở Form gốc;
+          ảnh, nội dung và thiết kế riêng của mỗi nghệ sĩ vẫn độc lập.</p></div>
         <div className="pt-catalog__grid">{groups.map(group=>{
           const chosen=choice[group.id]||''
           const person=group.people.find(item=>item.artist.id===chosen)

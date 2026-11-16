@@ -26,7 +26,7 @@ test('Every ribbon layout exposes unique valid directions',()=>{
     {ribbonLayout:'curtain',ribbonDirection:'inward'})
 })
 
-test('All three Forms retain their own layout + direction in normalized blueprint',()=>{
+test('The Silk Atelier Form retains layout + direction in normalized blueprint',()=>{
   for(const form of PRESET_FORMS){
     const preset=blueprintFor(form)
     assert.equal(preset.ribbonLayout,'vertical')

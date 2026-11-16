@@ -3,10 +3,10 @@ import assert from 'node:assert/strict'
 import {PRESET_FORMS,blueprintFor,normalizeBlueprint,resolveInstance,
   setSectionField,setSlotImage,templateAssignments} from '../src/features/portfolio/templates/model.js'
 
-test('Three distinct reusable portfolio layouts, no artist data or imported PDF photos',()=>{
-  assert.equal(PRESET_FORMS.length,3)
-  assert.equal(new Set(PRESET_FORMS.map(p=>p.slug)).size,3)
-  assert.ok(PRESET_FORMS.every(p=>p.sections.length>=5))
+test('One new reusable Silk Atelier form, no artist data or imported PDF photos',()=>{
+  assert.equal(PRESET_FORMS.length,1)
+  assert.equal(new Set(PRESET_FORMS.map(p=>p.slug)).size,1)
+  assert.ok(PRESET_FORMS.every(p=>p.sections.length===8))
   assert.ok(PRESET_FORMS.every(p=>p.sections.every(s=>Number.isInteger(s.slots))))
   assert.ok(PRESET_FORMS.every(p=>!JSON.stringify(p).includes('Long Nhật')))
 })

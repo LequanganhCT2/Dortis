@@ -4,6 +4,7 @@ import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
 import {getScene,sceneFont,resizeDimensions} from './sectionDesign'
 import SectionArtboard from './SectionArtboard'
 import RibbonSilk from './RibbonSilk'
+import PortfolioGlowOverlay from './PortfolioGlowOverlay'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import './template-site.css'
@@ -328,7 +329,7 @@ export default function PortfolioTemplateSite({
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
           onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
-          (useClassic||section.backdrop||editSectionId===section.id)?
+          useClassic?
           <MotionSection key={section.id} section={section} index={index}
             continuousSilk={continuousSilk}
             ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}
@@ -340,12 +341,21 @@ export default function PortfolioTemplateSite({
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
             onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>:
           <RibbonPortfolioSection key={section.id} section={section}
-            index={index} urls={urls} artistRole={view.artistRole}/>
+            index={index} urls={urls} artistRole={view.artistRole}
+            isPublic={Boolean(publishedView)}
+            positions={instance?.content?.positions?.[section.id]?.[device]}
+            typography={instance?.content?.typography?.[section.id]?.[device]}
+            selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
+            onMoveElement={editSectionId===section.id?onMoveElement:undefined}
+            onSelectLayer={editSectionId===section.id?onSelectLayer:undefined}
+            onEditText={editSectionId===section.id?onEditText:undefined}
+            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>
       })}
       {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>
         {!publishedView&&<small>Bản xem trước nội bộ</small>}
       </footer>}
+      {continuousSilk&&<PortfolioGlowOverlay opacity={view.glowOpacity??.28}/>}
     </main>
   </div>
 }

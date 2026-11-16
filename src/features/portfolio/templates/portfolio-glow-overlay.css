@@ -1,0 +1,67 @@
+/* Global glows ABOVE the entire Portfolio, never one glow per section.
+   Translucent, blurred, luxurious lighting; all clicks pass through. */
+.pt-site.pt-site--continuous-silk > .pt-portfolio-halos{
+  position:absolute!important;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none!important;
+  user-select:none;
+  z-index:90!important;
+  opacity:var(--pt-halo-opacity,.28);
+  isolation:isolate;
+  mix-blend-mode:screen;
+}
+.pt-portfolio-halos__orb{
+  position:absolute;
+  display:block;
+  min-width:220px;
+  min-height:220px;
+  max-width:850px;
+  max-height:850px;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(clamp(35px,6vw,100px));
+  transform:translate3d(-50%,-50%,0) scale(.96);
+  transform-origin:center;
+  animation:pt-portfolio-halo-float 27s ease-in-out infinite alternate;
+  will-change:auto;
+}
+.pt-portfolio-halos__orb--gold{
+  background:radial-gradient(circle at 42% 45%,
+    #fff9d7f2 0%,#ffe2a8b3 13%,#f5c66b7a 27%,#b84b1940 51%,transparent 75%);
+}
+.pt-portfolio-halos__orb--rose{
+  background:radial-gradient(circle at 40% 42%,
+    #fff6e7c4 0%,#ef879e8c 16%,#c842784b 40%,#8e15262b 56%,transparent 75%);
+}
+.pt-portfolio-halos__orb--amber{
+  background:radial-gradient(circle at 42% 48%,
+    #fff9d5db 0%,#ffc172ba 18%,#e77d3d63 37%,#ac2a1d27 56%,transparent 76%);
+}
+@keyframes pt-portfolio-halo-float{
+  0%{transform:translate3d(-51%,-50%,0) scale(.91);opacity:.68}
+  48%{opacity:.93}
+  100%{transform:translate3d(-44%,-47%,0) scale(1.09);opacity:.8}
+}
+@media(max-width:680px){
+  .pt-site.pt-site--continuous-silk > .pt-portfolio-halos{
+    opacity:calc(var(--pt-halo-opacity,.28) * .7);
+  }
+  .pt-portfolio-halos__orb{
+    min-width:160px;
+    min-height:160px;
+    filter:blur(36px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-portfolio-halos__orb{
+    animation:none!important;
+    transform:translate(-50%,-50%)!important;
+    will-change:auto;
+  }
+}
+
+/* Freeze glow while Admin drags text/images; public page remains gently animated. */
+.pt-site.pt-site--motion-paused > .pt-portfolio-halos .pt-portfolio-halos__orb{animation-play-state:paused}

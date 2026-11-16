@@ -269,7 +269,8 @@ export default function PortfolioInstanceEditor({
   }
   function beginVisualEdit(){
     if(!current)return
-    selectSection(current)
+    // The Form is already rendered in preview. Do not switch its layout or
+    // scroll to an unmounted page when entering direct edit mode.
     setSelectedLayer('title')
     setVisualEditing(true);setNotice('')
   }
@@ -495,7 +496,7 @@ export default function PortfolioInstanceEditor({
       </aside>
       <section className="pt-editor__preview" ref={previewRef}>
         <div className="pt-editor__preview-head"><div>
-          <strong>{visualEditing?'CHỈNH TRỰC TIẾP':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
+          <strong>{visualEditing?'CHỈNH TRỰC TIẾP TRÊN FORM GỐC':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
           <span> {visualEditing?(scene?'Kéo thả layer của '+current.label:'Bấm để sửa chữ, kéo để di chuyển · '+current.label):
             'Xem toàn bộ Form với nội dung và ảnh riêng của nghệ sĩ'}</span>
         </div><div className="pt-editor__preview-controls">
