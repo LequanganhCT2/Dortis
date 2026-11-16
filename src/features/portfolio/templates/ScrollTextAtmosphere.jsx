@@ -1,12 +1,12 @@
 import React,{useEffect,useRef} from 'react'
 import {scrollCanvasBounds} from './scrollTextMotion'
-import {classifyPortfolioBlock,blockTravelDirection} from './blockRevealState'
+import {classifyPortfolioBlock,blockTravelDirection,portfolioPartDelays} from './blockRevealState'
 import './scroll-text-atmosphere.css'
 
 /**
  * Section-based Portfolio reveal. One IntersectionObserver triggers each
- * section as a complete composition; no text/image opacity is tied to each
- * pixel of the scroll. CSS animates the existing copy and media groups.
+ * section once. Within that section the label, title, description and photos
+ * appear as separately timed layers, never scrubbed by individual pixels.
  *
  * Canvas is decorative only: one short-lived, viewport-sized gold glint
  * behind newly opened sections. Text and photos remain normal DOM layers.
@@ -36,6 +36,28 @@ export default function ScrollTextAtmosphere({
         top:Math.max(0,rect?.top||0),
         bottom:Math.min(window.innerHeight,rect?.bottom??window.innerHeight)
       }
+    }
+    // Animate visible content on inner layers only. Saved layer transforms,
+    // portrait crops, font sizes and user-defined opacity stay on their parents.
+    const revealParts=[]
+    for(const section of sections){
+      let bodyIndex=0,photoIndex=0
+      const register=(node,kind,index=0)=>{
+        const {enter,exit}=portfolioPartDelays(kind,index)
+        node.dataset.ptRevealPart=kind
+        node.style.setProperty('--pt-reveal-delay',enter+'ms')
+        node.style.setProperty('--pt-reveal-exit-delay',exit+'ms')
+        revealParts.push(node)
+      }
+      section.querySelectorAll('[data-pt-scroll-reveal]').forEach(node=>{
+        const kind=node.dataset.ptScrollReveal
+        if(kind==='eyebrow'||kind==='title'||kind==='body'){
+          register(node,kind,kind==='body'?bodyIndex++:0)
+        }
+      })
+      section.querySelectorAll('.pt-photo-motion').forEach(node=>{
+        register(node,'image',photoIndex++)
+      })
     }
     const ctx=canvas.getContext('2d',{alpha:true})
     let lastScroll=currentScroll()
@@ -94,6 +116,7 @@ export default function ScrollTextAtmosphere({
     }
     function mark(section,state,entryDirection=direction){
       if(section.dataset.ptBlockState===state)return
+      delete section.dataset.ptBlockPrime
       section.dataset.ptBlockDirection=entryDirection
       section.dataset.ptBlockState=state
       if(state==='visible'&&ctx){
@@ -105,8 +128,9 @@ export default function ScrollTextAtmosphere({
     const visibleInitially=[]
     for(const section of sections){
       const state=classifyPortfolioBlock(section.getBoundingClientRect(),box.top,box.bottom)
-      // Start visible sections in their hidden pose, then pop the whole block
-      // on the next frame. Sections farther down stay hidden until observed.
+      // Prime all parts fully hidden to avoid a flash before their first
+      // staged entrance, including after opening a URL mid-portfolio.
+      section.dataset.ptBlockPrime='true'
       section.dataset.ptBlockState=state==='visible'?'hidden-bottom':state
       section.dataset.ptBlockDirection='down'
       if(state==='visible')visibleInitially.push(section)
@@ -174,6 +198,12 @@ export default function ScrollTextAtmosphere({
       sections.forEach(section=>{
         delete section.dataset.ptBlockState
         delete section.dataset.ptBlockDirection
+        delete section.dataset.ptBlockPrime
+      })
+      revealParts.forEach(node=>{
+        delete node.dataset.ptRevealPart
+        node.style.removeProperty('--pt-reveal-delay')
+        node.style.removeProperty('--pt-reveal-exit-delay')
       })
       if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height)
     }

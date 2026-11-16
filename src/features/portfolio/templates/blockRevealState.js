@@ -18,3 +18,16 @@ export function blockAnimationName(state,direction){
   if(state==='visible')return direction==='up'?'pt-block-enter-top':'pt-block-enter-bottom'
   return state==='hidden-top'?'pt-block-exit-top':'pt-block-exit-bottom'
 }
+
+/** One section entrance schedules its label, title, copy, then real photos.
+ * Durations use milliseconds, not scroll percentage. */
+export function portfolioPartDelays(kind,index=0){
+  const order=Math.max(0,Math.min(8,Math.trunc(Number(index)||0)))
+  switch(kind){
+    case 'eyebrow': return {enter:40,exit:235}
+    case 'title': return {enter:160,exit:165}
+    case 'body': return {enter:350+order*95,exit:95}
+    case 'image': return {enter:550+order*115,exit:order*35}
+    default: return {enter:0,exit:0}
+  }
+}

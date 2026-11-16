@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {
-  classifyPortfolioBlock,blockTravelDirection,blockAnimationName
+  classifyPortfolioBlock,blockTravelDirection,blockAnimationName,portfolioPartDelays
 } from '../src/features/portfolio/templates/blockRevealState.js'
 
 const source=name=>readFileSync(new URL('../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
@@ -40,20 +40,32 @@ test('Only one observer controls every section, with no per-letter progress loop
   assert.doesNotMatch(component,/scrollRevealEnvelope|scrollTextPose|scrollImagePose/)
   assert.doesNotMatch(component,/for\(const element of fields\)/)
 })
-test('Block bloom is synchronized across entire text and media groups',()=>{
+test('A section reveals eyebrow, title, description, and photos in order',()=>{
+  const eyebrow=portfolioPartDelays('eyebrow')
+  const title=portfolioPartDelays('title')
+  const body=portfolioPartDelays('body')
+  const image=portfolioPartDelays('image',0)
+  assert.ok(eyebrow.enter<title.enter&&title.enter<body.enter&&body.enter<image.enter)
+  assert.ok(portfolioPartDelays('image',2).enter>image.enter)
+  assert.ok(image.exit<body.exit&&body.exit<title.exit&&title.exit<eyebrow.exit)
+  assert.equal(portfolioPartDelays('image',200).enter,portfolioPartDelays('image',8).enter)
+  const observer=source('ScrollTextAtmosphere.jsx')
+  assert.match(observer,/querySelectorAll\\('\\[data-pt-scroll-reveal\\]'\\)/)
+  assert.match(observer,/querySelectorAll\\('\\.pt-photo-motion'\\)/)
+  assert.match(observer,/portfolioPartDelays\\(kind,index\\)/)
+  assert.match(observer,/revealParts\\.forEach/)
   const css=source('scroll-text-atmosphere.css')
-  assert.match(css,/\.pt-ribbon__copy/)
-  assert.match(css,/\.pt-ribbon__media/)
-  assert.match(css,/\.pt-site__copy/)
-  assert.match(css,/\.pt-site__media/)
-  assert.match(css,/\.pt-artboard__layer/)
+  assert.match(css,/\\.pt-ribbon__copy/)
+  assert.match(css,/\\.pt-site__copy/)
+  assert.match(css,/\\.pt-artboard__layer/)
+  assert.match(css,/\\.pt-ribbon__media/)
   assert.match(css,/animation-duration:840ms/)
+  assert.match(css,/animation-delay:var\\(--pt-reveal-delay,0ms\\)/)
+  assert.match(css,/animation-delay:var\\(--pt-reveal-exit-delay,0ms\\)/)
   assert.match(css,/@keyframes pt-block-enter-bottom/)
   assert.match(css,/@keyframes pt-block-enter-top/)
-  assert.match(css,/scale:1\.025/)
-  assert.match(css,/animation-delay:70ms/)
-  assert.doesNotMatch(css,/opacity:var\(--pt-scroll-alpha/)
-  assert.doesNotMatch(css,/--pt-media-alpha/)
+  assert.match(css,/scale:1\\.025/)
+  assert.doesNotMatch(css,/opacity:var\\(--pt-scroll-alpha/)
 })
 test('Unified continuous silk and sticky navigation are never animated away',()=>{
   const site=source('PortfolioTemplateSite.jsx')
@@ -71,6 +83,8 @@ test('Edit mode and reduced-motion show complete content without animations',()=
   assert.match(observer,/if\(!root\|\|paused\|\|!canvas\)return undefined/)
   assert.match(observer,/if\(motion\?\.matches\)return undefined/)
   assert.match(observer,/delete section\.dataset\.ptBlockState/)
+  assert.match(observer,/delete section\.dataset\.ptBlockPrime/)
+  assert.match(observer,/delete node\.dataset\.ptRevealPart/)
   assert.match(css,/pt-site--motion-paused/)
   assert.match(css,/\.pt-scene-section\.is-editing/)
   assert.match(css,/prefers-reduced-motion:reduce/)
