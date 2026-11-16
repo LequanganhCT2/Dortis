@@ -65,7 +65,7 @@ test('One 2D Canvas is used site-wide and recomputed only on scrolling or resize
   assert.match(src,/const measurements=fields\.map\(element=>/)
   assert.match(src,/for\(const \{element,kind,rect\} of measurements\)/)
   assert.match(src,/scrollRevealEnvelope\(/)
-  assert.match(src,/scrollTextPose\(progress,kind\)/)
+  assert.match(src,/scrollTextPose\(progress,kind,envelope\)/)
   assert.match(src,/style\.setProperty\('--pt-scroll-rise'/)
   assert.match(src,/role="presentation"/)
   assert.doesNotMatch(src,/setState|setContent|setSelectedLayer|onMoveElement/)

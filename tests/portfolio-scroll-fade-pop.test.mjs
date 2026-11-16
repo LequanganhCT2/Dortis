@@ -48,7 +48,7 @@ test('One existing Canvas drives both text and images without per-image canvases
   const board=source('SectionArtboard.jsx')
   const site=source('PortfolioTemplateSite.jsx')
   assert.match(canvas,/scrollRevealEnvelope\(/)
-  assert.match(canvas,/scrollImagePose\(progress\)/)
+  assert.match(canvas,/scrollImagePose\(progress,envelope\)/)
   assert.match(canvas,/anchor=kind==='image'\?element\.parentElement\|\|element:element/)
   assert.match(canvas,/kind==='image'/)
   assert.match(canvas,/--pt-media-alpha/)
