@@ -450,8 +450,9 @@ export default function PortfolioTemplateSite({
         const id=page.id.slice(3)
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
-      {continuousSilk&&<SilkStageBackdrop palette={view.colorPalette||'red-gold'} layout={view.ribbonLayout||'diagonal'}
-        direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
+      {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
+        direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
+        palette={view.colorPalette||'red-gold'}/>}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
         sectionsKey={revealKey} device={device}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
