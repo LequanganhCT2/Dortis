@@ -8,7 +8,7 @@
   top:0;
   z-index:95!important;
   display:grid!important;
-  grid-template-columns:minmax(108px,max-content) minmax(0,1fr) max-content;
+  grid-template-columns:minmax(0,1fr);
   align-items:center;
   gap:clamp(12px,2.1vw,32px);
   width:100%;
@@ -52,6 +52,9 @@
   gap:clamp(6px,.8vw,13px);
   width:100%;
   min-width:0;
+  grid-column:1/-1;
+  min-height:0;
+  margin:0;
   overflow-x:auto;
   overflow-y:hidden;
   overscroll-behavior-inline:contain;
@@ -134,7 +137,7 @@
   transition:width .18s linear;
   pointer-events:none;
 }
-.pt-site section[id^="pt-"]{scroll-margin-top:95px}
+.pt-site section[id^="pt-"]{scroll-margin-top:calc(var(--pt-nav-height,78px) + 18px)}
 @keyframes pt-nav-appear{
   from{opacity:.3;transform:translateY(-20px)}
   to{opacity:1;transform:translateY(0)}
@@ -145,30 +148,21 @@
 }
 @media(max-width:950px){
   .pt-site > .pt-site__nav.pt-site__nav--sticky{
-    grid-template-columns:minmax(80px, max-content) minmax(0,1fr);
-    min-height:72px;
+    grid-template-columns:minmax(0,1fr);
+    min-height:64px;
   }
-  .pt-site > .pt-site__nav--sticky .pt-site__nav-meta{display:none}
 }
 @media(max-width:680px){
   .pt-site > .pt-site__nav.pt-site__nav--sticky{
-    grid-template-columns:minmax(0,1fr) max-content;
-    gap:3px 10px;
-    min-height:110px;
-    padding:10px 13px 7px!important;
-  }
-  .pt-site > .pt-site__nav--sticky .pt-site__brand{
-    max-width:75vw;
-    font-size:22px;
-  }
-  .pt-site > .pt-site__nav--sticky .pt-site__nav-meta{
-    display:block;font-size:8px;max-width:32vw;
+    grid-template-columns:minmax(0,1fr);
+    min-height:58px;
+    padding:7px 11px 5px!important;
   }
   .pt-site > .pt-site__nav--sticky nav.pt-site__nav-links{
     grid-column:1/-1;
-    grid-row:2;
+    grid-row:1;
     gap:6px;
-    padding:5px 1px 10px;
+    padding:5px 1px 9px;
   }
   .pt-site > .pt-site__nav--sticky .pt-site__nav-links a{
     max-width:210px;
@@ -176,7 +170,7 @@
     padding:7px 9px;
     font-size:9px;
   }
-  .pt-site section[id^="pt-"]{scroll-margin-top:124px}
+  .pt-site section[id^="pt-"]{scroll-margin-top:calc(var(--pt-nav-height,58px) + 18px)}
 }
 @media(prefers-reduced-motion:reduce){
   .pt-site > .pt-site__nav--sticky,

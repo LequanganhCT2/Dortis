@@ -16,6 +16,7 @@ import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
 import './portfolio-sticky-nav.css'
+import {pickPortfolioActiveSection} from './sectionNavigation'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
@@ -340,42 +341,70 @@ export default function PortfolioTemplateSite({
   // the artist's editable heading. Include every section, even empty ones.
   const navSections=view.sections
   const rootRef=useRef(null),navRef=useRef(null),navScrollRef=useRef(null)
+  const pendingNavigationRef=useRef(null)
+  const navTimerRef=useRef(null)
+  const resyncNavigationRef=useRef(null)
   const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
   const navIds=navSections.map(s=>s.id).join('|')
   useEffect(()=>{
     const root=rootRef.current
     if(!root||focusedSectionId)return undefined
-    const nav=root.querySelector('.pt-site__nav')
-    const scrollHost=root.closest('.pt-device')
-    // Admin preview scrolls internally; the published site scrolls the window.
-    const embedded=scrollHost&&scrollHost.scrollHeight>scrollHost.clientHeight+12&&
-      getComputedStyle(scrollHost).overflowY!=='visible'
-    const scrollTarget=embedded?scrollHost:window
+    const nav=navRef.current
     let raf=0
     function update(){
       raf=0
-      const sections=Array.from(root.querySelectorAll('section[id^="pt-"]'))
+      const sections=Array.from(root.querySelectorAll(':scope > section[id^="pt-"]'))
       if(!sections.length)return
-      const limit=(nav?.getBoundingClientRect().bottom||0)+44
-      let current=sections[0]
-      for(const section of sections){
-        if(section.getBoundingClientRect().top<=limit)current=section
+      const navBottom=nav?.getBoundingClientRect().bottom||0
+      const viewportBottom=Math.min(
+        window.innerHeight||Number.POSITIVE_INFINITY,
+        root.closest('.pt-device')?.getBoundingClientRect().bottom||Number.POSITIVE_INFINITY
+      )
+      const next=pickPortfolioActiveSection(sections,navBottom,viewportBottom)
+      const pending=pendingNavigationRef.current
+      // A click selects the intended tab immediately. While a smooth scroll
+      // passes through intermediary sections, don't flash older tabs.
+      if(!pending||pending===next){
+        if(pending===next){
+          pendingNavigationRef.current=null
+          if(navTimerRef.current)clearTimeout(navTimerRef.current)
+          navTimerRef.current=null
+        }
+        if(next)setActiveSectionId(old=>old===next?old:next)
       }
-      const id=current.id.slice(3)
-      setActiveSectionId(old=>old===id?old:id)
       const top=sections[0].getBoundingClientRect().top
-      const end=sections[sections.length-1].getBoundingClientRect().bottom
-      const fraction=Math.min(1,Math.max(0,(limit-top)/Math.max(1,end-top)))
-      nav?.style.setProperty('--pt-nav-progress',(fraction*100).toFixed(2)+'%')
+      const bottom=sections[sections.length-1].getBoundingClientRect().bottom
+      const line=navBottom+Math.max(28,(viewportBottom-navBottom)*.32)
+      const progress=Math.min(1,Math.max(0,(line-top)/Math.max(1,bottom-top)))
+      nav?.style.setProperty('--pt-nav-progress',(progress*100).toFixed(2)+'%')
     }
     const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)}
-    update()
-    scrollTarget.addEventListener('scroll',schedule,{passive:true})
-    window.addEventListener('resize',schedule,{passive:true})
+    resyncNavigationRef.current=schedule
+    const resizeHeader=()=>{
+      if(nav){
+        root.style.setProperty('--pt-nav-height',nav.getBoundingClientRect().height+'px')
+      }
+      schedule()
+    }
+    resizeHeader()
+    // Capture *all* scrolling ancestors (window on the public website and
+    // the internal preview pane). A guessed scroll host could miss updates.
+    document.addEventListener('scroll',schedule,{capture:true,passive:true})
+    window.addEventListener('scroll',schedule,{passive:true})
+    window.addEventListener('resize',resizeHeader,{passive:true})
+    const observer=typeof ResizeObserver!=='undefined'&&nav?
+      new ResizeObserver(resizeHeader):null
+    if(observer)observer.observe(nav)
     return ()=>{
-      scrollTarget.removeEventListener('scroll',schedule)
-      window.removeEventListener('resize',schedule)
+      document.removeEventListener('scroll',schedule,true)
+      window.removeEventListener('scroll',schedule)
+      window.removeEventListener('resize',resizeHeader)
+      observer?.disconnect()
       if(raf)cancelAnimationFrame(raf)
+      if(navTimerRef.current)clearTimeout(navTimerRef.current)
+      navTimerRef.current=null
+      pendingNavigationRef.current=null
+      resyncNavigationRef.current=null
     }
   },[navIds,focusedSectionId,device])
   useEffect(()=>{
@@ -388,12 +417,22 @@ export default function PortfolioTemplateSite({
   },[activeSectionId,device])
   function jumpToSection(event,id){
     event.preventDefault()
-    const section=Array.from(rootRef.current?.querySelectorAll('section[id^="pt-"]')||[])
+    const section=Array.from(rootRef.current?.querySelectorAll(':scope > section[id^="pt-"]')||[])
       .find(node=>node.id==='pt-'+id)
     if(!section)return
+    // Hold the clicked tab active while smooth scrolling crosses other pages.
+    // The scroll observer releases the lock when the destination is reached.
+    pendingNavigationRef.current=id
+    if(navTimerRef.current)clearTimeout(navTimerRef.current)
+    navTimerRef.current=setTimeout(()=>{
+      pendingNavigationRef.current=null
+      navTimerRef.current=null
+      resyncNavigationRef.current?.()
+    },1800)
+    setActiveSectionId(id)
     const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     section.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})
-    setActiveSectionId(id)
+    if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
     <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
@@ -406,7 +445,6 @@ export default function PortfolioTemplateSite({
       {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
         direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
-        <strong className="pt-site__brand">{view.artistName||'PORTFOLIO'}<span>.</span></strong>
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}
             className={activeSectionId===s.id?'is-active':''}
@@ -417,7 +455,6 @@ export default function PortfolioTemplateSite({
               </span>
             </a>)}
         </nav>
-        <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
         <span className="pt-site__nav-progress" aria-hidden="true"/>
       </header>}
       {visibleSections.map(section=>{
