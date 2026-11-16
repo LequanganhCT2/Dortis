@@ -17,6 +17,7 @@ import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
 import './portfolio-sticky-nav.css'
+import './portfolio-color-palettes.css'
 import {pickPortfolioActiveSection} from './sectionNavigation'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -442,14 +443,14 @@ export default function PortfolioTemplateSite({
     if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+(view.colorPalette||'red-gold')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
         const id=page.id.slice(3)
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
-      {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
+      {continuousSilk&&<SilkStageBackdrop palette={view.colorPalette||'red-gold'} layout={view.ribbonLayout||'diagonal'}
         direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
         sectionsKey={revealKey} device={device}/>

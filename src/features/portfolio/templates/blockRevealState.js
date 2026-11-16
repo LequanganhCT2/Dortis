@@ -24,10 +24,10 @@ export function blockAnimationName(state,direction){
 export function portfolioPartDelays(kind,index=0){
   const order=Math.max(0,Math.min(8,Math.trunc(Number(index)||0)))
   switch(kind){
-    case 'eyebrow': return {enter:40,exit:235}
-    case 'title': return {enter:160,exit:165}
-    case 'body': return {enter:350+order*95,exit:95}
-    case 'image': return {enter:550+order*115,exit:order*35}
-    default: return {enter:0,exit:0}
+    case 'eyebrow':return {enter:0,exit:540}
+    case 'title':return {enter:540,exit:360}
+    case 'body':return {enter:1120+order*240,exit:180}
+    case 'image':return {enter:1780+order*480,exit:order*65}
+    default:return {enter:0,exit:0}
   }
 }

@@ -3,6 +3,7 @@ import {
   FABRIC_BRANCHES,buildFabricBands,scatterGlitter,normalizeFabricChoice
 } from './silkFabricGeometry'
 import './silk-stage-backdrop.css'
+import {tintSilkColor} from './portfolioPalette'
 
 /**
  * One continuous, full-document silk stage.
@@ -14,7 +15,7 @@ import './silk-stage-backdrop.css'
  */
 const MAX_SCENE=26000
 export default function SilkStageBackdrop({
-  layout='diagonal',direction='down-right',motionPaused=false
+  layout='diagonal',direction='down-right',motionPaused=false,palette='red-gold'
 }){
   const root=useRef(null)
   const id=useId().replace(/:/g,'')
@@ -47,65 +48,65 @@ export default function SilkStageBackdrop({
       preserveAspectRatio="none" focusable="false">
       <defs>
         <linearGradient id={id+'-ruby'} x1="0%" y1="17%" x2="100%" y2="80%">
-          <stop offset="0%" stopColor="#370007"/>
-          <stop offset="13%" stopColor="#7d0413"/>
-          <stop offset="30%" stopColor="#dd1527"/>
-          <stop offset="47%" stopColor="#ff755e"/>
-          <stop offset="58%" stopColor="#feab7d"/>
-          <stop offset="71%" stopColor="#bb1227"/>
-          <stop offset="100%" stopColor="#36000d"/>
+          <stop offset="0%" stopColor={tintSilkColor('#370007',palette)}/>
+          <stop offset="13%" stopColor={tintSilkColor('#7d0413',palette)}/>
+          <stop offset="30%" stopColor={tintSilkColor('#dd1527',palette)}/>
+          <stop offset="47%" stopColor={tintSilkColor('#ff755e',palette)}/>
+          <stop offset="58%" stopColor={tintSilkColor('#feab7d',palette)}/>
+          <stop offset="71%" stopColor={tintSilkColor('#bb1227',palette)}/>
+          <stop offset="100%" stopColor={tintSilkColor('#36000d',palette)}/>
         </linearGradient>
         <linearGradient id={id+'-scarlet'} x1="10%" y1="0%" x2="95%" y2="100%">
-          <stop offset="0%" stopColor="#510009"/>
-          <stop offset="19%" stopColor="#d4101b"/>
-          <stop offset="35%" stopColor="#ff5241"/>
-          <stop offset="48%" stopColor="#ffc49a"/>
-          <stop offset="62%" stopColor="#e93626"/>
-          <stop offset="83%" stopColor="#a20a18"/>
-          <stop offset="100%" stopColor="#31000b"/>
+          <stop offset="0%" stopColor={tintSilkColor('#510009',palette)}/>
+          <stop offset="19%" stopColor={tintSilkColor('#d4101b',palette)}/>
+          <stop offset="35%" stopColor={tintSilkColor('#ff5241',palette)}/>
+          <stop offset="48%" stopColor={tintSilkColor('#ffc49a',palette)}/>
+          <stop offset="62%" stopColor={tintSilkColor('#e93626',palette)}/>
+          <stop offset="83%" stopColor={tintSilkColor('#a20a18',palette)}/>
+          <stop offset="100%" stopColor={tintSilkColor('#31000b',palette)}/>
         </linearGradient>
         <linearGradient id={id+'-champagne'} x1="0%" y1="10%" x2="100%" y2="90%">
-          <stop offset="0%" stopColor="#640c14"/>
-          <stop offset="24%" stopColor="#e34d33"/>
-          <stop offset="39%" stopColor="#ef9a53"/>
-          <stop offset="52%" stopColor="#ffe2a3"/>
-          <stop offset="64%" stopColor="#e85d3d"/>
-          <stop offset="100%" stopColor="#680c18"/>
+          <stop offset="0%" stopColor={tintSilkColor('#640c14',palette)}/>
+          <stop offset="24%" stopColor={tintSilkColor('#e34d33',palette)}/>
+          <stop offset="39%" stopColor={tintSilkColor('#ef9a53',palette)}/>
+          <stop offset="52%" stopColor={tintSilkColor('#ffe2a3',palette)}/>
+          <stop offset="64%" stopColor={tintSilkColor('#e85d3d',palette)}/>
+          <stop offset="100%" stopColor={tintSilkColor('#680c18',palette)}/>
         </linearGradient>
         <linearGradient id={id+'-crease'} x1="0%" y1="0%" x2="100%" y2="60%">
-          <stop offset="0%" stopColor="#240008" stopOpacity=".76"/>
-          <stop offset="55%" stopColor="#620311" stopOpacity=".5"/>
-          <stop offset="100%" stopColor="#ff6d46" stopOpacity=".05"/>
+          <stop offset="0%" stopColor={tintSilkColor('#240008',palette)} stopOpacity=".76"/>
+          <stop offset="55%" stopColor={tintSilkColor('#620311',palette)} stopOpacity=".5"/>
+          <stop offset="100%" stopColor={tintSilkColor('#ff6d46',palette)} stopOpacity=".05"/>
         </linearGradient>
         <linearGradient id={id+'-shadow'} x1="100%" y1="20%" x2="0%" y2="85%">
-          <stop offset="0%" stopColor="#2b000a" stopOpacity=".82"/>
-          <stop offset="60%" stopColor="#650313" stopOpacity=".48"/>
-          <stop offset="100%" stopColor="#140006" stopOpacity=".76"/>
+          <stop offset="0%" stopColor={tintSilkColor('#2b000a',palette)} stopOpacity=".82"/>
+          <stop offset="60%" stopColor={tintSilkColor('#650313',palette)} stopOpacity=".48"/>
+          <stop offset="100%" stopColor={tintSilkColor('#140006',palette)} stopOpacity=".76"/>
         </linearGradient>
         <linearGradient id={id+'-satin'} x1="0%" y1="10%" x2="100%" y2="70%">
-          <stop offset="0%" stopColor="#f73f38" stopOpacity="0"/>
-          <stop offset="20%" stopColor="#ffb89a" stopOpacity=".39"/>
-          <stop offset="48%" stopColor="#fff4ce" stopOpacity=".65"/>
-          <stop offset="72%" stopColor="#f89b74" stopOpacity=".24"/>
-          <stop offset="100%" stopColor="#f32b38" stopOpacity="0"/>
+          <stop offset="0%" stopColor={tintSilkColor('#f73f38',palette)} stopOpacity="0"/>
+          <stop offset="20%" stopColor={tintSilkColor('#ffb89a',palette)} stopOpacity=".39"/>
+          <stop offset="48%" stopColor={tintSilkColor('#fff4ce',palette)} stopOpacity=".65"/>
+          <stop offset="72%" stopColor={tintSilkColor('#f89b74',palette)} stopOpacity=".24"/>
+          <stop offset="100%" stopColor={tintSilkColor('#f32b38',palette)} stopOpacity="0"/>
         </linearGradient>
         <linearGradient id={id+'-edge'} x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#ffd0a2" stopOpacity=".02"/>
-          <stop offset="51%" stopColor="#ffe3b6" stopOpacity=".68"/>
-          <stop offset="100%" stopColor="#e74131" stopOpacity=".1"/>
+          <stop offset="0%" stopColor={tintSilkColor('#ffd0a2',palette)} stopOpacity=".02"/>
+          <stop offset="51%" stopColor={tintSilkColor('#ffe3b6',palette)} stopOpacity=".68"/>
+          <stop offset="100%" stopColor={tintSilkColor('#e74131',palette)} stopOpacity=".1"/>
         </linearGradient>
         <radialGradient id={id+'-aura'}>
-          <stop offset="0%" stopColor="#fffaf2" stopOpacity=".96"/>
-          <stop offset="13%" stopColor="#fff6c8" stopOpacity=".91"/>
-          <stop offset="28%" stopColor="#ffda71" stopOpacity=".68"/>
-          <stop offset="48%" stopColor="#ffab3f" stopOpacity=".4"/>
-          <stop offset="72%" stopColor="#ff6b24" stopOpacity=".13"/>
-          <stop offset="100%" stopColor="#e4411c" stopOpacity="0"/>
+          <stop offset="0%" stopColor={tintSilkColor('#fffaf2',palette)} stopOpacity=".96"/>
+          <stop offset="13%" stopColor={tintSilkColor('#fff6c8',palette)} stopOpacity=".91"/>
+          <stop offset="28%" stopColor={tintSilkColor('#ffda71',palette)} stopOpacity=".68"/>
+          <stop offset="48%" stopColor={tintSilkColor('#ffab3f',palette)} stopOpacity=".4"/>
+          <stop offset="72%" stopColor={tintSilkColor('#ff6b24',palette)} stopOpacity=".13"/>
+          <stop offset="100%" stopColor={tintSilkColor('#e4411c',palette)} stopOpacity="0"/>
         </radialGradient>
         <radialGradient id={id+'-dust'}>
-          <stop offset="0%" stopColor="#fffbea" stopOpacity="1"/>
-          <stop offset="28%" stopColor="#ffe5a1" stopOpacity=".7"/>
-          <stop offset="100%" stopColor="#e38d25" stopOpacity="0"/>
+          <stop offset="0%" stopColor={tintSilkColor('#fffbea',palette)} stopOpacity="1"/>
+          <stop offset="28%" stopColor={tintSilkColor('#ffe5a1',palette)} stopOpacity=".7"/>
+          <stop offset="100%" stopColor={tintSilkColor('#e38d25',palette)} stopOpacity="0"/>
         </radialGradient>
         <filter id={id+'-cloud'} x="-80%" y="-80%" width="260%" height="260%">
           <feGaussianBlur stdDeviation="24"/>
@@ -122,26 +123,26 @@ export default function SilkStageBackdrop({
         <circle cx="505" cy="382" r="177"
           fill={'url(#'+id+'-aura)'} opacity=".93"/>
         <circle cx="505" cy="382" r="188"
-          fill="none" stroke="#ffdc82" strokeWidth="2.5" opacity=".65"/>
+          fill="none" stroke={tintSilkColor('#ffdc82',palette)} strokeWidth="2.5" opacity=".65"/>
         <circle cx="505" cy="382" r="203"
-          fill="none" stroke="#ffe49b" strokeWidth="9" opacity=".45"
+          fill="none" stroke={tintSilkColor('#ffe49b',palette)} strokeWidth="9" opacity=".45"
           filter={'url(#'+id+'-glimmer)'}/>
         <ellipse cx="505" cy="382" rx="225" ry="179"
-          fill="none" stroke="#fff1b4" strokeWidth="4" opacity=".68"
+          fill="none" stroke={tintSilkColor('#fff1b4',palette)} strokeWidth="4" opacity=".68"
           transform="rotate(-23 505 382)"/>
         <ellipse cx="505" cy="382" rx="235" ry="175"
-          fill="none" stroke="#e9a64d" strokeWidth="1.8" opacity=".66"
+          fill="none" stroke={tintSilkColor('#e9a64d',palette)} strokeWidth="1.8" opacity=".66"
           transform="rotate(31 505 382)"/>
         <path d="M 300 465 C 380 580 598 616 705 442"
-          fill="none" stroke="#ffecad" strokeWidth="3.7" opacity=".84"
+          fill="none" stroke={tintSilkColor('#ffecad',palette)} strokeWidth="3.7" opacity=".84"
           strokeLinecap="round"/>
         <path d="M 308 473 C 424 613 596 587 686 481"
-          fill="none" stroke="#ffbe60" strokeWidth="15" opacity=".55"
+          fill="none" stroke={tintSilkColor('#ffbe60',palette)} strokeWidth="15" opacity=".55"
           filter={'url(#'+id+'-glimmer)'}/>
         {Array.from({length:11},(_,i)=><circle key={'aura-'+i}
           cx={505+Math.cos(i*2.399)*220}
           cy={382+Math.sin(i*2.399)*183}
-          r={2+i%4*1.3} fill="#ffeaaa" opacity=".83"/>)}
+          r={2+i%4*1.3} fill={tintSilkColor('#ffeaaa',palette)} opacity=".83"/>)}
       </g>
       {fabric.map((branch,index)=>{
         const d=branch.bands
@@ -152,7 +153,7 @@ export default function SilkStageBackdrop({
           <path d={d.underfold} fill={'url(#'+id+'-crease)'} opacity=".84"/>
           <path d={d.shadow} fill={'url(#'+id+'-shadow)'} opacity=".79"/>
           <path d={d.satin} fill={'url(#'+id+'-satin)'} opacity=".76"/>
-          <path d={d.high} fill="#ffe1b3" opacity=".23"/>
+          <path d={d.high} fill={tintSilkColor('#ffe1b3',palette)} opacity=".23"/>
           <path d={d.fringe} fill="none" stroke={'url(#'+id+'-edge)'}
             strokeWidth="2.7" opacity=".64"/>
         </g>
@@ -163,9 +164,9 @@ export default function SilkStageBackdrop({
           style={{animationDuration:p.dur+'s',animationDelay:p.delay+'s'}}>
           {p.glow&&<circle cx={p.x} cy={p.y} r={p.r*6}
             fill={'url(#'+id+'-dust)'} opacity=".63"/>}
-          <circle cx={p.x} cy={p.y} r={p.r} fill="#fff0ad" opacity=".9"/>
+          <circle cx={p.x} cy={p.y} r={p.r} fill={tintSilkColor('#fff0ad',palette)} opacity=".9"/>
           {p.id%13===0&&<path d={'M '+(p.x-7)+' '+p.y+'h14 M '+p.x+
-            ' '+(p.y-7)+'v14'} stroke="#fff4c8"
+            ' '+(p.y-7)+'v14'} stroke={tintSilkColor('#fff4c8',palette)}
             strokeWidth="1.2" opacity=".76"/>}
         </g>)}
       </g>

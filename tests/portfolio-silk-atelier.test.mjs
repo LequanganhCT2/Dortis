@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {PRESET_FORMS,blueprintFor,normalizeBlueprint,resolveInstance} from '../src/features/portfolio/templates/model.js'
 import {resolveArtistPortfolio} from '../src/features/portfolio/templates/resolvedPortfolio.js'
+import {FORM_COLOR_PALETTES,normalizePortfolioPalette,tintSilkColor} from '../src/features/portfolio/templates/portfolioPalette.js'
 
 const code=name=>readFileSync(new URL('../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
 const migration=readFileSync(new URL(
@@ -84,4 +85,21 @@ test('Old Forms are archived, not cascaded/deleted; one new draft binds approved
   assert.doesNotMatch(manager,/<section className="pt-create"/)
   assert.match(manager,/Quầng sáng trên cùng/)
   assert.match(manager,/glowOpacity/)
+})
+
+test('New palettes are selectable per artist without changing the source form',()=>{
+  assert.deepEqual(FORM_COLOR_PALETTES.map(p=>p.id),[
+    'red-gold','red-white','yellow-white','black-white'
+  ])
+  assert.equal(normalizePortfolioPalette('bad-id'),'red-gold')
+  const template={blueprint:normalizeBlueprint({
+    ...blueprintFor(PRESET_FORMS[0]),colorPalette:'yellow-white'
+  })}
+  assert.equal(resolveInstance(template,{content:{}},{name:'A'}).colorPalette,'yellow-white')
+  assert.equal(resolveInstance(template,{content:{colorPalette:'black-white'}},{name:'B'}).colorPalette,'black-white')
+  assert.equal(tintSilkColor('#ef9a53','red-gold'),'#ef9a53')
+  assert.notEqual(tintSilkColor('#ef9a53','black-white'),'#ef9a53')
+  assert.ok(code('PortfolioInstanceEditor.jsx').includes('Bảng màu Portfolio'))
+  assert.ok(code('PortfolioTemplateManager.jsx').includes('Bảng màu mặc định'))
+  assert.ok(code('PortfolioTemplateSite.jsx').includes('pt-palette--'))
 })

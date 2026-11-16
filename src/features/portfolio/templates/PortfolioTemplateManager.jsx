@@ -1,6 +1,7 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
+import {FORM_COLOR_PALETTES} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
@@ -224,6 +225,13 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <option value="editorial">Editorial Story</option>
               <option value="cinematic">Cinematic Stage</option>
               <option value="minimal">Minimal Signature</option>
+            </select>
+          </label>
+          <label className="pt-blueprint__style">Bảng màu mặc định
+            <select value={blueprint.colorPalette||'red-gold'}
+              aria-label="Bảng màu mặc định của Form"
+              onChange={e=>setBlueprint(v=>({...v,colorPalette:e.target.value}))}>
+              {FORM_COLOR_PALETTES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
             </select>
           </label>
           <label className="pt-blueprint__style">Chủ đề nền xuyên suốt mọi trang

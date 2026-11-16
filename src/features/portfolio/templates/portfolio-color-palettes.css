@@ -1,0 +1,104 @@
+/* One stage palette per artist. Existing red-gold publications stay unchanged. */
+.pt-site.pt-palette--red-white{
+ --pt-bg:#6b0717;--pt-ink:#fffafb;--pt-muted:#ffe2e8;
+ --pt-accent:#fff;--pt-gold:#fff;--pt-border:#ffffff48;
+}
+.pt-site.pt-palette--yellow-white{
+ --pt-bg:#fff9e6;--pt-ink:#33260b;--pt-muted:#59441c;
+ --pt-accent:#9a680b;--pt-gold:#b58711;--pt-border:#b88a2f5e;
+}
+.pt-site.pt-palette--black-white{
+ --pt-bg:#101114;--pt-ink:#fdfdfd;--pt-muted:#d4d4d6;
+ --pt-accent:#fff;--pt-gold:#e7e8e9;--pt-border:#ffffff43;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--red-white{
+ color:#fffafb!important;
+ background:radial-gradient(ellipse at 75% 15%,#f57c8c6b,transparent 40%),
+ radial-gradient(ellipse at 14% 70%,#c522424f,transparent 45%),
+ linear-gradient(145deg,#53020c,#990e24 45%,#570515)!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--yellow-white{
+ color:#332508!important;
+ background:radial-gradient(ellipse at 76% 13%,#ffdc7399,transparent 38%),
+ radial-gradient(ellipse at 18% 63%,#f8d87f6b,transparent 52%),
+ linear-gradient(145deg,#fffef7,#fce7a4 45%,#fff9e4)!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--black-white{
+ color:#fcfcfc!important;
+ background:radial-gradient(ellipse at 72% 14%,#797b8533,transparent 40%),
+ radial-gradient(ellipse at 16% 75%,#c9ccd322,transparent 43%),
+ linear-gradient(145deg,#060609,#24252a 45%,#08080b)!important;
+}
+/* Text contrast includes layouts with their own explicit copy colors. */
+.pt-site.pt-palette--yellow-white :is(.pt-ribbon__copy h2,.pt-ribbon__copy p,
+ .pt-ribbon__copy small,.pt-artboard__layer.is-text .pt-artboard__text),
+.pt-site.pt-site--continuous-silk.pt-palette--yellow-white .pt-fx-section .pt-site__copy :is(h2,p,small){
+ color:#3b2a12!important;text-shadow:0 2px 16px #fff9e9!important;
+}
+.pt-site.pt-palette--yellow-white .pt-ribbon__copy>small,
+.pt-site.pt-site--continuous-silk.pt-palette--yellow-white .pt-fx-section .pt-site__copy>small{
+ color:#91600e!important;
+}
+.pt-site.pt-palette--red-white :is(.pt-ribbon__copy h2,.pt-ribbon__copy p,.pt-ribbon__copy small),
+.pt-site.pt-site--continuous-silk.pt-palette--red-white .pt-fx-section .pt-site__copy :is(h2,p,small),
+.pt-site.pt-palette--black-white :is(.pt-ribbon__copy h2,.pt-ribbon__copy p,.pt-ribbon__copy small),
+.pt-site.pt-site--continuous-silk.pt-palette--black-white .pt-fx-section .pt-site__copy :is(h2,p,small){
+ color:#fffafb!important;
+}
+.pt-site.pt-palette--red-white .pt-artboard__layer.is-text .pt-artboard__text,
+.pt-site.pt-palette--black-white .pt-artboard__layer.is-text .pt-artboard__text{
+ color:#fffafb!important;
+}
+/* Sticky navigation and footer take the selected surface color too. */
+.pt-site.pt-palette--yellow-white > .pt-site__nav.pt-site__nav--sticky{
+ color:#35240e!important;background:#fffdf3e5!important;
+ border-color:#b98c3f6e!important;box-shadow:0 8px 30px #84601b26!important;
+}
+.pt-site.pt-palette--yellow-white > .pt-site__nav.pt-site__nav--sticky
+ :is(.pt-site__nav-links a,.pt-site__nav-label,strong,span){
+ color:#493319!important;
+}
+.pt-site.pt-palette--yellow-white > .pt-site__nav.pt-site__nav--sticky .pt-site__nav-links a.is-active{
+ color:#4c3103!important;background:#e8bd5480!important;border-color:#b88a27a0!important;
+}
+.pt-site.pt-palette--black-white > .pt-site__nav.pt-site__nav--sticky{
+ background:linear-gradient(105deg,#0b0b0df2,#28282de8,#101014f2)!important;
+ border-color:#ffffff55!important;
+}
+.pt-site.pt-palette--red-white > .pt-site__nav.pt-site__nav--sticky{
+ background:linear-gradient(105deg,#580613f2,#a2122be8,#650b20f2)!important;
+ border-color:#ffffff55!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--yellow-white .pt-site__footer{
+ background:#fff4d6a1!important;color:#3d2c12!important;
+ border-top:1px solid #b78a2269!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--yellow-white .pt-site__footer :is(span,small){
+ color:#3d2c12!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--black-white .pt-site__footer{
+ background:#10101499!important;border-color:#ffffff38!important;
+}
+.pt-site.pt-site--continuous-silk.pt-palette--red-white .pt-site__footer{
+ background:#70081a8f!important;border-color:#ffffff38!important;
+}
+.pt-site.pt-palette--yellow-white .pt-ribbon__tile{
+ border-color:#b88f3c77;background:#f8ecd0;
+}
+.pt-site.pt-palette--black-white .pt-ribbon__tile{
+ border-color:#eee9e866;background:#242529;
+}
+.pt-site.pt-palette--red-white .pt-ribbon__tile{
+ border-color:#ffffff66;background:#9f1930;
+}
+.pt-site.pt-palette--yellow-white .pt-silk-stage__light-veil{
+ background:linear-gradient(90deg,#fff7dc3a,transparent 54%)!important;
+}
+.pt-site.pt-palette--black-white .pt-silk-stage__light-veil{
+ background:linear-gradient(90deg,#0009,transparent 62%)!important;
+}
+.pt-site.pt-palette--black-white .pt-portfolio-halos{filter:grayscale(1)}
+.pt-site.pt-palette--yellow-white .pt-portfolio-halos{filter:hue-rotate(35deg) saturate(.7)}
+.pt-editor__palette-swatches{display:flex;gap:5px;align-items:center;margin-top:6px}
+.pt-editor__palette-swatches i{display:block;width:20px;height:20px;
+ border:1px solid #a1a2a36c;border-radius:50%}

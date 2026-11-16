@@ -62,6 +62,7 @@ test('A section reveals eyebrow, title, description, and photos in order',()=>{
   assert.match(css,/animation-duration:840ms/)
   assert.match(css,/animation-delay:var\(--pt-reveal-delay,0ms\)/)
   assert.match(css,/animation-delay:var\(--pt-reveal-exit-delay,0ms\)/)
+  assert.doesNotMatch(css,/animation-delay:0ms/)
   assert.match(css,/@keyframes pt-block-enter-bottom/)
   assert.match(css,/@keyframes pt-block-enter-top/)
   assert.match(css,/scale:1\.025/)

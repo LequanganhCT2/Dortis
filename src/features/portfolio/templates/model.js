@@ -1,3 +1,5 @@
+import {normalizePortfolioPalette} from './portfolioPalette.js'
+
 /** Reusable layout only. Artist names, claims, images, and booking live on instances.
  * Suggested neutral tokens are PROPOSED, never an artist's approved identity.
  */
@@ -56,12 +58,13 @@ export const FORM_EFFECTS=[
 ]
 export const FORM_EFFECT_IDS=FORM_EFFECTS.map(item=>item.id)
 export function blueprintFor(preset){
-  return {style:preset.style,visualTheme:'ribbon-luxury',ribbonLayout:'diagonal',ribbonDirection:'down-right',glowOpacity:0.28,
+  return {style:preset.style,colorPalette:'red-gold',visualTheme:'ribbon-luxury',ribbonLayout:'diagonal',ribbonDirection:'down-right',glowOpacity:0.28,
     sections:preset.sections.map(s=>({...s})),
     source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
 export function normalizeBlueprint(input={}){
   const style=['editorial','cinematic','minimal'].includes(input.style)?input.style:'editorial'
+  const colorPalette=normalizePortfolioPalette(input.colorPalette)
   const visualTheme=FORM_VISUAL_THEMES.some(t=>t.id===input.visualTheme)?
     input.visualTheme:'ribbon-luxury'
   const {ribbonLayout,ribbonDirection}=normalizeRibbonChoice(input.ribbonLayout,input.ribbonDirection)
@@ -81,7 +84,7 @@ export function normalizeBlueprint(input={}){
       effect:FORM_EFFECT_IDS.includes(x.effect)?x.effect:'auto',
       slots:Math.max(0,Math.min(10,Math.floor(Number(x.slots)||0)))
     }))
-  return {style,visualTheme,ribbonLayout,ribbonDirection,glowOpacity,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
+  return {style,visualTheme,colorPalette,ribbonLayout,ribbonDirection,glowOpacity,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
 export function portfolioSections(template,content){
   const shared=normalizeBlueprint(template?.blueprint||{}).sections
@@ -100,6 +103,7 @@ export function resolveInstance(template,instance,profile){
     templateName:template?.name||'',templateVersion:template?.version||1,
     artistName,artistRole:String(profile?.role||''),
     style:blueprint.style,visualTheme:blueprint.visualTheme,
+    colorPalette:normalizePortfolioPalette(content.colorPalette||blueprint.colorPalette),
     ribbonLayout:blueprint.ribbonLayout,ribbonDirection:blueprint.ribbonDirection,
     glowOpacity:blueprint.glowOpacity,profileId:profile?.id,
     sections:portfolioSections(template,content).map(section=>{

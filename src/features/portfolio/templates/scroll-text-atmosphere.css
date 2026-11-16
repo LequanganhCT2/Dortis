@@ -33,13 +33,12 @@
   animation-iteration-count:1;
   animation-timeline:auto!important;
   animation-range:normal!important;
-  animation-delay:0ms;
   transform-origin:center 55%;
   backface-visibility:hidden;
 }
 .pt-site.pt-site--block-reveal-active > section[data-pt-block-state="visible"]
   [data-pt-reveal-part]{
-  animation-delay:var(--pt-reveal-delay,0ms);
+  animation-delay:var(--pt-reveal-delay,0ms)!important;
 }
 .pt-site.pt-site--block-reveal-active > section[data-pt-block-state="visible"][data-pt-block-direction="down"]
   [data-pt-reveal-part]{animation-name:pt-block-enter-bottom}
@@ -49,7 +48,7 @@
   [data-pt-reveal-part]{
   animation-name:pt-block-exit-top;
   animation-duration:460ms;
-  animation-delay:var(--pt-reveal-exit-delay,0ms);
+  animation-delay:var(--pt-reveal-exit-delay,0ms)!important;
 }
 .pt-site.pt-site--block-reveal-active > section[data-pt-block-state="hidden-bottom"]
   [data-pt-reveal-part]{
