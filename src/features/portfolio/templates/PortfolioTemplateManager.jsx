@@ -99,28 +99,33 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     }catch(e){setError('Không gán được form: '+e.message)}
     finally{setWorking(false)}
   }
-  /** Saves layout + its own directional control on a single Form blueprint. */
-  async function updateRibbonChoice(form,patch){
+  /** Save ribbon direction or palette directly on the catalog card.
+   * Version comparison prevents a stale card from overwriting the shared Form.
+   */
+  async function updateTemplateChoice(form,patch){
     if(working)return
     const current=normalizeBlueprint(form.blueprint)
     const chosen=normalizeRibbonChoice(
       patch.ribbonLayout||current.ribbonLayout,
       patch.ribbonLayout?undefined:(patch.ribbonDirection||current.ribbonDirection)
     )
-    if(current.ribbonLayout===chosen.ribbonLayout&&
-       current.ribbonDirection===chosen.ribbonDirection)return
+    const next=normalizeBlueprint({...current,...chosen,
+      colorPalette:patch.colorPalette||current.colorPalette})
+    if(current.ribbonLayout===next.ribbonLayout&&
+       current.ribbonDirection===next.ribbonDirection&&
+       current.colorPalette===next.colorPalette)return
     setWorking(true);setError('');setNotice('')
     try{
       const {data,error:e}=await supabase.from('artist_website_templates')
-        .update({blueprint:{...current,...chosen},version:form.version+1,
+        .update({blueprint:next,version:form.version+1,
           updated_at:new Date().toISOString()})
         .eq('id',form.id).eq('version',form.version).select().maybeSingle()
       if(e)throw e
       if(!data)throw new Error('Form đã được cập nhật ở nơi khác. Hãy tải lại trước khi chọn.')
       setTemplates(list=>list.map(item=>item.id===data.id?data:item))
-      setNotice('Đã lưu layout và hướng dải lụa của '+form.name+
-        '. Website đã xuất bản cần cập nhật để nhận thay đổi.')
-    }catch(e){setError('Không lưu được hướng dải lụa: '+e.message)}
+      setNotice((patch.colorPalette?'Đã lưu bảng màu ':'Đã lưu hướng dải lụa ')+
+        'cho '+form.name+'. Các website đã xuất bản cần cập nhật lại.')
+    }catch(e){setError('Không lưu được thiết kế Form: '+e.message)}
     finally{setWorking(false)}
   }
   async function detach(group,person){
@@ -305,7 +310,8 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           const chosen=choice[group.id]||''
           const person=group.people.find(item=>item.artist.id===chosen)
           return <article key={group.id} className="pt-template">
-            <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')}>
+            <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')+
+              ' pt-template__visual--palette-'+normalizeBlueprint(group.blueprint).colorPalette}>
               <span>{group.name}</span>
               <div className="pt-template__skeleton"><i/><i/><i/></div>
               <small>FORM / {group.slug.toUpperCase()}</small>
@@ -321,7 +327,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                   <select aria-label={'Kiểu dải lụa '+group.name}
                     value={normalizeBlueprint(group.blueprint).ribbonLayout}
                     disabled={working}
-                    onChange={e=>updateRibbonChoice(group,{ribbonLayout:e.target.value})}>
+                    onChange={e=>updateTemplateChoice(group,{ribbonLayout:e.target.value})}>
                     {FORM_RIBBON_LAYOUTS.map(item=>
                       <option key={item.id} value={item.id}>{item.label}</option>)}
                   </select>
@@ -330,12 +336,18 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                   <select aria-label={'Hướng dải lụa '+group.name}
                     value={normalizeBlueprint(group.blueprint).ribbonDirection}
                     disabled={working}
-                    onChange={e=>updateRibbonChoice(group,{ribbonDirection:e.target.value})}>
+                    onChange={e=>updateTemplateChoice(group,{ribbonDirection:e.target.value})}>
                     {ribbonDirectionOptions(normalizeBlueprint(group.blueprint).ribbonLayout)
                       .map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
                   </select>
                 </label>
               </div>
+              <PortfolioPalettePicker
+                heading="Bảng màu Form này"
+                hint="Chọn màu tại đây để lưu vào Form. Website nghệ sĩ cần cập nhật để nhận màu mới."
+                value={normalizeBlueprint(group.blueprint).colorPalette}
+                disabled={working}
+                onChange={palette=>updateTemplateChoice(group,{colorPalette:palette})}/>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
               <div className="pt-template__assign">

@@ -585,3 +585,55 @@
 @media(prefers-reduced-motion:reduce){
   .pt-palette-picker__option{transition:none}
 }
+
+/* The Form library card must expose color selection without opening any editor. */
+.pt-template__body > .pt-palette-picker{
+  padding:12px 10px;gap:9px;border-radius:9px;
+  background:#fafcfc;border-color:#d7e3e5;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__head strong{
+  font-size:11px;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__head p{
+  font-size:10px;line-height:1.5;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__options{
+  grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__option{
+  padding:7px;gap:7px;font-size:10px;min-height:44px;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__swatch{
+  flex:0 0 44px;height:29px;
+}
+.pt-template__body > .pt-palette-picker .pt-palette-picker__mark{
+  flex:0 0 12px;
+}
+.pt-template__visual.pt-template__visual--palette-red-white{
+  background:linear-gradient(140deg,#8d1125,#cd3545 55%,#f8eee9)!important;
+  color:#fff8f8;
+}
+.pt-template__visual.pt-template__visual--palette-red-white .pt-template__skeleton i{
+  background:#fff4f4a1;
+}
+.pt-template__visual.pt-template__visual--palette-yellow-white{
+  background:linear-gradient(140deg,#fffef8,#fbe9ae 55%,#d3a42b)!important;
+  color:#47310d;
+}
+.pt-template__visual.pt-template__visual--palette-yellow-white .pt-template__skeleton i{
+  background:#a5782382;
+}
+.pt-template__visual.pt-template__visual--palette-black-white{
+  background:linear-gradient(140deg,#090a0d,#35363a 55%,#a5a6a9)!important;
+  color:#f9f9f9;
+}
+.pt-template__visual.pt-template__visual--palette-black-white .pt-template__skeleton i{
+  background:#eeeef093;
+}
+.pt-template__visual.pt-template__visual--palette-red-gold{
+  background:linear-gradient(140deg,#39020d,#8d1428 55%,#dfae57)!important;
+  color:#fff3d9;
+}
+.pt-template__visual.pt-template__visual--palette-red-gold .pt-template__skeleton i{
+  background:#eaca898b;
+}

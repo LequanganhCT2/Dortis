@@ -117,3 +117,18 @@ test('Color selection is visible before the long artist section list',()=>{
   assert.match(picker,/aria-pressed=\{active===option\.id\}/)
   assert.match(styles,/\.pt-palette-picker__options/)
 })
+
+test('Catalog card visibly exposes four colors and saves chosen palette to shared Form',()=>{
+  const manager=code('PortfolioTemplateManager.jsx')
+  const styles=code('template-admin.css')
+  const block=manager.slice(manager.indexOf('<div className="pt-template__ribbon-choice">'))
+  const pickerPos=block.indexOf('heading="Bảng màu Form này"')
+  const editPos=block.indexOf('Chỉnh bố cục form gốc')
+  assert.ok(pickerPos>0&&editPos>pickerPos,'palette must precede the edit button')
+  assert.match(block,/onChange=\{palette=>updateTemplateChoice\(group,\{colorPalette:palette\}\)\}/)
+  assert.match(manager,/\.update\(\{blueprint:next,version:form\.version\+1,/)
+  assert.match(manager,/\.eq\('id',form\.id\)\.eq\('version',form\.version\)/)
+  assert.match(manager,/pt-template__visual--palette-/)
+  assert.match(styles,/\.pt-template__body > \.pt-palette-picker/)
+  assert.match(styles,/\.pt-template__visual\.pt-template__visual--palette-black-white/)
+})
