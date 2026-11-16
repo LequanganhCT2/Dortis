@@ -20,3 +20,17 @@
 .pt-site .pt-fx-section.pt-section--luxury-ribbon[data-backdrop] .pt-site__copy>small{color:var(--pt-accent)}
 .pt-site .pt-fx-section.pt-section--luxury-ribbon[data-backdrop] .pt-site__copy{background:none}
 .pt-site .pt-fx-section.pt-section--luxury-ribbon::before{content:none}
+
+
+/* Explicit legacy SVG ribbon honors the selected geometry of its Form. */
+.pt-luxury-ribbon svg{transform-origin:50% 50%;transition:transform .6s ease}
+.pt-luxury-ribbon--layout-vertical.pt-luxury-ribbon--direction-left svg{transform:scaleX(-1)}
+.pt-luxury-ribbon--layout-diagonal.pt-luxury-ribbon--direction-down-right svg{transform:rotate(-32deg) scale(1.13)}
+.pt-luxury-ribbon--layout-diagonal.pt-luxury-ribbon--direction-down-left svg{transform:rotate(32deg) scaleX(-1) scale(1.13)}
+.pt-luxury-ribbon--layout-diagonal.pt-luxury-ribbon--direction-up-right svg{transform:rotate(32deg) scale(1.13)}
+.pt-luxury-ribbon--layout-diagonal.pt-luxury-ribbon--direction-up-left svg{transform:rotate(-32deg) scaleX(-1) scale(1.13)}
+.pt-luxury-ribbon--layout-horizontal.pt-luxury-ribbon--direction-to-right svg{transform:rotate(75deg) scale(1.26)}
+.pt-luxury-ribbon--layout-horizontal.pt-luxury-ribbon--direction-to-left svg{transform:rotate(-75deg) scaleX(-1) scale(1.26)}
+.pt-luxury-ribbon--layout-curtain.pt-luxury-ribbon--direction-inward svg{transform:scaleX(-1) scale(.88)}
+.pt-luxury-ribbon--layout-curtain.pt-luxury-ribbon--direction-outward svg{transform:scale(1.1)}
+@media(prefers-reduced-motion:reduce){.pt-luxury-ribbon svg{transition:none!important}}

@@ -308,3 +308,19 @@
 .pt-blueprint__visual-note{margin:7px 0 16px;padding:12px 14px;border-radius:8px;
   background:#f7f3e8;color:#73614a;font:500 11px/1.8 'Be Vietnam Pro',sans-serif}
 @media(max-width:680px){.pt-blueprint__themes{grid-template-columns:1fr}}
+
+
+/* Each reusable Form has an independent ribbon style and direction selector. */
+.pt-template__ribbon-choice{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;border:1px solid #d7e3e5;border-radius:9px;padding:12px;
+  background:#f9fbfb}
+.pt-template__ribbon-choice label{display:flex;flex-direction:column;gap:6px;
+  color:#496773;font:750 10px/1.5 'Be Vietnam Pro',sans-serif}
+.pt-template__ribbon-choice select{display:block;width:100%;min-width:0;
+  border:1px solid #bed0d6;border-radius:7px;padding:9px 7px;
+  background:#fff;color:#243c49;font:600 10px 'Be Vietnam Pro',sans-serif}
+.pt-template__ribbon-choice select:focus-visible{outline:2px solid #2f8892;outline-offset:2px}
+.pt-template__ribbon-choice select:disabled{opacity:.55;cursor:wait}
+.pt-blueprint__themes{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:560px){.pt-template__ribbon-choice{grid-template-columns:1fr}
+  .pt-blueprint__themes{grid-template-columns:1fr}}

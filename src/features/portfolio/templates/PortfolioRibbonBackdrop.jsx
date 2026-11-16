@@ -13,7 +13,7 @@ const SPARKLES=Array.from({length:38},(_,i)=>({
   delay:(i*7%19)*-.41,
   duration:3.5+(i%5)*1.4
 }))
-export default function PortfolioRibbonBackdrop({index=0,variant='standard'}){
+export default function PortfolioRibbonBackdrop({index=0,variant='standard',layout='vertical',direction='right'}){
   const id=useId().replace(/:/g,'')
   const node=useRef(null)
   useEffect(()=>{
@@ -27,7 +27,14 @@ export default function PortfolioRibbonBackdrop({index=0,variant='standard'}){
     return ()=>observer.disconnect()
   },[])
   const type=['hero','gallery','standard'].includes(variant)?variant:'standard'
+  const layouts=['vertical','diagonal','horizontal','curtain']
+  const selectedLayout=layouts.includes(layout)?layout:'vertical'
+  const validDirections={vertical:['left','right'],diagonal:['down-right','down-left','up-right','up-left'],
+    horizontal:['to-left','to-right'],curtain:['inward','outward']}
+  const selectedDirection=validDirections[selectedLayout].includes(direction)?direction:validDirections[selectedLayout][0]
   return <div ref={node} className={'pt-ribbon-backdrop pt-ribbon-backdrop--'+type+
+    ' pt-ribbon-backdrop--layout-'+selectedLayout+
+    ' pt-ribbon-backdrop--direction-'+selectedDirection+
     ' pt-ribbon-backdrop--phase-'+(Math.abs(index)%3)}
     aria-hidden="true">
     <div className="pt-ribbon-backdrop__glow"/>
@@ -70,6 +77,8 @@ export default function PortfolioRibbonBackdrop({index=0,variant='standard'}){
           <feGaussianBlur stdDeviation="3.5"/>
         </filter>
       </defs>
+      <g className="pt-ribbon-backdrop__composition">
+      <g id={id+'-ribbon-shapes'}>
       <g className="pt-ribbon-backdrop__silks">
         <path d="M 810 -150 C 560 60 860 200 760 365 S 540 580 700 960"
           fill="none" stroke={'url(#'+id+'-scarlet)'} strokeWidth="205"
@@ -106,6 +115,10 @@ export default function PortfolioRibbonBackdrop({index=0,variant='standard'}){
         <path d="M 686 -160 C 525 82 788 209 691 367 S 480 624 630 970"
           stroke="#fff3bf" strokeWidth="2" fill="none"
           strokeDasharray="8 145 14 230" opacity=".65"/>
+      </g>
+      </g>
+      {selectedLayout==='curtain'&&<use href={'#'+id+'-ribbon-shapes'}
+        transform="translate(1200 0) scale(-1 1)" opacity=".62"/>}
       </g>
       <g className="pt-ribbon-backdrop__lights" fill={'url(#'+id+'-flare)'}>
         {SPARKLES.filter((_,i)=>i%7===0).map((dot,i)=>

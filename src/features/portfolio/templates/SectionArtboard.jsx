@@ -143,7 +143,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
  */
 export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
-  index=0,selectedLayer='',onSelectLayer,onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
+  index=0,ribbonLayout='vertical',ribbonDirection='right',selectedLayer='',onSelectLayer,
+  onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
   const fileRef=useRef(null),pendingSlot=useRef(null)
@@ -222,8 +223,10 @@ export default function SectionArtboard({
       }}
       onDrop={dropImage}
       onClick={()=>{if(editable){setMenu(null);onSelectLayer?.('')}}}>
-      {section.backdrop===LUXURY_RIBBON&&<RibbonLuxuryBackground/>}
-      {hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}/>}
+      {section.backdrop===LUXURY_RIBBON&&<RibbonLuxuryBackground
+        layout={ribbonLayout} direction={ribbonDirection}/>}
+      {hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}
+        layout={ribbonLayout} direction={ribbonDirection}/>}
       {firstUrl&&!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__ambient" aria-hidden="true">
         <img src={firstUrl} alt=""/>
       </div>}

@@ -1,5 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
-import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES} from './model'
+import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
+  ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import './template-admin.css'
 
@@ -54,6 +55,30 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
       if(e)throw e
       setInstances(current=>[data,...current]);setSelection(data.id)
     }catch(e){setError('Không gán được form: '+e.message)}
+    finally{setWorking(false)}
+  }
+  /** Saves layout + its own directional control on a single Form blueprint. */
+  async function updateRibbonChoice(form,patch){
+    if(working)return
+    const current=normalizeBlueprint(form.blueprint)
+    const chosen=normalizeRibbonChoice(
+      patch.ribbonLayout||current.ribbonLayout,
+      patch.ribbonLayout?undefined:(patch.ribbonDirection||current.ribbonDirection)
+    )
+    if(current.ribbonLayout===chosen.ribbonLayout&&
+       current.ribbonDirection===chosen.ribbonDirection)return
+    setWorking(true);setError('');setNotice('')
+    try{
+      const {data,error:e}=await supabase.from('artist_website_templates')
+        .update({blueprint:{...current,...chosen},version:form.version+1,
+          updated_at:new Date().toISOString()})
+        .eq('id',form.id).eq('version',form.version).select().maybeSingle()
+      if(e)throw e
+      if(!data)throw new Error('Form đã được cập nhật ở nơi khác. Hãy tải lại trước khi chọn.')
+      setTemplates(list=>list.map(item=>item.id===data.id?data:item))
+      setNotice('Đã lưu layout và hướng dải lụa của '+form.name+
+        '. Website đã xuất bản cần cập nhật để nhận thay đổi.')
+    }catch(e){setError('Không lưu được hướng dải lụa: '+e.message)}
     finally{setWorking(false)}
   }
   async function detach(group,person){
@@ -179,6 +204,20 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               </option>)}
             </select>
           </label>
+          <label className="pt-blueprint__style">Kiểu dải lụa
+            <select aria-label="Kiểu dải lụa của Form" value={blueprint.ribbonLayout}
+              onChange={e=>setBlueprint(v=>({...v,
+                ...normalizeRibbonChoice(e.target.value)}))}>
+              {FORM_RIBBON_LAYOUTS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </label>
+          <label className="pt-blueprint__style">Hướng dải lụa
+            <select aria-label="Hướng dải lụa của Form" value={blueprint.ribbonDirection}
+              onChange={e=>setBlueprint(v=>({...v,ribbonDirection:e.target.value}))}>
+              {ribbonDirectionOptions(blueprint.ribbonLayout).map(item=>
+                <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </label>
         </div>
         <p className="pt-blueprint__visual-note">
           Luxury Motion dùng chung dải lụa đỏ vàng chuyển động nhẹ cho mọi khu vực.
@@ -246,6 +285,26 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <p>{group.description}</p>
               <div className="pt-template__stats"><span>{normalizeBlueprint(group.blueprint).sections.length} khu vực</span>
                 <span>{group.people.length} nghệ sĩ sử dụng</span><span>3D / layered visuals</span></div>
+              <div className="pt-template__ribbon-choice">
+                <label>Kiểu dải lụa
+                  <select aria-label={'Kiểu dải lụa '+group.name}
+                    value={normalizeBlueprint(group.blueprint).ribbonLayout}
+                    disabled={working}
+                    onChange={e=>updateRibbonChoice(group,{ribbonLayout:e.target.value})}>
+                    {FORM_RIBBON_LAYOUTS.map(item=>
+                      <option key={item.id} value={item.id}>{item.label}</option>)}
+                  </select>
+                </label>
+                <label>Hướng dải lụa
+                  <select aria-label={'Hướng dải lụa '+group.name}
+                    value={normalizeBlueprint(group.blueprint).ribbonDirection}
+                    disabled={working}
+                    onChange={e=>updateRibbonChoice(group,{ribbonDirection:e.target.value})}>
+                    {ribbonDirectionOptions(normalizeBlueprint(group.blueprint).ribbonLayout)
+                      .map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
+                  </select>
+                </label>
+              </div>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
               <div className="pt-template__assign">

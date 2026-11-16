@@ -523,3 +523,18 @@
 
 /* An explicit opt-out covers the legacy silk layer behind this section. */
 .pt-site.pt-site--silk>.pt-fx-section[data-backdrop='none']{background-color:var(--pt-bg)}
+
+
+/* Legacy Canvas ribbon: same layout and directional options as SVG renderer. */
+.pt-site.pt-site--silk>.pt-ribbon__silk{
+  overflow:hidden;transform-origin:50% 50%;
+}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-vertical.pt-ribbon__silk--direction-left{transform:scaleX(-1)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-diagonal.pt-ribbon__silk--direction-down-right{transform:rotate(-30deg) scale(1.2)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-diagonal.pt-ribbon__silk--direction-down-left{transform:rotate(30deg) scaleX(-1) scale(1.2)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-diagonal.pt-ribbon__silk--direction-up-right{transform:rotate(30deg) scale(1.2)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-diagonal.pt-ribbon__silk--direction-up-left{transform:rotate(-30deg) scaleX(-1) scale(1.2)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-horizontal.pt-ribbon__silk--direction-to-right{transform:rotate(79deg) scale(1.18)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-horizontal.pt-ribbon__silk--direction-to-left{transform:rotate(-79deg) scaleX(-1) scale(1.18)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-curtain.pt-ribbon__silk--direction-inward{transform:scaleX(-1) scale(.88)}
+.pt-site.pt-site--silk>.pt-ribbon__silk--layout-curtain.pt-ribbon__silk--direction-outward{transform:scale(1.1)}

@@ -218,3 +218,30 @@
   .pt-ribbon-backdrop__spark:nth-child(n+18){display:none}
   .pt-ribbon-backdrop__lights{opacity:.65}
 }
+
+
+/* Per-template ribbon composition. A single choice is inherited by every page
+   in that Form, independent from artist images and section Grid placement. */
+.pt-ribbon-backdrop__composition{
+  transform-box:view-box;transform-origin:50% 50%;
+}
+.pt-ribbon-backdrop--layout-vertical.pt-ribbon-backdrop--direction-right .pt-ribbon-backdrop__composition{transform:translateX(0) scale(1)}
+.pt-ribbon-backdrop--layout-vertical.pt-ribbon-backdrop--direction-left .pt-ribbon-backdrop__composition{transform:scaleX(-1)}
+.pt-ribbon-backdrop--layout-diagonal.pt-ribbon-backdrop--direction-down-right .pt-ribbon-backdrop__composition{transform:rotate(-38deg) scale(1.06)}
+.pt-ribbon-backdrop--layout-diagonal.pt-ribbon-backdrop--direction-down-left .pt-ribbon-backdrop__composition{transform:rotate(38deg) scaleX(-1) scale(1.06)}
+.pt-ribbon-backdrop--layout-diagonal.pt-ribbon-backdrop--direction-up-right .pt-ribbon-backdrop__composition{transform:rotate(38deg) scale(1.06)}
+.pt-ribbon-backdrop--layout-diagonal.pt-ribbon-backdrop--direction-up-left .pt-ribbon-backdrop__composition{transform:rotate(-38deg) scaleX(-1) scale(1.06)}
+.pt-ribbon-backdrop--layout-horizontal.pt-ribbon-backdrop--direction-to-right .pt-ribbon-backdrop__composition{transform:rotate(77deg) scale(1.07)}
+.pt-ribbon-backdrop--layout-horizontal.pt-ribbon-backdrop--direction-to-left .pt-ribbon-backdrop__composition{transform:rotate(-77deg) scaleX(-1) scale(1.07)}
+.pt-ribbon-backdrop--layout-curtain.pt-ribbon-backdrop--direction-inward .pt-ribbon-backdrop__composition{transform:translateX(-4%) scale(.88)}
+.pt-ribbon-backdrop--layout-curtain.pt-ribbon-backdrop--direction-outward .pt-ribbon-backdrop__composition{transform:translateX(-4%) scale(1.08)}
+.pt-ribbon-backdrop--direction-up-left .pt-ribbon-backdrop__shimmer,
+.pt-ribbon-backdrop--direction-up-right .pt-ribbon-backdrop__shimmer,
+.pt-ribbon-backdrop--direction-to-left .pt-ribbon-backdrop__shimmer,
+.pt-ribbon-backdrop--direction-outward .pt-ribbon-backdrop__shimmer{
+  animation-direction:alternate-reverse;
+}
+.pt-ribbon-backdrop--layout-curtain .pt-ribbon-backdrop__veil{
+  background:linear-gradient(90deg,#250005ba 0%,transparent 46%,#250005ba 100%),
+    linear-gradient(0deg,#24000589,transparent 60%);
+}

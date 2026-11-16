@@ -133,7 +133,7 @@ const LIGHT_CLUSTERS=[
   {x:'71%',y:'95%',size:'19%',delay:'-13s',duration:'18s'}
 ]
 
-export default function RibbonSilk(){
+export default function RibbonSilk({layout='vertical',direction='right'}){
   const layerRef=useRef(null)
   useEffect(()=>{
     const layer=layerRef.current
@@ -164,7 +164,11 @@ export default function RibbonSilk(){
     observer.observe(layer)
     return ()=>observer.disconnect()
   },[])
-  return <div ref={layerRef} className="pt-ribbon__silk" aria-hidden="true">
+  const layouts=['vertical','diagonal','horizontal','curtain']
+  const safeLayout=layouts.includes(layout)?layout:'vertical'
+  const safeDirection=/^(right|left|down-right|down-left|up-right|up-left|to-right|to-left|inward|outward)$/.test(direction)?direction:'right'
+  return <div ref={layerRef} className={'pt-ribbon__silk pt-ribbon__silk--layout-'+safeLayout+
+    ' pt-ribbon__silk--direction-'+safeDirection} aria-hidden="true">
     {RIBBONS.map(({phase},index)=><canvas key={phase}
       className={'pt-ribbon__strand pt-ribbon__strand--'+(index+1)}/>)}
     {LIGHT_CLUSTERS.map(({x,y,size,delay,duration})=><span key={y} className="pt-ribbon__bokeh"

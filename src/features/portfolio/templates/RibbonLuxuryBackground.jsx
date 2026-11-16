@@ -20,9 +20,14 @@ const sparks=Array.from({length:48},(_,i)=>{
   return {x,y,r:i%11===0?2.1: .55+i%4*.27,opacity:.16+i%7*.085}
 })
 
-export default function RibbonLuxuryBackground(){
+export default function RibbonLuxuryBackground({layout='vertical',direction='right'}){
   const id=useId()
-  return <div className="pt-luxury-ribbon" aria-hidden="true">
+  const allowed={vertical:['right','left'],diagonal:['down-right','down-left','up-right','up-left'],
+    horizontal:['to-right','to-left'],curtain:['inward','outward']}
+  const safeLayout=allowed[layout]?layout:'vertical'
+  const safeDirection=allowed[safeLayout].includes(direction)?direction:allowed[safeLayout][0]
+  return <div className={'pt-luxury-ribbon pt-luxury-ribbon--layout-'+safeLayout+
+    ' pt-luxury-ribbon--direction-'+safeDirection} aria-hidden="true">
     <svg viewBox="0 0 1200 760" preserveAspectRatio="xMidYMid slice" focusable="false">
       <defs>
         {Object.entries(palettes).map(([name,colors])=><linearGradient key={name}

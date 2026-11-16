@@ -31,6 +31,28 @@ export const PRESET_FORMS=Object.freeze([
     ]}
 ])
 export const FORM_LAYOUTS=['split','split-reverse','cover','grid','mosaic','wide','text']
+export const FORM_RIBBON_LAYOUTS=Object.freeze([
+  {id:'vertical',label:'Lụa dọc',description:'Dải lụa buông mềm theo chiều dọc'},
+  {id:'diagonal',label:'Lụa chéo',description:'Dải lụa chảy theo đường chéo'},
+  {id:'horizontal',label:'Lụa sóng ngang',description:'Dải lụa trải mềm theo phương ngang'},
+  {id:'curtain',label:'Lụa hai bên',description:'Hai dải lụa đối xứng như sân khấu'}
+])
+export const FORM_RIBBON_DIRECTIONS=Object.freeze({
+  vertical:[{id:'right',label:'Bên phải'},{id:'left',label:'Bên trái'}],
+  diagonal:[{id:'down-right',label:'Trái trên → Phải dưới'},{id:'down-left',label:'Phải trên → Trái dưới'},
+    {id:'up-right',label:'Trái dưới → Phải trên'},{id:'up-left',label:'Phải dưới → Trái trên'}],
+  horizontal:[{id:'to-right',label:'Trái → Phải'},{id:'to-left',label:'Phải → Trái'}],
+  curtain:[{id:'inward',label:'Hướng vào giữa'},{id:'outward',label:'Hướng ra hai bên'}]
+})
+export function ribbonDirectionOptions(layout){
+  return FORM_RIBBON_DIRECTIONS[layout]||FORM_RIBBON_DIRECTIONS.vertical
+}
+export function normalizeRibbonChoice(layout,direction){
+  const selectedLayout=FORM_RIBBON_LAYOUTS.some(item=>item.id===layout)?layout:'vertical'
+  const options=ribbonDirectionOptions(selectedLayout)
+  return {ribbonLayout:selectedLayout,
+    ribbonDirection:options.some(item=>item.id===direction)?direction:options[0].id}
+}
 export const FORM_VISUAL_THEMES=[
   {id:'ribbon-luxury',label:'Dải lụa đỏ vàng · Luxury Motion'},
   {id:'classic',label:'Bố cục hiệu ứng cũ · Classic'}
@@ -47,7 +69,7 @@ export const FORM_EFFECTS=[
 ]
 export const FORM_EFFECT_IDS=FORM_EFFECTS.map(item=>item.id)
 export function blueprintFor(preset){
-  return {style:preset.style,visualTheme:'ribbon-luxury',
+  return {style:preset.style,visualTheme:'ribbon-luxury',ribbonLayout:'vertical',ribbonDirection:'right',
     sections:preset.sections.map(s=>({...s})),
     source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
@@ -55,6 +77,7 @@ export function normalizeBlueprint(input={}){
   const style=['editorial','cinematic','minimal'].includes(input.style)?input.style:'editorial'
   const visualTheme=FORM_VISUAL_THEMES.some(t=>t.id===input.visualTheme)?
     input.visualTheme:'ribbon-luxury'
+  const {ribbonLayout,ribbonDirection}=normalizeRibbonChoice(input.ribbonLayout,input.ribbonDirection)
   const ids=new Set()
   const sections=(Array.isArray(input.sections)?input.sections:[])
     .filter(x=>{
@@ -68,7 +91,7 @@ export function normalizeBlueprint(input={}){
       effect:FORM_EFFECT_IDS.includes(x.effect)?x.effect:'auto',
       slots:Math.max(0,Math.min(10,Math.floor(Number(x.slots)||0)))
     }))
-  return {style,visualTheme,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
+  return {style,visualTheme,ribbonLayout,ribbonDirection,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
 export function portfolioSections(template,content){
   const shared=normalizeBlueprint(template?.blueprint||{}).sections
@@ -86,7 +109,8 @@ export function resolveInstance(template,instance,profile){
   return {
     templateName:template?.name||'',templateVersion:template?.version||1,
     artistName,artistRole:String(profile?.role||''),
-    style:blueprint.style,visualTheme:blueprint.visualTheme,profileId:profile?.id,
+    style:blueprint.style,visualTheme:blueprint.visualTheme,
+    ribbonLayout:blueprint.ribbonLayout,ribbonDirection:blueprint.ribbonDirection,profileId:profile?.id,
     sections:portfolioSections(template,content).map(section=>{
       const own=content.sections?.[section.id]||{}
       const effect=content.effects?.[section.id]
