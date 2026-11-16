@@ -3,6 +3,7 @@ import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
 import {getScene} from './sectionDesign'
 import SectionArtboard from './SectionArtboard'
+import RibbonPortfolioSection from './RibbonPortfolioSection'
 import './portfolio-effects.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -88,12 +89,14 @@ export default function PortfolioTemplateSite({
   onSelectLayer,onPatchLayer
 }){
   const view=resolveArtistPortfolio(template,instance,profile)
+  const useClassic=view.visualTheme==='classic'||instance?.content?.visualTheme==='classic'
   const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
   const visibleSections=focusedSectionId?
     view.sections.filter(s=>s.id===focusedSectionId):view.sections
   return <div className={'pt-device pt-device--'+device+
     (focusedSectionId?' pt-device--focused':'')}>
-    <main className={'pt-site pt-site--'+view.style} aria-label={'Xem trước '+view.templateName}>
+    <main className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')}
+      aria-label={'Xem trước '+view.templateName}>
       {!focusedSectionId&&<header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
@@ -102,15 +105,19 @@ export default function PortfolioTemplateSite({
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
       </header>}
-      {visibleSections.map((section,index)=>{
+      {visibleSections.map(section=>{
+        const index=view.sections.findIndex(item=>item.id===section.id)
         const scene=getScene(instance?.content||{},section,device)
-        return scene?<SectionArtboard key={section.id}
+        return scene?<SectionArtboard key={section.id} index={index}
           section={section} scene={scene} device={device} urls={urls}
           editable={editSectionId===section.id}
           selectedLayer={selectedLayer}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}/>:
-          <MotionSection key={section.id} section={section} index={index}
-            styleName={view.style} urls={urls} artistRole={view.artistRole}/>
+          useClassic?
+            <MotionSection key={section.id} section={section} index={index}
+              styleName={view.style} urls={urls} artistRole={view.artistRole}/>:
+            <RibbonPortfolioSection key={section.id} section={section}
+              index={index} urls={urls} artistRole={view.artistRole}/>
       })}
       {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>

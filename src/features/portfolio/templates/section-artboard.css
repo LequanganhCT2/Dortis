@@ -72,3 +72,14 @@
  .pt-artboard__edit-hint{font-size:8px}
 }
 @media(prefers-reduced-motion:reduce){.pt-artboard__layer{transition:none}}
+
+/* The custom layer editor and live portfolio use the very same ribbon drawing. */
+.pt-artboard--ribbon{background-color:#450005!important}
+.pt-artboard--ribbon:before{background:linear-gradient(90deg,#2500069e,transparent 65%);
+  z-index:1}
+.pt-artboard--ribbon .pt-artboard__watermark{color:#ffe0a1;opacity:.11}
+.pt-artboard--ribbon .pt-artboard__layer.is-image{box-shadow:0 16px 39px #13000477}
+.pt-artboard--ribbon .pt-artboard__empty{background:linear-gradient(130deg,#54100a,#6e0a0b);
+  color:#ffe5b2;border-color:#e9c07999}
+.pt-artboard--ribbon .pt-artboard__layer.is-text .pt-artboard__text{
+  text-shadow:0 4px 18px #10000575}

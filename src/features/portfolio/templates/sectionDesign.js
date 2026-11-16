@@ -4,6 +4,7 @@
  * No artist data or image path is copied into the reusable blueprint.
  */
 export const SCENE_BACKGROUNDS=Object.freeze([
+  {id:'ribbon-luxury',label:'Dải lụa đỏ vàng · Chuyển động',css:'linear-gradient(130deg,#560006,#890b04 45%,#350005)'},
   {id:'paper',label:'Gallery / Kem',css:'linear-gradient(132deg,#f7f1e8,#e8dfd5 74%,#d7c7b8)'},
   {id:'noir',label:'Noir / Sân khấu',css:'radial-gradient(ellipse at 84% 17%,#795456,#1c1c23 58%,#111218)'},
   {id:'rose',label:'Rose Gold / Ánh sáng',css:'radial-gradient(ellipse at 82% 12%,#f6cdbe,#f9eee0 52%,#e9d5ca)'},
@@ -30,19 +31,41 @@ export function sceneLayerIds(section,scene=null){
 export function sceneLayerTitle(id){return SCENE_LAYER_LABELS[id]||(
   photo(id)?'Ảnh '+(Number(id.split(':')[1])+1):id.startsWith('note:')?'Chữ trang trí':'Layer')}
 export function sceneLayerType(id){return photo(id)?'image':'text'}
+/** All default photo slots live inside an independent non-overlapping image
+ * region, separated from the title and copy. Mobile and desktop have their own
+ * stable grid. A user may still deliberately move an image in the layer editor.
+ */
+export function automaticImageGeometry(index,count,device='desktop'){
+  const mobile=device==='mobile'
+  const amount=Math.max(1,Math.min(10,Math.floor(Number(count)||1)))
+  const n=Math.max(0,Math.min(amount-1,Math.floor(Number(index)||0)))
+  if(amount===1)return mobile?{x:17,y:35,w:66,h:35}:
+    {x:57,y:9,w:36,h:79}
+  const cols=Math.min(amount,amount<=4?2:3)
+  const rows=Math.ceil(amount/cols)
+  const frame=mobile?
+    {x:8,y:36,w:84,h:34,gapX:2,gapY:1.6}:
+    {x:56,y:10,w:38,h:78,gapX:1.7,gapY:2.4}
+  const w=(frame.w-frame.gapX*(cols-1))/cols
+  const h=(frame.h-frame.gapY*(rows-1))/rows
+  const col=n%cols,row=Math.floor(n/cols)
+  return {x:Number((frame.x+col*(w+frame.gapX)).toFixed(3)),
+    y:Number((frame.y+row*(h+frame.gapY)).toFixed(3)),
+    w:Number(w.toFixed(3)),h:Number(h.toFixed(3))}
+}
 export function sceneLayerDefault(id,section,device='desktop'){
   const mobile=device==='mobile'
   const layout=String(section?.layout||'split')
   const isCover=layout==='cover'
   const imageIndex=photo(id)?Number(id.split(':')[1]):-1
   const defaults=mobile?{
-    eyebrow:{x:7,y:7,w:84,h:6,z:12,size:11,color:isCover?'#f9eadd':'#a78068'},
-    title:{x:7,y:15,w:87,h:19,z:13,size:55,color:isCover?'#ffffff':'#262c36'},
-    body:{x:8,y:73,w:84,h:22,z:14,size:12,color:isCover?'#f5e9df':'#374350'}
+    eyebrow:{x:7,y:7,w:84,h:6,z:12,size:11,color:'#f1cb89'},
+    title:{x:7,y:15,w:86,h:18,z:13,size:55,color:'#fff1df'},
+    body:{x:8,y:75,w:84,h:22,z:14,size:12,color:'#f6e6d9'}
   }:{
-    eyebrow:{x:7,y:13,w:49,h:7,z:12,size:14,color:isCover?'#e6cda9':'#a78068'},
-    title:{x:7,y:24,w:62,h:25,z:13,size:95,color:isCover?'#ffffff':'#26303b'},
-    body:{x:8,y:64,w:45,h:24,z:14,size:17,color:isCover?'#f3eee5':'#3d454c'}
+    eyebrow:{x:7,y:13,w:45,h:7,z:12,size:14,color:'#f1cb89'},
+    title:{x:7,y:24,w:46,h:27,z:13,size:95,color:'#fff1df'},
+    body:{x:8,y:64,w:44,h:24,z:14,size:17,color:'#f6e6d9'}
   }
   if(defaults[id])return {
     ...defaults[id],h:defaults[id].h,
@@ -53,20 +76,9 @@ export function sceneLayerDefault(id,section,device='desktop'){
     radius:0,fit:'cover'
   }
   if(imageIndex>=0){
-    const d=mobile?[
-      {x:17,y:35,w:66,h:35,rotation:3},
-      {x:5,y:47,w:32,h:25,rotation:-7},
-      {x:65,y:53,w:27,h:25,rotation:6},
-      {x:24,y:43,w:45,h:28,rotation:-2}
-    ]:[
-      {x:57,y:9,w:36,h:79,rotation:3},
-      {x:44,y:58,w:24,h:32,rotation:-7},
-      {x:78,y:49,w:18,h:32,rotation:6},
-      {x:61,y:30,w:23,h:31,rotation:-3}
-    ]
-    const seed=d[imageIndex%4]
-    const shift=Math.floor(imageIndex/4)*5
-    return {...seed,x:Math.min(98-seed.w,seed.x+shift),y:Math.min(98-seed.h,seed.y+shift),
+    const count=Math.max(1,Math.min(10,Number(section?.slots)||1))
+    const box=automaticImageGeometry(imageIndex,count,device)
+    return {...box,rotation:0,
       z:4+imageIndex,opacity:100,blur:0,radius:mobile?10:16,fit:'cover',
       hidden:false,size:18,color:'#ffffff',align:'left',font:'sans',
       weight:500,spacing:0,lineHeight:1.4}
@@ -109,8 +121,23 @@ export function normalizeScene(raw,section,device='desktop'){
     layers}
 }
 export function makeScene(section,device='desktop'){
-  return normalizeScene({enabled:true,background:
-    section?.layout==='cover'?'noir':section?.layout==='mosaic'?'rose':'paper'},section,device)
+  return normalizeScene({enabled:true,background:'ribbon-luxury'},section,device)
+}
+/** Restores automated non-overlapping slots without modifying manual text
+ * placement, source binding or pictures. */
+export function arrangeSceneImages(content={},section,device='desktop'){
+  if(!SCENE_DEVICES.includes(device))return content
+  const enabled=enableSectionScene(content,section)
+  const current=enabled.scenes[section.id]
+  const scene=normalizeScene(current[device],section,device)
+  const layers={...scene.layers}
+  const count=Math.min(10,Math.max(0,Number(section.slots)||0))
+  for(let index=0;index<count;index++){
+    const id='image:'+index
+    layers[id]={...layers[id],...automaticImageGeometry(index,count,device),rotation:0}
+  }
+  return {...enabled,scenes:{...enabled.scenes,
+    [section.id]:{...current,[device]:{...scene,layers}}}}
 }
 export function getScene(content,section,device='desktop'){
   const settings=content?.scenes?.[section?.id]

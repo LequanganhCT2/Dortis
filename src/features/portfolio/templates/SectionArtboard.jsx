@@ -2,6 +2,7 @@ import React,{useRef} from 'react'
 import {
   sceneGradient,sceneFont,sceneLayerIds,sceneLayerTitle,sceneLayerType
 } from './sectionDesign.js'
+import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v))
@@ -120,21 +121,26 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
  */
 export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
-  selectedLayer='',onSelectLayer,onPatchLayer
+  index=0,selectedLayer='',onSelectLayer,onPatchLayer
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
   const firstImage=(section.images||[]).find(x=>x?.path&&urls[x.path])
   const firstUrl=firstImage?urls[firstImage.path]:null
+  const hasRibbon=scene.background==='ribbon-luxury'
+  const ribbonVariant=index===0||section.layout==='cover'?'hero':
+    ['grid','mosaic','wide'].includes(section.layout)?'gallery':'standard'
   return <section id={'pt-'+section.id}
     className={'pt-scene-section pt-scene-section--'+device+
       (editable?' is-editing':'')} aria-label={section.label}>
-    <div ref={boardRef} className="pt-artboard"
+    <div ref={boardRef}
+      className={'pt-artboard'+(hasRibbon?' pt-artboard--ribbon':'')}
       style={{background:sceneGradient(scene.background)}}
       onClick={()=>{if(editable)onSelectLayer?.('')}}>
-      {firstUrl&&<div className="pt-artboard__ambient" aria-hidden="true">
+      {hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}/>}
+      {!hasRibbon&&firstUrl&&<div className="pt-artboard__ambient" aria-hidden="true">
         <img src={firstUrl} alt=""/>
       </div>}
-      <div className="pt-artboard__flare" aria-hidden="true"/>
+      {!hasRibbon&&<div className="pt-artboard__flare" aria-hidden="true"/>}
       <span className="pt-artboard__watermark" aria-hidden="true">
         {(section.title||'PORTFOLIO').slice(0,45)}
       </span>

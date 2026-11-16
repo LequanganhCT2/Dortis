@@ -6,7 +6,8 @@ import {sourceBoundField,restoreLinkedFields} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
-  patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote
+  patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote,
+  arrangeSceneImages
 } from './sectionDesign'
 import './template-site.css'
 
@@ -181,6 +182,12 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>patchSceneBackground(prev,current,device,background))
     setDirty(true)
   }
+  function autoArrangeImages(){
+    if(!current||!current.slots)return
+    setContent(prev=>arrangeSceneImages(prev,current,device))
+    setDirty(true);setNotice('Ảnh đã được xếp vào từng ô an toàn trên '+
+      (device==='mobile'?'mobile':'desktop')+'. Nhấn Lưu để giữ vị trí.')
+  }
   function addNote(){
     if(!current)return
     const id=crypto.randomUUID()
@@ -295,7 +302,7 @@ export default function PortfolioInstanceEditor({
             onPatchLayer={patchLayer} onPatchBackground={changeBackground}
             onAddNote={addNote} onPatchNote={editNote}
             onRemoveNote={deleteNote} onReset={resetPage}
-            onDisable={disablePageDesign}
+            onDisable={disablePageDesign} onArrangeImages={autoArrangeImages}
             onChangeText={changeText}
             textForField={field=>sourceBoundField(sourceProfile,content,current.id,field)||
               (field==='title'&&current.id==='hero'?sourceProfile.name:'')}/>}
