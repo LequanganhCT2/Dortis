@@ -1,0 +1,166 @@
+/* Silk Atelier / theatrical satin. One uninterrupted art direction for the
+   full website; never restart a curtain or glow at a section boundary. */
+.pt-site.pt-site--continuous-silk{
+  --pt-ink:#fff1e3;
+  --pt-muted:#edcdb2;
+  --pt-accent:#f4c87d;
+  --pt-border:#efce8d33;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  color:#fff3e8;
+  background:
+    radial-gradient(ellipse at 48% 7%,#de4c1938,transparent 28%),
+    radial-gradient(ellipse at 5% 53%,#bb171638,transparent 39%),
+    radial-gradient(ellipse at 95% 92%,#a5472b41,transparent 33%),
+    linear-gradient(170deg,#470007 0%,#790309 17%,#50020b 46%,#62070e 73%,#2e020b 100%)!important;
+}
+.pt-site.pt-site--continuous-silk > .pt-silk-stage{
+  position:absolute!important;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  pointer-events:none;
+  user-select:none;
+}
+.pt-silk-stage__scene{position:absolute;inset:0;width:100%;height:100%;
+  overflow:hidden;display:block;}
+.pt-site.pt-site--continuous-silk > :not(.pt-silk-stage):not(.pt-portfolio-halos){
+  position:relative;
+  z-index:2;
+}
+/* Each fabric is a wide surface made of shaded panels rather than a bright
+   centerline stroke. Every sheet drifts on an independent, very slow rhythm. */
+.pt-silk-stage__fabric{
+  transform-box:view-box;
+  transform-origin:center center;
+  animation:pt-satin-drift 21s ease-in-out infinite alternate;
+}
+.pt-silk-stage__fabric--1{
+  animation-duration:24s;animation-delay:-7s;
+  --satin-x:16px;--satin-y:-14px;opacity:.94;
+}
+.pt-silk-stage__fabric--2{
+  animation-duration:31s;animation-delay:-18s;
+  --satin-x:-22px;--satin-y:15px;opacity:.88;
+}
+.pt-silk-stage__fabric--3{
+  animation-duration:27s;animation-delay:-11s;
+  --satin-x:11px;--satin-y:20px;opacity:.67;
+}
+.pt-silk-stage__lightfield{
+  animation:pt-stage-aura-breathe 12s ease-in-out infinite alternate;
+}
+.pt-silk-stage__spark{
+  transform-box:fill-box;transform-origin:center;
+  animation:pt-stage-glimmer 8s ease-in-out infinite alternate;
+}
+.pt-silk-stage__light-veil{
+  position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:
+    linear-gradient(90deg,#1e000b88 0%,#3a020b2a 22%,transparent 55%),
+    radial-gradient(ellipse at 53% 4%,#ffe69f12,transparent 27%),
+    linear-gradient(180deg,#25000918,transparent 27%,#1b010a29 100%);
+}
+@keyframes pt-satin-drift{
+  0%{transform:translate3d(0,0,0) rotate(-.28deg)}
+  100%{transform:translate3d(var(--satin-x),var(--satin-y),0)
+    rotate(.32deg)}
+}
+@keyframes pt-stage-aura-breathe{
+  0%{opacity:.72;transform:translate3d(-5px,2px,0) scale(.97)}
+  100%{opacity:.94;transform:translate3d(7px,-3px,0) scale(1.03)}
+}
+@keyframes pt-stage-glimmer{
+  0%,100%{opacity:.19}
+  42%{opacity:.9}
+  75%{opacity:.45}
+}
+/* All sections are transparent: satin continues through each transition. */
+.pt-site.pt-site--continuous-silk .pt-ribbon-section,
+.pt-site.pt-site--continuous-silk .pt-fx-section,
+.pt-site.pt-site--continuous-silk .pt-site__section,
+.pt-site.pt-site--continuous-silk .pt-scene-section,
+.pt-site.pt-site--continuous-silk .pt-artboard{
+  background:transparent!important;
+  background-image:none!important;
+  background-color:transparent!important;
+}
+.pt-site.pt-site--continuous-silk .pt-fx-section:before,
+.pt-site.pt-site--continuous-silk .pt-fx-section:after{content:none!important}
+.pt-site.pt-site--continuous-silk .pt-fx__ambient,
+.pt-site.pt-site--continuous-silk .pt-artboard__ambient{
+  display:none!important;
+}
+/* The image region is independent of the curtain. Photos are crisp and are
+   never blurred by any of the lighting effects. */
+.pt-site.pt-site--continuous-silk .pt-ribbon__tile{
+  border:1px solid #ffdfa948;
+  box-shadow:0 14px 45px #2000067d;
+  background:#7c211a55;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__tile img,
+.pt-site.pt-site--continuous-silk .pt-site__media-tile img,
+.pt-site.pt-site--continuous-silk .pt-artboard__photo img{
+  filter:none!important;opacity:1!important;
+}
+/* Missing images do not create enormous dashed rectangles in preview.
+   Empty slots remain accessible when the Admin enters direct edit mode. */
+.pt-site.pt-site--continuous-silk .pt-ribbon-section--editing .pt-ribbon__tile--empty{
+  background:linear-gradient(140deg,#be4a3c19,#2b00122b);
+  border:1px dashed #f7d8a354;box-shadow:none;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__copy{
+  text-shadow:0 4px 26px #2100077d;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__copy h2{
+  color:#fff2e5;
+  text-shadow:0 7px 31px #28000ac7;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__copy>small,
+.pt-site.pt-site--continuous-silk .pt-ribbon__source{color:#f7d295}
+.pt-site.pt-site--continuous-silk .pt-ribbon__copy p{color:#fff2e5}
+.pt-site.pt-site--continuous-silk .pt-ribbon-section{border-bottom:1px solid #ffe7c22c}
+.pt-site.pt-site--continuous-silk .pt-site__nav{
+  background:linear-gradient(90deg,#3c010c9a,#5b051047)!important;
+  color:#fdf0d8;border-color:#f6d08b35;backdrop-filter:blur(4px);
+}
+.pt-site.pt-site--continuous-silk .pt-site__nav :is(strong,a,span){color:#ffefe4!important}
+.pt-site.pt-site--continuous-silk .pt-site__nav strong>span,
+.pt-site.pt-site--continuous-silk .pt-site__nav-meta{color:#f5cf86!important}
+.pt-site.pt-site--continuous-silk .pt-site__footer{
+  color:#f9e7db!important;background:#33000677!important;
+  border-top:1px solid #e5b16d44;
+}
+.pt-site.pt-site--continuous-silk .pt-site__footer :is(span,small){color:#f9e7db!important}
+.pt-site.pt-site--continuous-silk .pt-artboard--ribbon:before{
+  background:linear-gradient(90deg,#2800095d,transparent 67%);
+}
+.pt-site.pt-site--continuous-silk .pt-scene-section.is-editing .pt-artboard{
+  background-image:linear-gradient(#ffffff13 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff13 1px,transparent 1px)!important;
+  background-size:10% 10%;
+}
+/* Global top glow retains its z-index via portfolio-glow-overlay.css; it
+   cannot intercept the pointer used by the editor. */
+.pt-site.pt-site--motion-paused .pt-silk-stage__fabric,
+.pt-site.pt-site--motion-paused .pt-silk-stage__lightfield,
+.pt-site.pt-site--motion-paused .pt-silk-stage__spark,
+.pt-silk-stage.is-paused .pt-silk-stage__fabric,
+.pt-silk-stage.is-paused .pt-silk-stage__lightfield,
+.pt-silk-stage.is-paused .pt-silk-stage__spark{
+  animation-play-state:paused;
+}
+@media(max-width:680px){
+  .pt-site.pt-site--continuous-silk > .pt-silk-stage{opacity:.85}
+  .pt-silk-stage__spark:nth-child(n+65){display:none}
+  .pt-site.pt-site--continuous-silk .pt-ribbon__copy h2{
+    font-size:clamp(40px,10vw,70px);
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-silk-stage__fabric,.pt-silk-stage__lightfield,
+  .pt-silk-stage__spark{animation:none!important;transform:none!important}
+}

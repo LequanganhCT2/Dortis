@@ -62,7 +62,7 @@ test('One continuous silk background and one translucent top glow layer',()=>{
   const renderer=code('PortfolioTemplateSite.jsx')
   const glow=code('PortfolioGlowOverlay.jsx')
   const css=code('portfolio-glow-overlay.css')
-  assert.equal((renderer.match(/<RibbonSilk /g)||[]).length,1)
+  assert.equal((renderer.match(/<SilkStageBackdrop /g)||[]).length,1)
   assert.equal((renderer.match(/<PortfolioGlowOverlay /g)||[]).length,1)
   assert.match(renderer,/opacity=\{view\.glowOpacity\?\?\.28\}/)
   assert.match(css,/z-index:90!important/)

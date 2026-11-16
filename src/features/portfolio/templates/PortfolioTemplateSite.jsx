@@ -3,14 +3,14 @@ import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
 import {getScene,sceneFont,resizeDimensions} from './sectionDesign'
 import SectionArtboard from './SectionArtboard'
-import RibbonSilk from './RibbonSilk'
+import SilkStageBackdrop from './SilkStageBackdrop'
 import PortfolioGlowOverlay from './PortfolioGlowOverlay'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
 import './portfolio-effects.css'
-import './portfolio-continuous-silk.css'
+import './silk-stage-backdrop.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
@@ -309,7 +309,8 @@ export default function PortfolioTemplateSite({
         const id=page.id.slice(3)
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
-      {continuousSilk&&<RibbonSilk layout={view.ribbonLayout||'vertical'} direction={view.ribbonDirection||'right'}/>}
+      {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
+        direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
     {!focusedSectionId&&<header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">

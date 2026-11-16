@@ -30,7 +30,9 @@ export default function RibbonPortfolioSection({
   const allTiles=(section.images||[]).map((asset,position)=>({
     asset,position,url:asset?.path?urls[asset.path]:null
   }))
-  const tiles=isPublic?allTiles.filter(tile=>tile.url):allTiles
+  // Only show photo placeholders while editing. A live preview with no photo
+  // becomes a clean text-led composition instead of large dashed boxes.
+  const tiles=editing?allTiles:allTiles.filter(tile=>tile.url)
   const columns=ribbonGridColumns(section.layout,tiles.length)
   const hasCopy=Boolean(section.title||section.eyebrow||section.body)
   const layout=tiles.length?'pt-ribbon-layout--'+section.layout:'pt-ribbon-layout--text'
