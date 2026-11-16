@@ -8,7 +8,8 @@ import PortraitCutout from './PortraitCutout'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
   SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
-  patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote
+  patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote,
+  arrangeSceneImages
 } from './sectionDesign'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -141,7 +142,7 @@ export default function PortfolioInstanceEditor({
       })
       const imagePaths=[...new Set(publicSections.flatMap(section=>
         section.images.map(image=>image?.path).filter(Boolean)))]
-      const snapshot={view:{...view,sections:publicSections},scenes:content.scenes||{},positions:content.positions||{},typography:content.typography||{}}
+      const snapshot={view:{...view,visualTheme:content.visualTheme==='classic'?'classic':view.visualTheme,sections:publicSections},scenes:content.scenes||{},positions:content.positions||{},typography:content.typography||{}}
       const {data,error:publishError}=await supabase.rpc('publish_artist_portfolio',{
         p_instance_id:instance.id,p_revision:instance.revision||1,
         p_content:content,p_snapshot:snapshot,p_image_paths:imagePaths
@@ -298,6 +299,12 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>patchSceneBackground(prev,current,device,background))
     setDirty(true)
   }
+  function autoArrangeImages(){
+    if(!current||!current.slots)return
+    setContent(prev=>arrangeSceneImages(prev,current,device))
+    setDirty(true);setNotice('Ảnh đã được xếp vào từng ô an toàn trên '+
+      (device==='mobile'?'mobile':'desktop')+'. Nhấn Lưu để giữ vị trí.')
+  }
   function addNote(){
     if(!current)return
     const id=crypto.randomUUID()
@@ -443,7 +450,7 @@ export default function PortfolioInstanceEditor({
             onPatchLayer={patchLayer} onMoveElement={moveElement} onPatchBackground={changeBackground}
             onAddNote={addNote} onPatchNote={editNote}
             onRemoveNote={deleteNote} onReset={resetPage}
-            onDisable={disablePageDesign}
+            onDisable={disablePageDesign} onArrangeImages={autoArrangeImages}
             onChangeText={changeText}
             textForField={field=>sourceBoundField(sourceProfile,content,current.id,field)||
               (field==='title'&&current.id==='hero'?sourceProfile.name:'')}/>}

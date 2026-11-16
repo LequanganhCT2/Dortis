@@ -7,6 +7,7 @@ import RibbonSilk from './RibbonSilk'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import './template-site.css'
+import RibbonPortfolioSection from './RibbonPortfolioSection'
 import './portfolio-effects.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -283,14 +284,17 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,onEditT
 }
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
-  editSectionId='',selectedLayer='',lockImageRatio=true,
+  focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
   onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
-  const hasSilk=view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
+  const useClassic=(publishedView&&!view.visualTheme)||view.visualTheme==='classic'||instance?.content?.visualTheme==='classic'
+  const visibleSections=focusedSectionId?
+    view.sections.filter(s=>s.id===focusedSectionId):view.sections
+  const hasSilk=useClassic&&view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
   const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
-  return <div className={'pt-device pt-device--'+device}>
-    <main className={'pt-site pt-site--'+view.style+(hasSilk?' pt-site--silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+  return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
+    <main className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(hasSilk?' pt-site--silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
@@ -298,22 +302,24 @@ export default function PortfolioTemplateSite({
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
       {hasSilk&&<RibbonSilk/>}
-    <header className="pt-site__nav">
+    {!focusedSectionId&&<header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
           {activeSections.slice(0,4).map(s=><a key={s.id}
             href={'#pt-'+s.id}>{s.title?s.title.slice(0,27):s.label}</a>)}
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
-      </header>
-      {view.sections.map((section,index)=>{
+      </header>}
+      {visibleSections.map(section=>{
+        const index=view.sections.findIndex(item=>item.id===section.id)
         const scene=getScene(instance?.content||{},section,device)
-        return scene?<SectionArtboard key={section.id}
+        return scene?<SectionArtboard key={section.id} index={index}
           section={section} scene={scene} device={device} urls={urls}
           editable={editSectionId===section.id}
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
           onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
+          (useClassic||section.backdrop||editSectionId===section.id)?
           <MotionSection key={section.id} section={section} index={index}
             positions={instance?.content?.positions?.[section.id]?.[device]}
             typography={instance?.content?.typography?.[section.id]?.[device]}
@@ -321,12 +327,14 @@ export default function PortfolioTemplateSite({
             onSelectLayer={onSelectLayer} lockImageRatio={lockImageRatio}
             styleName={view.style} urls={urls} artistRole={view.artistRole} isPublic={Boolean(publishedView)}
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
-            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>
+            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>:
+          <RibbonPortfolioSection key={section.id} section={section}
+            index={index} urls={urls} artistRole={view.artistRole}/>
       })}
-      <footer className="pt-site__footer">
+      {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>
         {!publishedView&&<small>Bản xem trước nội bộ</small>}
-      </footer>
+      </footer>}
     </main>
   </div>
 }

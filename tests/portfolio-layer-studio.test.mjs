@@ -44,7 +44,7 @@ test('Each form section and device has distinct layer positions and photos',()=>
   assert.equal(getScene(content,story,'mobile').layers['image:0'].x,17)
   assert.equal(getScene(content,story,'desktop').layers.title.x,7)
   content=patchSceneBackground(content,hero,'desktop','noir')
-  assert.equal(getScene(content,story,'desktop').background,'paper')
+  assert.equal(getScene(content,story,'desktop').background,'ribbon-luxury')
   assert.equal(getScene(content,hero,'desktop').background,'noir')
   assert.equal(sceneLayerIds(hero).includes('image:0'),true)
   assert.equal(sceneLayerIds(hero).includes('image:1'),false)

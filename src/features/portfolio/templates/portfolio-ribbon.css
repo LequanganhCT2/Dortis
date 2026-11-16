@@ -1,0 +1,220 @@
+/*
+ * One visual system for Editorial Story, Cinematic Stage and Minimal Signature.
+ * Animated SVG silk is decorative only; original artist images remain sharp.
+ * Slow compositor-friendly motion; zero animation for reduced-motion users.
+ */
+.pt-ribbon-backdrop{position:absolute;inset:0;z-index:0;overflow:hidden;
+  isolation:isolate;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 90% 13%,#ac270d88,transparent 41%),
+    radial-gradient(ellipse at 12% 50%,#c314091a,transparent 47%),
+    linear-gradient(132deg,#480003 0%,#850500 31%,#530004 68%,#2c0106 100%)}
+.pt-ribbon-backdrop__svg{display:block;position:absolute;inset:-4%;width:108%;height:108%;
+  overflow:visible;transform-origin:63% 45%}
+.pt-ribbon-backdrop__silks{transform-origin:70% 45%;
+  animation:pt-ribbon-breathe 21s cubic-bezier(.45,0,.55,1) infinite alternate}
+.pt-ribbon-backdrop__shimmer{animation:pt-ribbon-shimmer 19s ease-in-out infinite alternate}
+.pt-ribbon-backdrop__glow{position:absolute;inset:-18% -12%;pointer-events:none;
+  background:radial-gradient(ellipse at 75% 29%,#ffb63535,transparent 37%),
+    radial-gradient(ellipse at 55% 74%,#ea280a2b,transparent 46%);
+  animation:pt-ribbon-glow 16s ease-in-out infinite alternate}
+.pt-ribbon-backdrop__spark{animation:pt-ribbon-sparkle 6s ease-in-out infinite alternate;
+  transform-origin:center center}
+.pt-ribbon-backdrop__veil{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,#230007bd 0%,#40000788 30%,transparent 68%),
+    linear-gradient(0deg,#24000583 0%,transparent 45%,#22000450 100%)}
+.pt-ribbon-backdrop--gallery .pt-ribbon-backdrop__silks{opacity:.58}
+.pt-ribbon-backdrop--gallery .pt-ribbon-backdrop__sparkles{opacity:.45}
+.pt-ribbon-backdrop--gallery .pt-ribbon-backdrop__veil{
+  background:linear-gradient(0deg,#2400058c,transparent 50%,#2400055c)}
+.pt-ribbon-backdrop--hero .pt-ribbon-backdrop__silks{opacity:1}
+.pt-ribbon-backdrop--standard .pt-ribbon-backdrop__silks{opacity:.8}
+.pt-ribbon-backdrop--phase-1 .pt-ribbon-backdrop__svg{
+  transform:translate3d(-3%,0,0) scale(1.05)}
+.pt-ribbon-backdrop--phase-2 .pt-ribbon-backdrop__svg{
+  transform:translate3d(3%,0,0) scale(.98)}
+@keyframes pt-ribbon-breathe{
+  0%{transform:translate3d(-10px,-7px,0) rotate(-.5deg)}
+  100%{transform:translate3d(13px,11px,0) rotate(.6deg)}
+}
+@keyframes pt-ribbon-shimmer{
+  0%{opacity:.40;transform:translate3d(0,0,0)}
+  100%{opacity:.91;transform:translate3d(4px,-6px,0)}
+}
+@keyframes pt-ribbon-glow{
+  0%{opacity:.62;transform:translate3d(-8px,4px,0) scale(1)}
+  100%{opacity:.98;transform:translate3d(9px,-4px,0) scale(1.03)}
+}
+@keyframes pt-ribbon-sparkle{
+  0%,100%{opacity:.18}
+  48%{opacity:.87}
+  68%{opacity:.47}
+}
+/*
+ * Stable editorial section layout: copy and media are separate grid tracks.
+ * All gallery slots occupy non-overlapping grid cells, including on mobile.
+ * Unlike legacy 3D orbit/spotlight, no photo is positioned absolute or hidden.
+ */
+.pt-site .pt-ribbon-section{position:relative;isolation:isolate;display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  grid-template-areas:"copy media";gap:clamp(22px,4vw,60px);
+  align-items:center;min-height:clamp(460px,57vw,750px);
+  padding:clamp(42px,5.6vw,96px) clamp(22px,5.8vw,90px);
+  border-bottom:1px solid #ffdc9d30;
+  background:#4b0308;color:#f9eee2;overflow:hidden}
+.pt-site .pt-ribbon-section>*:not(.pt-ribbon-backdrop){position:relative;z-index:2}
+.pt-ribbon__copy{grid-area:copy;min-width:0;max-width:100%;display:flex;
+  flex-direction:column;align-items:flex-start;gap:clamp(14px,2.5vw,30px);
+  padding:10px 0}
+.pt-ribbon__copy>small{font:800 10px/1.6 'Be Vietnam Pro',Arial,sans-serif;
+  letter-spacing:.21em;color:#f4ce89;text-transform:uppercase;
+  text-shadow:0 1px 10px #170002}
+.pt-ribbon__copy h2{font:600 clamp(45px,6.7vw,112px)/.96
+    'Cormorant Garamond',Georgia,serif;
+  letter-spacing:-.045em;color:#fff4e5;margin:0;overflow-wrap:anywhere;
+  text-shadow:0 9px 32px #23030790;max-width:100%;text-wrap:balance}
+.pt-ribbon__copy p{font:400 clamp(12px,1.2vw,15px)/1.85
+    'Be Vietnam Pro',Arial,sans-serif;color:#f6e5de;margin:0;
+  white-space:pre-line;overflow-wrap:anywhere;max-width:690px;
+  text-shadow:0 2px 12px #2300044a}
+.pt-ribbon__copy .pt-ribbon__missing{opacity:.68;font-style:italic}
+.pt-ribbon__source{color:#f1c77b;border-top:1px solid #f1c77b77;
+  padding-top:9px;font:700 9px/1.6 'Be Vietnam Pro',Arial,sans-serif;
+  letter-spacing:.1em;text-transform:uppercase}
+.pt-ribbon__media{grid-area:media;display:grid;min-width:0;min-height:0;
+  grid-template-columns:repeat(var(--pt-ribbon-cols,2),minmax(0,1fr));
+  gap:clamp(9px,1.3vw,17px);align-items:stretch}
+.pt-ribbon__media--single{grid-template-columns:minmax(0,1fr)}
+.pt-ribbon__tile{position:relative;min-width:0;min-height:0;overflow:hidden;
+  border:1px solid #ffe4af50;border-radius:clamp(8px,1vw,18px);
+  aspect-ratio:4/5;background:#621b18;
+  box-shadow:0 17px 33px #1702094d,inset 0 1px #ffffff18;
+  transform:none!important;filter:none}
+.pt-ribbon__tile img{display:block;width:100%;height:100%;max-width:100%;
+  object-fit:cover;object-position:center;
+  filter:none!important;opacity:1!important;transform:none!important}
+.pt-ribbon__tile--empty{display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;
+  background:linear-gradient(130deg,#5b100fc0,#a74d2680);
+  border-style:dashed;box-shadow:none;text-align:center}
+.pt-ribbon__tile--empty>span{font:500 35px 'Cormorant Garamond',serif;color:#eccc99}
+.pt-ribbon__tile--empty>small{font:650 10px/1.6 'Be Vietnam Pro',sans-serif;color:#e3cba9}
+.pt-site--cinematic .pt-ribbon__copy h2{
+  font-family:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
+  text-transform:uppercase;font-weight:800;letter-spacing:-.018em;
+  font-size:clamp(58px,8vw,143px);line-height:.85}
+.pt-site--minimal .pt-ribbon__copy h2{
+  font-family:'Be Vietnam Pro',Arial,sans-serif;font-weight:800;
+  font-size:clamp(40px,5.1vw,78px);line-height:1.13;
+  letter-spacing:-.065em}
+.pt-site .pt-ribbon-layout--split-reverse{
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  grid-template-areas:"media copy"}
+.pt-site .pt-ribbon-layout--wide,.pt-site .pt-ribbon-layout--grid,
+.pt-site .pt-ribbon-layout--mosaic{grid-template-columns:1fr;grid-template-areas:"copy" "media";
+  gap:clamp(30px,4vw,48px)}
+.pt-site .pt-ribbon-layout--wide .pt-ribbon__copy,
+.pt-site .pt-ribbon-layout--grid .pt-ribbon__copy,
+.pt-site .pt-ribbon-layout--mosaic .pt-ribbon__copy{max-width:870px}
+.pt-site .pt-ribbon-layout--grid .pt-ribbon__media,
+.pt-site .pt-ribbon-layout--mosaic .pt-ribbon__media{
+  grid-template-columns:repeat(var(--pt-ribbon-cols,3),minmax(0,1fr))}
+.pt-site .pt-ribbon-layout--text{grid-template-columns:1fr;grid-template-areas:"copy"}
+.pt-site .pt-ribbon-layout--text .pt-ribbon__copy{max-width:910px}
+.pt-site .pt-ribbon-layout--cover{min-height:clamp(580px,68vw,900px);
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
+.pt-site .pt-ribbon-layout--cover .pt-ribbon__media--single .pt-ribbon__tile{
+  aspect-ratio:3/4;max-height:640px}
+.pt-site .pt-ribbon-layout--split .pt-ribbon__media--single .pt-ribbon__tile,
+.pt-site .pt-ribbon-layout--split-reverse .pt-ribbon__media--single .pt-ribbon__tile{
+  max-height:580px;aspect-ratio:3/4}
+.pt-site .pt-ribbon-layout--grid .pt-ribbon__tile,
+.pt-site .pt-ribbon-layout--mosaic .pt-ribbon__tile{
+  aspect-ratio:4/4.5;max-height:370px}
+.pt-site .pt-ribbon-layout--wide .pt-ribbon__tile{max-height:440px}
+.pt-device--mobile .pt-ribbon-section,
+.pt-device--desktop .pt-ribbon-section{color:#f9eee2}
+.pt-device--mobile .pt-ribbon-section{display:flex;flex-direction:column;
+  align-items:stretch;gap:24px;padding:52px 20px;min-height:0!important}
+.pt-device--mobile .pt-ribbon__copy{width:100%;padding:0}
+.pt-device--mobile .pt-ribbon__copy h2{
+  font-size:clamp(40px,10.5vw,74px);line-height:1.02}
+.pt-device--mobile .pt-ribbon__copy p{font-size:12px;line-height:1.85}
+.pt-device--mobile .pt-ribbon__media{width:100%;grid-template-columns:
+  repeat(min(2,var(--pt-ribbon-cols,2)),minmax(0,1fr))}
+.pt-device--mobile .pt-ribbon__media--single{grid-template-columns:minmax(0,1fr)}
+.pt-device--mobile .pt-ribbon__tile{aspect-ratio:4/5!important;max-height:400px!important}
+.pt-device--mobile .pt-ribbon__tile--empty{aspect-ratio:4/5!important}
+.pt-device--mobile .pt-ribbon-backdrop__svg{
+  width:190%;left:-45%;max-width:none;height:105%}
+.pt-device--mobile .pt-ribbon-backdrop__veil{
+  background:linear-gradient(180deg,#200004d6 0%,#2c0304b0 30%,#3c03064d 100%)}
+@media(max-width:920px){
+  .pt-device--desktop .pt-ribbon-section{grid-template-columns:1fr!important;
+    grid-template-areas:"copy" "media"!important;padding:55px 6%;
+    min-height:0}
+  .pt-device--desktop .pt-ribbon__media{grid-template-columns:
+    repeat(min(3,var(--pt-ribbon-cols,2)),minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .pt-ribbon-section{grid-template-columns:1fr!important;grid-template-areas:"copy" "media"!important}
+  .pt-ribbon-section .pt-ribbon__copy h2{font-size:clamp(40px,10vw,70px)!important}
+  .pt-ribbon__media{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-ribbon-backdrop__silks,.pt-ribbon-backdrop__shimmer,
+  .pt-ribbon-backdrop__glow,.pt-ribbon-backdrop__spark{
+    animation:none!important;transform:none!important;transition:none!important}
+}
+
+
+/* A shared header/footer makes the full journey feel like one portfolio. */
+.pt-site.pt-site--ribbon{--pt-ink:#fff0e3;--pt-muted:#e7cbb6;--pt-bg:#2a0207;
+  --pt-accent:#f1c777;--pt-border:#f2c16b41;color:#fff0e3;background:#300208}
+.pt-site.pt-site--ribbon .pt-site__nav{
+  position:relative;background:linear-gradient(120deg,#390108,#620707,#320108);
+  color:#f6eadd;border-color:#d69f582b;z-index:3}
+.pt-site.pt-site--ribbon .pt-site__nav>strong{color:#fff3e2}
+.pt-site.pt-site--ribbon .pt-site__nav>strong span{color:#f2c772}
+.pt-site.pt-site--ribbon .pt-site__nav nav a{color:#e6c8ac}
+.pt-site.pt-site--ribbon .pt-site__nav nav a:hover{color:#ffe4a5}
+.pt-site.pt-site--ribbon .pt-site__nav-meta{color:#e6c18c}
+.pt-site.pt-site--ribbon .pt-site__footer{
+  background:radial-gradient(ellipse at 85% 20%,#9c290b4c,transparent 60%),
+    linear-gradient(120deg,#300107,#4b0506);
+  color:#fff3df;border-color:#d69f582b}
+.pt-site.pt-site--ribbon .pt-site__footer span{color:#fff3df}
+.pt-site.pt-site--ribbon .pt-site__footer small{color:#e8cda7}
+
+/* Existing template effect selectors remain meaningful but never detach
+   photos from their grid cells or cover text with a picture. */
+.pt-ribbon-effect--depth .pt-ribbon__tile{box-shadow:0 24px 48px #0e0007a8}
+.pt-ribbon-effect--glass .pt-ribbon__copy{
+  border:1px solid #f6ce8f44;background:#2f010b66;
+  padding:clamp(18px,3vw,38px);border-radius:16px;
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.pt-ribbon-effect--overlap .pt-ribbon__copy h2{
+  text-shadow:2px 5px 0 #ae462866,0 10px 36px #090004a8}
+.pt-ribbon-effect--spotlight .pt-ribbon__tile{
+  box-shadow:0 0 0 2px #f5c27044,0 22px 53px #110006b5}
+.pt-ribbon-effect--orbit .pt-ribbon__tile{
+  border-color:#f6daaa9e;box-shadow:0 24px 45px #1000068b}
+.pt-ribbon-effect--typography .pt-ribbon__copy h2{
+  letter-spacing:-.055em}
+
+/* Ribbon animations are paused outside the visible viewport, without any
+   animation frame loop in React. */
+.pt-ribbon-backdrop.is-paused .pt-ribbon-backdrop__silks,
+.pt-ribbon-backdrop.is-paused .pt-ribbon-backdrop__shimmer,
+.pt-ribbon-backdrop.is-paused .pt-ribbon-backdrop__glow,
+.pt-ribbon-backdrop.is-paused .pt-ribbon-backdrop__spark{
+  animation-play-state:paused}
+.pt-ribbon-backdrop.is-paused.is-visible .pt-ribbon-backdrop__silks,
+.pt-ribbon-backdrop.is-paused.is-visible .pt-ribbon-backdrop__shimmer,
+.pt-ribbon-backdrop.is-paused.is-visible .pt-ribbon-backdrop__glow,
+.pt-ribbon-backdrop.is-paused.is-visible .pt-ribbon-backdrop__spark{
+  animation-play-state:running}
+@media(max-width:720px){
+  .pt-ribbon-backdrop__spark:nth-child(n+18){display:none}
+  .pt-ribbon-backdrop__lights{opacity:.65}
+}

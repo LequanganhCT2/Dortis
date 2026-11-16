@@ -20,7 +20,7 @@ function NumberControl({item,value,onChange}){
 export default function SceneLayerInspector({
   scene,section,selectedLayer,onSelectLayer,
   onPatchLayer,onPatchBackground,onAddNote,onRemoveNote,
-  onPatchNote,onReset,onDisable,onChangeText,textForField
+  onPatchNote,onReset,onDisable,onArrangeImages,onChangeText,textForField
 }){
   const ids=sceneLayerIds(section,scene)
   const ordered=[...ids].sort((a,b)=>scene.layers[b].z-scene.layers[a].z)
@@ -31,7 +31,13 @@ export default function SceneLayerInspector({
   return <div className="pt-layer-panel">
     <div className="pt-layer-panel__head">
       <div><strong>THIẾT KẾ TỪNG LỚP</strong><small>Chỉ áp dụng cho nghệ sĩ và khu vực đang chọn</small></div>
-      <button type="button" onClick={onReset}>Đặt lại trang</button>
+      <div className="pt-layer-panel__head-actions">
+        <button type="button" onClick={onArrangeImages} disabled={!section.slots}
+          title="Xếp lại các ảnh vào các ô riêng, không đè ảnh lên chữ">
+          ⊞ Tự xếp ảnh
+        </button>
+        <button type="button" onClick={onReset}>Đặt lại trang</button>
+      </div>
     </div>
     <label className="pt-layer-panel__background">Nền trang
       <select value={scene.background} onChange={event=>onPatchBackground(event.target.value)}>
@@ -149,6 +155,7 @@ export default function SceneLayerInspector({
         </>}
       <p className="pt-layer-panel__help">
         Chọn layer trên bản xem trước để kéo thả. Kéo góc phải dưới để thay đổi kích thước.
+        Bấm Tự xếp ảnh để đưa tất cả ảnh trở lại lưới an toàn, không tự chồng lên nhau.
         Các thuộc tính được lưu theo từng trang và không thay đổi Form chung.
       </p>
     </div>}

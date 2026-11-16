@@ -4,6 +4,7 @@ import {
 } from './sectionDesign.js'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
+import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v))
@@ -142,7 +143,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
  */
 export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
-  selectedLayer='',onSelectLayer,onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
+  index=0,selectedLayer='',onSelectLayer,onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
   const fileRef=useRef(null),pendingSlot=useRef(null)
@@ -177,6 +178,9 @@ export default function SectionArtboard({
   }
   const firstImage=(section.images||[]).find(x=>x?.path&&urls[x.path])
   const firstUrl=firstImage?urls[firstImage.path]:null
+  const hasRibbon=!section.backdrop&&scene.background==='ribbon-luxury'
+  const ribbonVariant=index===0||section.layout==='cover'?'hero':
+    ['grid','mosaic','wide'].includes(section.layout)?'gallery':'standard'
   return <section id={'pt-'+section.id}
     className={'pt-scene-section pt-scene-section--'+device+
       (editable?' is-editing':'')} aria-label={section.label}>
@@ -208,8 +212,8 @@ export default function SectionArtboard({
           onClick={()=>setMenu(null)}>Đóng</button>
       </div>}
     </div>}
-    <div ref={boardRef} className="pt-artboard"
-      style={{background:sceneGradient(scene.background)}}
+    <div ref={boardRef} className={'pt-artboard'+(hasRibbon?' pt-artboard--ribbon':'')}
+      style={{background:sceneGradient(section.backdrop==='none'&&scene.background==='ribbon-luxury'?'paper':scene.background)}}
       onContextMenu={openMenu}
       onDragOver={event=>{
         if(!editable||!event.dataTransfer.types.includes('Files'))return
@@ -219,10 +223,11 @@ export default function SectionArtboard({
       onDrop={dropImage}
       onClick={()=>{if(editable){setMenu(null);onSelectLayer?.('')}}}>
       {section.backdrop===LUXURY_RIBBON&&<RibbonLuxuryBackground/>}
-      {firstUrl&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__ambient" aria-hidden="true">
+      {hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}/>}
+      {firstUrl&&!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__ambient" aria-hidden="true">
         <img src={firstUrl} alt=""/>
       </div>}
-      {section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__flare" aria-hidden="true"/>}
+      {!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__flare" aria-hidden="true"/>}
       <span className="pt-artboard__watermark" aria-hidden="true">
         {(section.title||'PORTFOLIO').slice(0,45)}
       </span>

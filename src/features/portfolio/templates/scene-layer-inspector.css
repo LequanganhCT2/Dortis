@@ -57,3 +57,13 @@
   color:#728995;background:#f1f5f6;border-radius:7px;padding:9px}
 .pt-layer-panel__disable{padding:12px;width:100%;font-size:10px}
 @media(max-width:680px){.pt-layer-panel{padding:11px}}
+
+.pt-layer-panel__head-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pt-layer-panel__head-actions button{border:1px solid #c8dde1;
+  border-radius:6px;background:#fff;color:#386375;
+  padding:8px 9px;cursor:pointer;font:750 9px 'Be Vietnam Pro',sans-serif}
+.pt-layer-panel__head-actions button:first-child{background:#e6f3f1;color:#16606b;
+  border-color:#a6d2d0}
+.pt-layer-panel__head-actions button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:470px){.pt-layer-panel__head{flex-direction:column;align-items:stretch}
+  .pt-layer-panel__head-actions{justify-content:flex-start}}

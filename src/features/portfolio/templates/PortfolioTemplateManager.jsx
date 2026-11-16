@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
-import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS} from './model'
+import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import './template-admin.css'
 
@@ -154,7 +154,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <div className="pt-blueprint__header">
           <div><span className="pt-overline">FORM BLUEPRINT · INHERITED DESIGN</span>
             <h2>Chỉnh bố cục: {templates.find(t=>t.id===editingTemplate)?.name}</h2>
-            <p>Thiết kế nhiều lớp 3D, ảnh sắc nét với ánh sáng mờ phía sau, chữ đè ảnh hoặc bảng kính mờ. Chỉnh hiệu ứng của mẫu sẽ áp dụng cho tất cả nghệ sĩ đang dùng; chữ PDF và ảnh riêng vẫn độc lập.</p>
+            <p>Form chung được kế thừa bởi mọi nghệ sĩ. Luxury Motion dùng dải lụa đỏ vàng chuyển động nhẹ, đồng bộ giữa các trang; ảnh tự vào từng khu vực riêng, không chồng nhau. Chỉnh mẫu dùng chung sẽ áp dụng cho các nghệ sĩ đang kế thừa, nhưng chữ và ảnh của họ vẫn độc lập.</p>
           </div>
           <div className="pt-action-row">
             <button type="button" className="pt-btn pt-btn--light"
@@ -162,14 +162,29 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             <button type="button" className="pt-btn" onClick={saveTemplate} disabled={working}>Lưu form gốc</button>
           </div>
         </div>
-        <label className="pt-blueprint__style">Phong cách trình bày
-          <select value={blueprint.style}
-            onChange={e=>setBlueprint(v=>({...v,style:e.target.value}))}>
-            <option value="editorial">Editorial Story</option>
-            <option value="cinematic">Cinematic Stage</option>
-            <option value="minimal">Minimal Signature</option>
-          </select>
-        </label>
+        <div className="pt-blueprint__themes">
+          <label className="pt-blueprint__style">Phong cách chữ
+            <select value={blueprint.style}
+              onChange={e=>setBlueprint(v=>({...v,style:e.target.value}))}>
+              <option value="editorial">Editorial Story</option>
+              <option value="cinematic">Cinematic Stage</option>
+              <option value="minimal">Minimal Signature</option>
+            </select>
+          </label>
+          <label className="pt-blueprint__style">Chủ đề nền xuyên suốt mọi trang
+            <select value={blueprint.visualTheme||'ribbon-luxury'}
+              onChange={e=>setBlueprint(v=>({...v,visualTheme:e.target.value}))}>
+              {FORM_VISUAL_THEMES.map(item=><option value={item.id} key={item.id}>
+                {item.label}
+              </option>)}
+            </select>
+          </label>
+        </div>
+        <p className="pt-blueprint__visual-note">
+          Luxury Motion dùng chung dải lụa đỏ vàng chuyển động nhẹ cho mọi khu vực.
+          Hình ảnh tự xếp trong các ô Grid riêng, không tự chồng lên nhau.
+          Bố cục chữ và ảnh chỉnh tay của nghệ sĩ vẫn là lớp tùy chỉnh độc lập.
+        </p>
         <div className="pt-blueprint__sections">
           {blueprint.sections.map((section,i)=><div key={section.id} className="pt-blueprint__row">
             <span className="pt-blueprint__number">{String(i+1).padStart(2,'0')}</span>
