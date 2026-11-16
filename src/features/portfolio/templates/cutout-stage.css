@@ -1,0 +1,126 @@
+/*
+ * DORTIS — Cut-out Portrait Stage
+ * Soft, organic light behind alpha-transparent PNGs. No rectangular PNG
+ * shadow. Styles are selectable per image, with Aura as the default.
+ */
+.pt-site .pt-cutout-stage{
+  isolation:isolate;
+  overflow:visible!important;
+}
+/* Do not override the absolute positioning owned by Layer Studio. */
+.pt-site .pt-artboard__layer.pt-cutout-stage{position:absolute;}
+.pt-site .pt-cutout-stage::before,
+.pt-site .pt-cutout-stage::after{
+  content:"";
+  display:block;
+  position:absolute;
+  pointer-events:none!important;
+  user-select:none;
+  z-index:0;
+}
+.pt-site .pt-cutout-stage--aura::before{
+  left:-12%;
+  right:-12%;
+  top:4%;
+  height:87%;
+  border-radius:50%;
+  background:
+    radial-gradient(ellipse at 50% 45%,transparent 47%,#fff0b15c 49%,
+      #ffdb9745 50%,transparent 52%),
+    radial-gradient(ellipse at 50% 45%,#ffeba94f 0%,#ffc27141 25%,
+      #bb3b361f 48%,transparent 73%);
+  filter:blur(11px);
+  opacity:.84;
+  transform:rotate(-9deg);
+  animation:pt-cutout-aura-drift 14s ease-in-out infinite alternate;
+}
+.pt-site .pt-cutout-stage--aura::after{
+  bottom:3%;
+  left:11%;
+  width:78%;
+  height:17%;
+  border-radius:50%;
+  background:radial-gradient(ellipse,#ffcc7a74 0%,#dc6f4a3b 38%,transparent 74%);
+  filter:blur(18px);
+  opacity:.82;
+}
+.pt-site .pt-cutout-stage--glass::before{
+  left:4%;right:4%;top:5%;bottom:3%;
+  border:1px solid #ffe6bc55;
+  border-radius:clamp(18px,2.8vw,38px);
+  background:
+    radial-gradient(ellipse at 52% 29%,#ffe3ac23,transparent 58%),
+    linear-gradient(145deg,#fff0db12,#fff0db05 45%,#48101b29);
+  box-shadow:0 26px 75px #20030866,inset 0 1px 0 #fff3dc42,
+    0 0 42px #f6ba6d17;
+  backdrop-filter:blur(9px);
+  -webkit-backdrop-filter:blur(9px);
+  opacity:.88;
+}
+.pt-site .pt-cutout-stage--glass::after{
+  width:68%;height:14%;bottom:5%;left:16%;
+  border-radius:50%;
+  background:radial-gradient(ellipse,#f5cf9880,#ed955a22 50%,transparent 78%);
+  filter:blur(15px);
+}
+.pt-site .pt-cutout-stage--bare::before,
+.pt-site .pt-cutout-stage--bare::after{
+  content:none!important;
+}
+/* The original photo has no rectangle/background; CSS drop-shadow uses the
+   PNG alpha channel, following the cat/artist silhouette precisely. */
+.pt-site .pt-ribbon-section .pt-ribbon__tile.pt-ribbon__tile--cutout.pt-cutout-stage--aura img,
+.pt-site .pt-ribbon-section .pt-ribbon__tile.pt-ribbon__tile--cutout.pt-cutout-stage--glass img,
+.pt-site .pt-fx-section .pt-site__media-tile.is-cutout.pt-cutout-stage--aura img,
+.pt-site .pt-fx-section .pt-site__media-tile.is-cutout.pt-cutout-stage--glass img,
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--aura .pt-artboard__photo img,
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--glass .pt-artboard__photo img{
+  position:relative;
+  z-index:2;
+  background:transparent!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 19px 13px #19020b75)
+    drop-shadow(0 0 12px #f2be8044)!important;
+}
+.pt-site .pt-ribbon-section .pt-ribbon__tile.pt-ribbon__tile--cutout.pt-cutout-stage--bare img,
+.pt-site .pt-fx-section .pt-site__media-tile.is-cutout.pt-cutout-stage--bare img,
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--bare .pt-artboard__photo img{
+  filter:none!important;
+}
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--aura .pt-artboard__photo,
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--glass .pt-artboard__photo,
+.pt-site .pt-artboard__layer.is-image.is-cutout.pt-cutout-stage--bare .pt-artboard__photo{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  z-index:2;
+  overflow:visible!important;
+}
+/* Enable the same treatment for an older MotionSection cutout without
+   requiring a migration or replacing its existing image data. */
+.pt-site .pt-fx-section .pt-site__media-tile.is-cutout.pt-cutout-stage{
+  background:transparent!important;
+  box-shadow:none!important;
+  border:0!important;
+}
+.pt-site .pt-fx-section .pt-site__media-tile.is-cutout.pt-cutout-stage img{
+  object-fit:contain!important;
+  object-position:center bottom;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+@keyframes pt-cutout-aura-drift{
+  from{transform:translate3d(-1.5%,1%,0) rotate(-9deg) scale(.98);opacity:.75}
+  to{transform:translate3d(2%,-1%,0) rotate(-7deg) scale(1.035);opacity:.95}
+}
+.pt-site--motion-paused .pt-cutout-stage--aura::before{
+  animation-play-state:paused;
+}
+@media(max-width:680px){
+  .pt-site .pt-cutout-stage--aura::before{filter:blur(7px);opacity:.8}
+  .pt-site .pt-cutout-stage--glass::before{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site .pt-cutout-stage--aura::before{animation:none!important;transform:none!important}
+}

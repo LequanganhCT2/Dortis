@@ -10,9 +10,10 @@ import {LUXURY_RIBBON} from './model'
 import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
 import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWidthStyle} from './textFrameSizing'
-import {isCutoutArtwork} from './imagePresentation'
+import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
+import './cutout-stage.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
@@ -295,7 +296,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         const url=asset?.path?urls[asset.path]:null
         if(isPublic&&!url)return null
         return <div key={section.id+':'+i} data-image-slot={onUploadImage?i:undefined} {...positionProps('image:'+i)}
-          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout':'')}
+          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(asset):'')}
           data-ribbon-slot={effect==='ribbon'?i:undefined}
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
           {url?<img src={url} draggable={onMoveElement?false:undefined} alt={asset?.alt||section.title||section.label}

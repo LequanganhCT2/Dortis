@@ -5,7 +5,7 @@ import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sour
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
-import {isCutoutArtwork} from './imagePresentation'
+import {isCutoutArtwork,cutoutStageStyle,CUTOUT_STAGE_STYLES} from './imagePresentation'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
   SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
@@ -205,6 +205,15 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>{
       const image=prev.images?.[slot]
       return image?.path?setSlotImage(prev,slot,{...image,cutout:value}):prev
+    })
+    setDirty(true)
+  }
+  function changeCutoutStyle(section,index,style){
+    if(!CUTOUT_STAGE_STYLES.some(option=>option.id===style))return
+    const slot=getSlot(section,index)
+    setContent(prev=>{
+      const image=prev.images?.[slot]
+      return image?.path?setSlotImage(prev,slot,{...image,cutoutStyle:style}):prev
     })
     setDirty(true)
   }
@@ -503,8 +512,17 @@ export default function PortfolioInstanceEditor({
                   <label className="pt-upload__cutout-option">
                     <input type="checkbox" checked={isCutoutArtwork(image)}
                       disabled={busy} onChange={e=>changeCutout(current,index,e.target.checked)}/>
-                    <span>Ảnh tách nền — không khung, không bóng đổ</span>
+                    <span>Ảnh tách nền / PNG trong suốt</span>
                   </label>
+                  {isCutoutArtwork(image)&&<label className="pt-upload__stage-option">
+                    <span>Hiệu ứng trang trí phía sau PNG</span>
+                    <select value={cutoutStageStyle(image)||'aura'} disabled={busy}
+                      onChange={e=>changeCutoutStyle(current,index,e.target.value)}>
+                      {CUTOUT_STAGE_STYLES.map(style=>
+                        <option key={style.id} value={style.id}>{style.label}</option>)}
+                    </select>
+                    <small>Bóng đi theo chủ thể, không tạo bóng hình chữ nhật.</small>
+                  </label>}
                 </>}
               </div>
             })}

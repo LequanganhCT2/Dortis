@@ -4,7 +4,7 @@ import {
 } from './sectionDesign.js'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
-import {isCutoutArtwork} from './imagePresentation'
+import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
@@ -115,7 +115,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     aria-label={editable?'Kéo layer '+label+', dùng phím mũi tên để di chuyển':undefined}
     aria-pressed={editable?Boolean(selected):undefined}
     className={'pt-artboard__layer '+(type==='image'?'is-image':'is-text')+
-      (type==='image'&&isCutoutArtwork(image)?' is-cutout':'')+
+      (type==='image'&&isCutoutArtwork(image)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(image):'')+
       (selected&&editable?' is-selected':'')+
       (editable?' is-editable':'')+
       (layer.hidden?' is-hidden':'')}

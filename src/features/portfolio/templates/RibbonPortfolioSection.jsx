@@ -1,7 +1,7 @@
 import React,{useRef} from 'react'
 import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
-import {isCutoutArtwork} from './imagePresentation'
+import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
 /**
@@ -234,7 +234,7 @@ export default function RibbonPortfolioSection({
       {tiles.map(({asset,position,url})=><div
         data-image-slot={editing?position:undefined}
         className={'pt-ribbon__tile'+(!url?' pt-ribbon__tile--empty':'')+
-          (url&&isCutoutArtwork(asset)?' pt-ribbon__tile--cutout':'')+
+          (url&&isCutoutArtwork(asset)?' pt-ribbon__tile--cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(asset):'')+
           (editing?' pt-ribbon__tile--editable':'')}
         data-image-selected={editing&&selectedLayer==='image:'+position?'true':undefined}
         key={section.id+':'+position}

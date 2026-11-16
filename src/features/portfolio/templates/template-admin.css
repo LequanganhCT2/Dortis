@@ -335,3 +335,37 @@
   width:15px!important;height:15px!important;margin:0;flex:none;
   accent-color:#376c69;
 }
+
+
+/* A per-PNG art direction selector, separate from the "has alpha" toggle. */
+.pt-upload__stage-option{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin-top:5px;
+  padding:12px 13px;
+  border:1px solid #d9c39d;
+  border-radius:10px;
+  background:linear-gradient(115deg,#fff9eb,#fcf1df);
+}
+.pt-upload__stage-option>span{
+  color:#76552b;
+  font:700 11px/1.5 'Be Vietnam Pro',sans-serif;
+}
+.pt-upload__stage-option select{
+  width:100%;min-width:0;
+  color:#4f3c27;
+  background:#fff;
+  border:1px solid #d1b98e;
+  border-radius:7px;
+  padding:9px 8px;
+  font:600 11px 'Be Vietnam Pro',sans-serif;
+}
+.pt-upload__stage-option select:focus-visible{
+  outline:2px solid #bb8b4b;
+  outline-offset:2px;
+}
+.pt-upload__stage-option small{
+  font:400 10px/1.7 'Be Vietnam Pro',sans-serif;
+  color:#8b7455;
+}

@@ -12,3 +12,20 @@ export function isCutoutArtwork(asset){
   if(asset.cutout===false)return false
   return /\.png(?:$|[?#])/i.test(asset.path)
 }
+
+
+/**
+ * Artistic background applied behind a transparent cutout. The base image
+ * retains its alpha and the shadow follows its subject, not its rectangle.
+ * Existing PNGs automatically receive the Aura design until an Admin opts out.
+ */
+export const CUTOUT_STAGE_STYLES=Object.freeze([
+  {id:'aura',label:'Aura ánh kim · nền sáng mềm'},
+  {id:'glass',label:'Khung kính mờ · viền vàng nhẹ'},
+  {id:'bare',label:'Trong suốt hoàn toàn'}
+])
+export function cutoutStageStyle(asset){
+  if(!isCutoutArtwork(asset))return null
+  return CUTOUT_STAGE_STYLES.some(style=>style.id===asset?.cutoutStyle)?
+    asset.cutoutStyle:'aura'
+}

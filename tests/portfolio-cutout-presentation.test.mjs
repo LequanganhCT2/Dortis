@@ -1,51 +1,77 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {isCutoutArtwork} from '../src/features/portfolio/templates/imagePresentation.js'
+import {
+  isCutoutArtwork,cutoutStageStyle,CUTOUT_STAGE_STYLES
+} from '../src/features/portfolio/templates/imagePresentation.js'
 
 const source=name=>readFileSync(new URL('../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
 
-test('Existing uploaded PNGs without flags display frameless automatically',()=>{
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.png'}),true)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.PNG'}),true)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.png?token=123'}),true)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.jpg'}),false)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.webp'}),false)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.webp',cutout:true}),true)
-  assert.equal(isCutoutArtwork({path:'artist/form/hero/0-abc.png',cutout:false}),false)
+test('Existing transparent PNGs are cutouts, with explicit opt-in and opt-out',()=>{
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.png'}),true)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.PNG'}),true)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.png?token=123'}),true)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.jpg'}),false)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.webp'}),false)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.webp',cutout:true}),true)
+  assert.equal(isCutoutArtwork({path:'artist/form/hero/cat.png',cutout:false}),false)
   assert.equal(isCutoutArtwork({path:''}),false)
   assert.equal(isCutoutArtwork(null),false)
 })
-
-test('Default Ribbon renderer keeps cutouts in grid slots but drops frames',()=>{
-  const comp=source('RibbonPortfolioSection.jsx')
+test('All PNGs inherit Aura and can switch to glass or bare without modifying photo',()=>{
+  const original={path:'artist/hero/portrait.png'}
+  assert.equal(cutoutStageStyle(original),'aura')
+  assert.equal(cutoutStageStyle({...original,cutoutStyle:'aura'}),'aura')
+  assert.equal(cutoutStageStyle({...original,cutoutStyle:'glass'}),'glass')
+  assert.equal(cutoutStageStyle({...original,cutoutStyle:'bare'}),'bare')
+  assert.equal(cutoutStageStyle({...original,cutoutStyle:'unexpected'}),'aura')
+  assert.equal(cutoutStageStyle({...original,cutout:false}),null)
+  assert.equal(cutoutStageStyle({path:'photo.jpg'}),null)
+  assert.deepEqual(CUTOUT_STAGE_STYLES.map(style=>style.id),['aura','glass','bare'])
+})
+test('Silk Atelier uses a framed photo only for opaque images, and decorates PNG separately',()=>{
+  const component=source('RibbonPortfolioSection.jsx')
   const css=source('portfolio-ribbon.css')
   const stage=source('silk-stage-backdrop.css')
-  assert.match(comp,/isCutoutArtwork\(asset\)\?' pt-ribbon__tile--cutout'/)
+  const effects=source('cutout-stage.css')
+  assert.match(component,/isCutoutArtwork\(asset\)\?' pt-ribbon__tile--cutout pt-cutout-stage/)
+  assert.match(component,/cutoutStageStyle\(asset\)/)
   assert.match(css,/\.pt-ribbon__tile\.pt-ribbon__tile--cutout\{/)
   assert.match(css,/box-shadow:none!important/)
   assert.match(css,/background:transparent!important/)
   assert.match(css,/object-fit:contain!important/)
   assert.match(stage,/\.pt-site\.pt-site--continuous-silk \.pt-ribbon-section\{border-bottom:0!important\}/)
-  assert.match(stage,/\.pt-ribbon__tile\.pt-ribbon__tile--cutout/)
   assert.doesNotMatch(stage,/\.pt-site\.pt-site--continuous-silk \.pt-ribbon-section\{border-bottom:1px/)
+  assert.match(effects,/\.pt-cutout-stage--aura::before/)
+  assert.match(effects,/\.pt-cutout-stage--glass::before/)
+  assert.match(effects,/\.pt-cutout-stage--bare::before/)
+  assert.match(effects,/filter:drop-shadow/)
+  assert.match(effects,/backdrop-filter:blur\(9px\)/)
+  assert.match(effects,/prefers-reduced-motion:reduce/)
+  assert.match(effects,/pointer-events:none!important/)
 })
-
-test('Layer Studio and legacy renderer recognize cutouts consistently',()=>{
+test('Editor, Layer Studio and older published Forms use one shared stage choice',()=>{
   const board=source('SectionArtboard.jsx')
   const boardCss=source('section-artboard.css')
   const site=source('PortfolioTemplateSite.jsx')
+  const effects=source('cutout-stage.css')
   assert.match(board,/isCutoutArtwork\(image\)/)
+  assert.match(board,/cutoutStageStyle\(image\)/)
   assert.match(boardCss,/\.pt-artboard__layer\.is-image\.is-cutout/)
   assert.match(boardCss,/overflow:visible!important/)
-  assert.match(site,/isCutoutArtwork\(asset\)/)
+  assert.match(site,/cutoutStageStyle\(asset\)/)
+  assert.match(site,/import '\.\/cutout-stage\.css'/)
+  assert.match(effects,/\.pt-artboard__layer\.pt-cutout-stage\{position:absolute;\}/)
+  assert.doesNotMatch(effects,/\.pt-site \.pt-cutout-stage\{[^}]*position:relative/)
 })
-
-test('Admin supports explicit frameless toggle even for opaque PNG and WebP',()=>{
+test('Admin can choose Aura / glass / bare separately for every image slot',()=>{
   const editor=source('PortfolioInstanceEditor.jsx')
   assert.match(editor,/function changeCutout\(/)
-  assert.match(editor,/cutout:value/)
+  assert.match(editor,/function changeCutoutStyle\(/)
+  assert.match(editor,/cutoutStyle:style/)
   assert.match(editor,/checked=\{isCutoutArtwork\(image\)\}/)
-  assert.match(editor,/Ảnh tách nền — không khung, không bóng đổ/)
+  assert.match(editor,/Ảnh tách nền \/ PNG trong suốt/)
+  assert.match(editor,/value=\{cutoutStageStyle\(image\)\|\|'aura'\}/)
+  assert.match(editor,/CUTOUT_STAGE_STYLES\.map/)
   assert.match(editor,/setDirty\(true\)/)
 })
