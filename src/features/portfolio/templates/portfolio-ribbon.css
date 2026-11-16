@@ -317,3 +317,17 @@
   outline:2px solid #f5d18f!important;
   outline-offset:4px;
 }
+
+
+/* Dragging a text handle changes its layout width, not CSS scale or font-size.
+   Let the browser reflow Vietnamese words naturally inside the new frame. */
+.pt-site .pt-ribbon__copy [data-portfolio-text-frame]{
+  box-sizing:border-box;max-width:100%;
+  overflow-wrap:anywhere;white-space:pre-line;
+}
+.pt-site .pt-ribbon-section--editing .pt-ribbon__resize--text{
+  top:50%;bottom:auto;right:-14px;
+  transform:translateY(-50%);
+  cursor:ew-resize;touch-action:none;
+  user-select:none;
+}

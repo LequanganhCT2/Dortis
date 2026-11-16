@@ -369,3 +369,17 @@
   .pt-site .pt-fx-section::before { transform: none; transition: none; }
   .pt-site--editorial .pt-fx-section::before { transform: rotate(-23deg); }
 }
+
+
+/* Width-controlled legacy text is also a wrapping frame, never a scaled
+   glyph layer. Kept for published older Forms. */
+.pt-site .pt-site__copy [data-portfolio-text-frame]{
+  box-sizing:border-box;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  white-space:pre-line;
+}
+.pt-site .pt-element-resize-handle[aria-label^="Điều chỉnh độ rộng khung"]{
+  cursor:ew-resize;
+  touch-action:none;
+}

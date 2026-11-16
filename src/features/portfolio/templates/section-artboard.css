@@ -106,3 +106,17 @@
   border:0!important;border-radius:0!important;
   box-shadow:none!important;background:transparent!important;
 }
+
+
+/* Narrowing an artboard text box must reflow its lines, not clip or scale
+   them. Font size stays owned by the independent typography control. */
+.pt-artboard__layer.is-text .pt-artboard__text{
+  height:auto!important;
+  min-height:100%;
+  overflow:visible!important;
+  overflow-wrap:anywhere;
+}
+.pt-artboard__handle--width{
+  cursor:ew-resize!important;
+  touch-action:none;
+}

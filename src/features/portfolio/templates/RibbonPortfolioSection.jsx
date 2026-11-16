@@ -2,6 +2,7 @@ import React,{useRef} from 'react'
 import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
 import {isCutoutArtwork} from './imagePresentation'
+import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
 /**
  * A section inherits its structure, slots and grid from the shared Form.
@@ -10,11 +11,14 @@ import {isCutoutArtwork} from './imagePresentation'
  */
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value))
 const clampPosition=value=>Math.round(clamp(value,-95,95)*10)/10
-function positionStyle(position={},type={}){
+function positionStyle(position={},type={},key=''){
+  const text=isTextFrame(key)
   return {
     translate:position.x||position.y?(Number(position.x)||0)+'% '+(Number(position.y)||0)+'%':undefined,
-    scale:position.scaleX&&position.scaleY?
+    // Legacy scale fields are ignored on text: wrapping never changes the font.
+    scale:!text&&position.scaleX&&position.scaleY?
       position.scaleX+' '+position.scaleY:undefined,
+    ...(text?textBoxWidthStyle(position):{}),
     fontFamily:type.font?sceneFont(type.font):undefined,
     fontSize:Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     lineHeight:Number.isFinite(type.lineHeight)?clamp(type.lineHeight,.7,3):undefined
@@ -45,12 +49,17 @@ export default function RibbonPortfolioSection({
     const target=resizing?event.currentTarget.parentElement:event.currentTarget
     const rect=target.getBoundingClientRect()
     if(!rect.width||!rect.height)return
-    const initial=positions?.[key]||{x:0,y:0,scaleX:1,scaleY:1}
+    const saved=positions?.[key]||{}
+    const initial={...saved,x:Number(saved.x)||0,y:Number(saved.y)||0,
+      scaleX:Number(saved.scaleX)||1,scaleY:Number(saved.scaleY)||1}
+    const isTextResize=resizing&&isTextFrame(key)
+    const containerWidth=target.parentElement?.getBoundingClientRect().width||rect.width
     drag.current={key,pointerId:event.pointerId,element:target,rect,
-      x:event.clientX,y:event.clientY,
-      initial:{x:Number(initial.x)||0,y:Number(initial.y)||0,
-        scaleX:Number(initial.scaleX)||1,scaleY:Number(initial.scaleY)||1},
-      resizing,locked,preview:null}
+      x:event.clientX,y:event.clientY,initial,locked,preview:null,
+      mode:isTextResize?'text-width':resizing?'image-scale':'move',
+      containerWidth,
+      startWidthPct:storedTextWidth(saved)??measuredTextWidth(target.offsetWidth,containerWidth),
+      originalStyleWidth:target.style.width}
     event.currentTarget.setPointerCapture?.(event.pointerId)
     onSelectLayer?.(key)
     event.preventDefault()
@@ -60,7 +69,11 @@ export default function RibbonPortfolioSection({
     if(!current||current.pointerId!==event.pointerId)return
     const dx=event.clientX-current.x,dy=event.clientY-current.y
     if(!current.preview&&Math.hypot(dx,dy)<3)return
-    if(current.resizing){
+    if(current.mode==='text-width'){
+      const widthPct=resizeTextWidth(current.startWidthPct,dx,current.containerWidth)
+      current.preview={...current.initial,widthPct}
+      current.element.style.width=widthPct+'%'
+    }else if(current.mode==='image-scale'){
       const dimensions=resizeDimensions(current.initial.scaleX,current.initial.scaleY,
         dx*2/current.rect.width,dy*2/current.rect.height,{
           locked:current.locked,minWidth:.25,minHeight:.25,maxWidth:2,maxHeight:2
@@ -81,10 +94,13 @@ export default function RibbonPortfolioSection({
     if(commit&&current.preview){
       suppressClick.current=true
       onMoveElement?.(current.key,current.preview)
+    }else if(current.mode==='text-width'){
+      current.element.style.width=current.originalStyleWidth
     }else{
-      current.element.style.translate=positionStyle(current.initial).translate||''
-      current.element.style.scale=
-        current.initial.scaleX+' '+current.initial.scaleY
+      current.element.style.translate=positionStyle(current.initial,{},current.key).translate||''
+      if(current.mode==='image-scale'){
+        current.element.style.scale=current.initial.scaleX+' '+current.initial.scaleY
+      }
     }
   }
   function moveKey(event,key){
@@ -100,7 +116,7 @@ export default function RibbonPortfolioSection({
     return true
   }
   const draggableProps=key=>({
-    style:positionStyle(positions?.[key],typography?.[key]),
+    style:positionStyle(positions?.[key],typography?.[key],key),
     ...(onMoveElement?{
       'data-portfolio-movable':'',tabIndex:0,
       onPointerDown:event=>startDrag(event,key),
@@ -112,19 +128,32 @@ export default function RibbonPortfolioSection({
     }:{})
   })
   function resizeHandle(key,label,locked){
-    return !onMoveElement||selectedLayer!==key?null:
-      <button type="button" className="pt-ribbon__resize"
-        aria-label={'Đổi kích thước '+label}
-        onClick={event=>event.stopPropagation()}
-        onPointerDown={event=>startDrag(event,key,true,locked)}
-        onPointerMove={dragMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={event=>finishDrag(event,false)}
-        onLostPointerCapture={event=>finishDrag(event,false)}>↘</button>
+    if(!onMoveElement||selectedLayer!==key)return null
+    const text=isTextFrame(key)
+    return <button type="button"
+      className={'pt-ribbon__resize'+(text?' pt-ribbon__resize--text':'')}
+      aria-label={text?'Điều chỉnh độ rộng khung '+label:'Đổi kích thước '+label}
+      title={text?'Kéo ngang để đổi độ rộng khung, giữ nguyên cỡ chữ':'Đổi kích thước ảnh'}
+      onClick={event=>event.stopPropagation()}
+      onPointerDown={event=>startDrag(event,key,true,locked)}
+      onPointerMove={dragMove}
+      onPointerUp={finishDrag}
+      onPointerCancel={event=>finishDrag(event,false)}
+      onLostPointerCapture={event=>finishDrag(event,false)}
+      onKeyDown={text?event=>{
+        if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return
+        event.preventDefault();event.stopPropagation()
+        const saved=positions?.[key]||{}
+        const target=event.currentTarget.parentElement
+        const parentWidth=target?.parentElement?.getBoundingClientRect().width||0
+        const start=storedTextWidth(saved)??measuredTextWidth(target?.offsetWidth||0,parentWidth)
+        const delta=(event.key==='ArrowRight'?1:-1)*(event.shiftKey?10:2)
+        onMoveElement(key,{...saved,widthPct:resizeTextWidth(start,parentWidth*delta/100,parentWidth)})
+      }:undefined}>{text?'↔':'↘'}</button>
   }
   function editTextProps(field){
     const base=draggableProps(field)
-    return {...base,
+    return {...base,'data-portfolio-text-frame':field,
       ...(onEditText?{
         'data-portfolio-edit-field':field,
         'data-portfolio-edit-selected':selectedLayer===field?'true':undefined,

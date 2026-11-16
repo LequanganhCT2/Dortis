@@ -9,6 +9,7 @@ import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
+import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWidthStyle} from './textFrameSizing'
 import {isCutoutArtwork} from './imagePresentation'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
@@ -73,11 +74,13 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   }
   function positionProps(key){
     const initial=positions?.[key]||{x:0,y:0}
+    const text=isTextFrame(key)
     const position={
       translate:initial.x||initial.y?initial.x+'% '+initial.y+'%':undefined,
-      scale:initial.scaleX&&initial.scaleY?initial.scaleX+' '+initial.scaleY:undefined,
-      '--pt-inverse-resize-x':initial.scaleX?1/initial.scaleX:undefined,
-      '--pt-inverse-resize-y':initial.scaleY?1/initial.scaleY:undefined
+      scale:!text&&initial.scaleX&&initial.scaleY?initial.scaleX+' '+initial.scaleY:undefined,
+      ...(text?textBoxWidthStyle(initial):{}),
+      '--pt-inverse-resize-x':!text&&initial.scaleX?1/initial.scaleX:undefined,
+      '--pt-inverse-resize-y':!text&&initial.scaleY?1/initial.scaleY:undefined
     }
     if(!onMoveElement)return {style:position}
     return {
@@ -120,15 +123,23 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     }
   }
   function elementResizeProps(key,locked){
+    const isText=isTextFrame(key)
     function setElementScale(element,x,y){
       element.style.scale=x+' '+y
       element.style.setProperty('--pt-inverse-resize-x',1/x)
       element.style.setProperty('--pt-inverse-resize-y',1/y)
     }
-    function resize(current,dx,dy){
-      const {w,h}=resizeDimensions(current.scaleX,current.scaleY,dx,dy,{
-        locked:current.locked,minWidth:.25,minHeight:.25,maxWidth:2,maxHeight:2
-      })
+    function resize(current,dxPx,dyPx){
+      if(current.isText){
+        const widthPct=resizeTextWidth(current.startWidthPct,dxPx,current.parentWidth)
+        current.next={...current.initial,widthPct}
+        current.element.style.width=widthPct+'%'
+        return
+      }
+      const {w,h}=resizeDimensions(current.scaleX,current.scaleY,
+        dxPx*2/current.width,dyPx*2/current.height,{
+          locked:current.locked,minWidth:.25,minHeight:.25,maxWidth:2,maxHeight:2
+        })
       current.next={...current.initial,scaleX:w,scaleY:h}
       setElementScale(current.element,w,h)
     }
@@ -137,17 +148,22 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       event.stopPropagation()
       const element=event.currentTarget.parentElement
       const initial=positions?.[key]||{x:0,y:0}
+      const parentWidth=element.parentElement?.getBoundingClientRect().width||element.offsetWidth
       drag.current={element,initial,pointer:event.pointerId,
-        startX:event.clientX,startY:event.clientY,width:element.offsetWidth,height:element.offsetHeight,
-        scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked}
+        startX:event.clientX,startY:event.clientY,
+        width:element.offsetWidth,height:element.offsetHeight,
+        scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked,isText,
+        parentWidth,
+        startWidthPct:storedTextWidth(initial)??measuredTextWidth(element.offsetWidth,parentWidth),
+        originalStyleWidth:element.style.width}
       event.currentTarget.setPointerCapture(event.pointerId)
+      event.preventDefault()
     }
     function move(event){
       const current=drag.current
       if(current?.pointer!==event.pointerId||!current.width||!current.height)return
       event.stopPropagation()
-      resize(current,(event.clientX-current.startX)*2/current.width,
-        (event.clientY-current.startY)*2/current.height)
+      resize(current,event.clientX-current.startX,event.clientY-current.startY)
     }
     function finish(event,save){
       const current=drag.current
@@ -155,26 +171,38 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       event.stopPropagation()
       drag.current=null
       if(save&&current.next)onMoveElement(key,current.next)
+      else if(current.isText)current.element.style.width=current.originalStyleWidth
       else setElementScale(current.element,current.scaleX,current.scaleY)
     }
     return {
       onPointerDown:start,onPointerMove:move,onPointerUp:event=>finish(event,true),
+      onPointerCancel:event=>finish(event,false),
       onLostPointerCapture:event=>finish(event,false),
       onKeyDown:event=>{
-        const dx=event.key==='ArrowLeft'?-.05:event.key==='ArrowRight'?.05:0
-        const dy=event.key==='ArrowUp'?-.05:event.key==='ArrowDown'?.05:0
-        if(!dx&&!dy)return
-        event.preventDefault()
+        const horizontal=event.key==='ArrowLeft'?-1:event.key==='ArrowRight'?1:0
+        const vertical=event.key==='ArrowUp'?-1:event.key==='ArrowDown'?1:0
+        if(!horizontal&&!vertical)return
+        if(isText&&!horizontal)return
+        event.preventDefault();event.stopPropagation()
         const initial=positions?.[key]||{x:0,y:0}
-        const current={element:event.currentTarget.parentElement,initial,
-          scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked}
-        resize(current,dx,dy)
+        const element=event.currentTarget.parentElement
+        const parentWidth=element.parentElement?.getBoundingClientRect().width||element.offsetWidth
+        if(isText){
+          const start=storedTextWidth(initial)??measuredTextWidth(element.offsetWidth,parentWidth)
+          onMoveElement(key,{...initial,widthPct:resizeTextWidth(start,
+            parentWidth*horizontal*(event.shiftKey?10:2)/100,parentWidth)})
+          return
+        }
+        const current={element,initial,width:element.offsetWidth,height:element.offsetHeight,
+          scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked,isText:false}
+        resize(current,horizontal*.05*current.width/2,vertical*.05*current.height/2)
         onMoveElement(key,current.next)
       }
     }
   }
   function editTextProps(field){
     const placement=positionProps(field)
+    placement['data-portfolio-text-frame']=field
     const type=typography?.[field]
     if(type)placement.style={
       ...placement.style,
@@ -203,8 +231,10 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   function textResizeHandle(field,label){
     if(!onMoveElement||selectedLayer!==field)return null
     return <button type="button" className="pt-artboard__handle pt-element-resize-handle"
-      aria-label={'Đổi kích thước '+label} onClick={event=>event.stopPropagation()}
-      {...elementResizeProps(field,true)}>↘</button>
+      aria-label={'Điều chỉnh độ rộng khung '+label}
+      title="Kéo ngang để đổi độ rộng khung, giữ nguyên cỡ chữ"
+      onClick={event=>event.stopPropagation()}
+      {...elementResizeProps(field,true)}>↔</button>
   }
   const textPresent=Boolean(section.title||section.body||section.eyebrow)
   const luxuryRibbon=section.backdrop===LUXURY_RIBBON

@@ -1,0 +1,81 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+import {
+  isTextFrame,clampTextWidth,storedTextWidth,
+  measuredTextWidth,resizeTextWidth,textBoxWidthStyle
+} from '../src/features/portfolio/templates/textFrameSizing.js'
+
+const file=name=>readFileSync(new URL(
+  '../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
+
+test('Dragging a text frame changes width as percentage, not text scale',()=>{
+  assert.equal(resizeTextWidth(60,100,500),80)
+  assert.equal(resizeTextWidth(60,-100,500),40)
+  assert.equal(resizeTextWidth(60,-1000,500),14)
+  assert.equal(resizeTextWidth(60,1000,500),100)
+  assert.equal(resizeTextWidth(42.5,3,500),43.1)
+  assert.equal(clampTextWidth(Infinity),100)
+  assert.equal(resizeTextWidth(50,150,0),50)
+  assert.equal(measuredTextWidth(300,500),60)
+  assert.equal(measuredTextWidth(400,0),100)
+  assert.deepEqual(textBoxWidthStyle({widthPct:57}),{width:'57%'})
+  assert.deepEqual(textBoxWidthStyle({}),{})
+  assert.equal(storedTextWidth({widthPct:0}),14)
+  assert.equal(storedTextWidth({widthPct:null}),null)
+  assert.equal(isTextFrame('title'),true)
+  assert.equal(isTextFrame('body'),true)
+  assert.equal(isTextFrame('eyebrow'),true)
+  assert.equal(isTextFrame('note:abc'),true)
+  assert.equal(isTextFrame('image:0'),false)
+})
+test('Silk Atelier resizes the text box and persists widthPct without font scaling',()=>{
+  const component=file('RibbonPortfolioSection.jsx')
+  const css=file('portfolio-ribbon.css')
+  assert.match(component,/isTextFrame\(key\)/)
+  assert.match(component,/scale:!text&&position\.scaleX/)
+  assert.match(component,/textBoxWidthStyle\(position\)/)
+  assert.match(component,/mode:isTextResize\?'text-width'/)
+  assert.match(component,/if\(current\.mode==='text-width'\)/)
+  assert.match(component,/current\.element\.style\.width=widthPct\+'%'/)
+  assert.match(component,/current\.preview=\{\.\.\.current\.initial,widthPct\}/)
+  assert.match(component,/onMoveElement\?\.\(current\.key,current\.preview\)/)
+  assert.match(component,/fontSize:Number\.isFinite\(type\.size\)/)
+  assert.match(component,/Điều chỉnh độ rộng khung/)
+  assert.match(component,/text\?'↔':'↘'/)
+  assert.match(component,/if\(current\.mode==='image-scale'\)/)
+  assert.match(css,/pt-ribbon__resize--text\{/)
+  assert.match(css,/cursor:ew-resize/)
+  assert.match(css,/overflow-wrap:anywhere/)
+})
+test('Legacy published templates also wrap text instead of scaling glyphs',()=>{
+  const site=file('PortfolioTemplateSite.jsx')
+  const css=file('template-site.css')
+  assert.match(site,/const text=isTextFrame\(key\)/)
+  assert.match(site,/scale:!text&&initial\.scaleX/)
+  assert.match(site,/textBoxWidthStyle\(initial\)/)
+  assert.match(site,/if\(current\.isText\)/)
+  assert.match(site,/current\.element\.style\.width=widthPct\+'%'/)
+  assert.match(site,/onMoveElement\(key,\{\.\.\.initial,widthPct:/)
+  assert.match(site,/data-portfolio-text-frame/)
+  assert.match(css,/pt-site__copy \[data-portfolio-text-frame\]/)
+})
+test('Layer Studio changes the text layer width only, never font-size or height',()=>{
+  const board=file('SectionArtboard.jsx')
+  const css=file('section-artboard.css')
+  assert.match(board,/if\(type==='text'\)\{/)
+  assert.match(board,/onPatchLayer\?\.\(layerId,\{w\}\)/)
+  assert.match(board,/Kéo để đổi độ rộng khung/)
+  assert.match(board,/pt-artboard__handle--width/)
+  assert.match(board,/type==='text'\?'↔':'↘'/)
+  assert.match(css,/\.pt-artboard__layer\.is-text \.pt-artboard__text\{/)
+  assert.match(css,/overflow:visible!important/)
+  assert.match(css,/cursor:ew-resize!important/)
+})
+test('Editor stores sizing separately per section and desktop/mobile',()=>{
+  const editor=file('PortfolioInstanceEditor.jsx')
+  assert.match(editor,/\[current\.id\]:\{[\s\S]*?\[device\]:\{[\s\S]*?\[key\]:position/)
+  assert.match(editor,/typography:\{\.\.\.typography/)
+  assert.match(editor,/function updateTypographyNumber\(event,field\)/)
+  assert.match(editor,/patchTypography\(\{\[field\]:value\}\)/)
+})

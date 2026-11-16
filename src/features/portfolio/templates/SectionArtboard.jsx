@@ -66,13 +66,21 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     const dx=(event.clientX-d.startX)/d.bounds.width*100
     const dy=(event.clientY-d.startY)/d.bounds.height*100
     if(d.mode==='resize'){
-      const size=resizeDimensions(d.layer.w,d.layer.h,dx,dy,{
-        locked:d.locked,minWidth:8,minHeight:3,maxWidth:100-d.layer.x,maxHeight:100-d.layer.y
-      })
-      const w=d.locked?size.w:snap(size.w),h=d.locked?size.h:snap(size.h)
-      if(w===d.lastW&&h===d.lastH)return
-      d.lastW=w;d.lastH=h
-      onPatchLayer?.(layerId,{w,h})
+      if(type==='text'){
+        // A text frame reflows at a new width, preserving its font and height.
+        const w=snap(clamp(d.layer.w+dx,8,100-d.layer.x))
+        if(w===d.lastW)return
+        d.lastW=w
+        onPatchLayer?.(layerId,{w})
+      }else{
+        const size=resizeDimensions(d.layer.w,d.layer.h,dx,dy,{
+          locked:d.locked,minWidth:8,minHeight:3,maxWidth:100-d.layer.x,maxHeight:100-d.layer.y
+        })
+        const w=d.locked?size.w:snap(size.w),h=d.locked?size.h:snap(size.h)
+        if(w===d.lastW&&h===d.lastH)return
+        d.lastW=w;d.lastH=h
+        onPatchLayer?.(layerId,{w,h})
+      }
     }else{
       const x=snap(clamp(d.layer.x+dx,0,100-d.layer.w))
       const y=snap(clamp(d.layer.y+dy,0,100-d.layer.h))
@@ -131,11 +139,14 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
         </div>}
     {editable&&selected&&<div className="pt-artboard__selection">
       <span>{label}</span>
-      <button type="button" className="pt-artboard__handle"
-        aria-label={'Kéo để thay đổi kích thước '+label}
+      <button type="button"
+        className={'pt-artboard__handle'+(type==='text'?' pt-artboard__handle--width':'')}
+        aria-label={type==='text'?'Kéo để đổi độ rộng khung '+label:
+          'Kéo để thay đổi kích thước '+label}
+        title={type==='text'?'Chỉ thay đổi độ rộng khung, không đổi cỡ chữ':undefined}
         onPointerDown={event=>startDrag(event,'resize')}
         onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
-      >↘</button>
+      >{type==='text'?'↔':'↘'}</button>
     </div>}
   </div>
 }
