@@ -50,6 +50,7 @@ test('Portfolio header sticks on published website and scrollable Admin preview'
 })
 
 test('Header has subtle motion and highlights active section without hiding mobile entries',()=>{
+  const site=src('PortfolioTemplateSite.jsx')
   const css=src('portfolio-sticky-nav.css')
   assert.match(css,/@keyframes pt-nav-appear/)
   assert.match(css,/@keyframes pt-nav-sheen/)
