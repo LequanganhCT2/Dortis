@@ -1,0 +1,71 @@
+/* Scroll-scrubbed 3D editorial typography. The DOM text remains selectable and
+   accessible; its saved position/width/font and editor pointer hitbox stay intact. */
+.pt-site{perspective:1400px}
+.pt-site > .pt-scroll-text-canvas,
+.pt-site.pt-site--continuous-silk > .pt-scroll-text-canvas{
+  position:absolute!important;
+  top:0;left:0;
+  width:100%;
+  height:1px;
+  z-index:3!important;
+  display:block;
+  margin:0;
+  border:0;
+  background:transparent;
+  pointer-events:none!important;
+  user-select:none;
+  mix-blend-mode:screen;
+  contain:paint;
+}
+.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused) [data-pt-scroll-reveal]{
+  opacity:var(--pt-scroll-alpha,1);
+  transform:
+    perspective(960px)
+    translate3d(0,var(--pt-scroll-rise,0px),var(--pt-scroll-depth,0px))
+    rotateX(var(--pt-scroll-tilt,0deg));
+  clip-path:inset(0 0 var(--pt-scroll-clip,0%) 0);
+  transform-origin:50% 85%;
+  /* Retain existing letter styling. A glow appears only at the reveal edge. */
+  text-shadow:
+    0 4px 18px rgba(41,3,14,.5),
+    0 0 22px rgba(255,211,145,var(--pt-scroll-glow,0));
+}
+.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused)
+  [data-pt-scroll-reveal="title"]{
+  transform-origin:50% 72%;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.pt-site.pt-site--scroll-text-active:not(.pt-site--motion-paused)
+  [data-pt-scroll-reveal="eyebrow"]{
+  transform-origin:left center;
+}
+.pt-site.pt-site--motion-paused [data-pt-scroll-reveal]{
+  opacity:1!important;
+  transform:none!important;
+  clip-path:none!important;
+}
+.pt-site.pt-site--motion-paused > .pt-scroll-text-canvas{
+  display:none!important;
+}
+/* The editor should never lose layer selection/drag handles to a reveal mask. */
+.pt-site :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing)
+  [data-pt-scroll-reveal]{
+  opacity:1!important;
+  transform:none!important;
+  clip-path:none!important;
+}
+@media(max-width:680px){
+  .pt-site > .pt-scroll-text-canvas{
+    opacity:.58;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site [data-pt-scroll-reveal]{
+    opacity:1!important;
+    transform:none!important;
+    clip-path:none!important;
+    transition:none!important;
+  }
+  .pt-site > .pt-scroll-text-canvas{display:none!important}
+}

@@ -162,6 +162,7 @@ export default function RibbonPortfolioSection({
   function editTextProps(field){
     const base=draggableProps(field)
     return {...base,'data-portfolio-text-frame':field,
+      'data-pt-scroll-reveal':field,
       ...(onEditText?{
         'data-portfolio-edit-field':field,
         'data-portfolio-edit-selected':selectedLayer===field?'true':undefined,

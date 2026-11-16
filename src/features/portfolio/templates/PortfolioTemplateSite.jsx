@@ -12,6 +12,7 @@ import RibbonPortfolioSection from './RibbonPortfolioSection'
 import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWidthStyle} from './textFrameSizing'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import ScrollTextAtmosphere from './ScrollTextAtmosphere'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
@@ -209,6 +210,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   function editTextProps(field){
     const placement=positionProps(field)
     placement['data-portfolio-text-frame']=field
+    placement['data-pt-scroll-reveal']=field
     const type=typography?.[field]
     if(type)placement.style={
       ...placement.style,
@@ -349,6 +351,7 @@ export default function PortfolioTemplateSite({
   const resyncNavigationRef=useRef(null)
   const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
   const navIds=navSections.map(s=>s.id).join('|')
+  const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body].join('::')).join('|')
   useEffect(()=>{
     const root=rootRef.current
     if(!root||focusedSectionId)return undefined
@@ -447,6 +450,8 @@ export default function PortfolioTemplateSite({
       }:undefined}>
       {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
         direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
+      <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
+        sectionsKey={revealKey} device={device}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}

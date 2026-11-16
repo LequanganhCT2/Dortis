@@ -138,7 +138,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           </PhotoMotion>:
             <div className="pt-artboard__empty">+<small>{label}<br/>Tải ảnh ở bảng bên trái</small></div>}
         </div>
-      : <div className="pt-artboard__text" style={textStyle}>
+      : <div className="pt-artboard__text" style={textStyle}
+          data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}>
           {source||'Chạm để chỉnh '+label}
         </div>}
     {editable&&selected&&<div className="pt-artboard__selection">
