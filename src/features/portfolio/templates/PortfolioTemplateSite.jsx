@@ -11,6 +11,7 @@ import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
 import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWidthStyle} from './textFrameSizing'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
+import PhotoMotion from './PhotoMotion'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
@@ -299,8 +300,10 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
           className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(asset):'')}
           data-ribbon-slot={effect==='ribbon'?i:undefined}
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
-          {url?<img src={url} draggable={onMoveElement?false:undefined} alt={asset?.alt||section.title||section.label}
-            loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>:
+          {url?<PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)}>
+            <img src={url} draggable={false} alt={asset?.alt||section.title||section.label}
+              loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>
+          </PhotoMotion>:
             <div className="pt-site__empty-image">
               <span aria-hidden="true">+</span>
               <small>ẢNH {String(i+1).padStart(2,'0')}</small>

@@ -369,3 +369,65 @@
   font:400 10px/1.7 'Be Vietnam Pro',sans-serif;
   color:#8b7455;
 }
+
+
+/* Per-photo motion controls, independent from cutout/background style. */
+.pt-upload__motion{
+  display:flex;
+  flex-direction:column;
+  gap:11px;
+  margin-top:12px;
+  padding:15px;
+  border:1px solid #cbd7db;
+  border-radius:11px;
+  background:linear-gradient(130deg,#f6fafb 0%,#f0f5f4 100%);
+}
+.pt-upload__motion>strong{
+  font:800 10px/1.5 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#25566a;
+  letter-spacing:.065em;
+}
+.pt-upload__motion>label:not(.pt-upload__motion-pointer){
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  color:#456373;
+  font:700 10px/1.6 'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pt-upload__motion select{
+  width:100%;min-width:0;
+  padding:10px 8px;
+  border:1px solid #c7d6dc;
+  border-radius:7px;
+  background:#fff;
+  color:#263e4b;
+  font:600 11px 'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pt-upload__motion-intensity input[type=range]{
+  width:100%;
+  accent-color:#366a79;
+  cursor:pointer;
+}
+.pt-upload__motion-pointer{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center;
+  gap:9px;
+  color:#456373;
+  font:650 10px/1.5 'Be Vietnam Pro',system-ui,sans-serif;
+  cursor:pointer;
+}
+.pt-upload__motion-pointer input[type=checkbox]{
+  width:15px!important;height:15px!important;
+  flex:none;margin:0;accent-color:#366a79;
+}
+.pt-upload__motion>small{
+  color:#718895;
+  font:450 10px/1.75 'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pt-upload__motion :is(select,input):focus-visible{
+  outline:2px solid #4d909d;outline-offset:2px;
+}
+.pt-upload__motion :is(select,input):disabled{
+  opacity:.55;cursor:not-allowed;
+}

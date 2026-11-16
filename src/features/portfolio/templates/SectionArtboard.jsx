@@ -5,6 +5,7 @@ import {
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
+import PhotoMotion from './PhotoMotion'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
@@ -130,8 +131,11 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           borderRadius:layer.radius+'px',
           filter:layer.blur?'blur('+layer.blur+'px)':'none'
         }}>
-          {url?<img src={url} alt={image?.alt||label}
-            loading="lazy" decoding="async" style={{objectFit:isCutoutArtwork(image)?'contain':layer.fit}}/>:
+          {url?<PhotoMotion asset={image} paused={editable}>
+            <img src={url} alt={image?.alt||label} draggable={false}
+              loading="lazy" decoding="async"
+              style={{objectFit:isCutoutArtwork(image)?'contain':layer.fit}}/>
+          </PhotoMotion>:
             <div className="pt-artboard__empty">+<small>{label}<br/>Tải ảnh ở bảng bên trái</small></div>}
         </div>
       : <div className="pt-artboard__text" style={textStyle}>

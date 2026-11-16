@@ -1,0 +1,140 @@
+/* Per-image CSS 3D motion isolated from position/size controls and transparent
+ * PNG edge shadows. Each preset can be changed without rebuilding the Form. */
+.pt-site .pt-photo-motion{
+  position:relative;
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  perspective:1050px;
+  transform-style:preserve-3d;
+  isolation:isolate;
+  --pm-rx:0deg;--pm-ry:0deg;--pm-x:0px;--pm-y:0px;
+  --pm-lx:50%;--pm-ly:50%;
+}
+.pt-site .pt-photo-motion__hover,
+.pt-site .pt-photo-motion__animated{
+  position:relative;
+  display:block;
+  width:100%;
+  height:100%;
+  min-height:0;
+  min-width:0;
+  transform-origin:center center;
+  transform-style:preserve-3d;
+}
+.pt-site .pt-photo-motion__hover{
+  transform:translate3d(var(--pm-x),var(--pm-y),0)
+    rotateX(var(--pm-rx)) rotateY(var(--pm-ry));
+  transition:transform 280ms cubic-bezier(.23,1,.32,1);
+}
+.pt-site .pt-photo-motion__animated{
+  animation:pt-photo-float 12s ease-in-out infinite alternate;
+  animation-play-state:paused;
+}
+.pt-site .pt-photo-motion.is-photo-visible .pt-photo-motion__animated{
+  animation-play-state:running;
+}
+.pt-site .pt-photo-motion__animated>img{
+  display:block;
+  width:100%;
+  height:100%;
+  max-width:100%;
+  object-position:center;
+  backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;
+}
+.pt-site .pt-photo-motion--still .pt-photo-motion__animated{
+  animation:none!important;transform:none!important;
+}
+.pt-site .pt-photo-motion--still .pt-photo-motion__hover{
+  transform:none!important;
+}
+.pt-site .pt-photo-motion--float .pt-photo-motion__animated{
+  animation-name:pt-photo-float;animation-duration:12s;
+}
+.pt-site .pt-photo-motion--depth .pt-photo-motion__animated{
+  animation-name:pt-photo-deep;animation-duration:13.5s;
+}
+.pt-site .pt-photo-motion--tilt .pt-photo-motion__animated{
+  animation-name:pt-photo-tilt;animation-duration:15s;
+}
+.pt-site .pt-photo-motion--orbit .pt-photo-motion__animated{
+  animation-name:pt-photo-orbit;animation-duration:18s;
+}
+.pt-site .pt-photo-motion--breathe .pt-photo-motion__animated{
+  animation-name:pt-photo-breathe;animation-duration:9s;
+}
+.pt-site .pt-photo-motion--magnetic .pt-photo-motion__animated{
+  animation-name:pt-photo-magnetic;animation-duration:15s;
+}
+.pt-site .pt-photo-motion--spotlight .pt-photo-motion__animated{
+  animation-name:pt-photo-deep;animation-duration:12s;
+}
+.pt-site .pt-photo-motion--spotlight::after{
+  content:"";
+  position:absolute;
+  inset:-6%;
+  pointer-events:none;
+  z-index:4;
+  opacity:.26;
+  background:radial-gradient(circle at var(--pm-lx) var(--pm-ly),
+    #fff9daa8 0%,#ffd8924d 14%,transparent 45%);
+  mix-blend-mode:screen;
+  filter:blur(6px);
+  border-radius:45%;
+  transition:opacity 260ms ease;
+}
+.pt-site .pt-photo-motion--spotlight:hover::after{opacity:.42}
+@keyframes pt-photo-float{
+  0%{transform:translate3d(0,0,0) rotateZ(0deg)}
+  100%{transform:translate3d(0,var(--pm-amp),0) rotateZ(var(--pm-turn))}
+}
+@keyframes pt-photo-deep{
+  0%{transform:translate3d(0,0,8px) rotateZ(0deg)}
+  100%{transform:translate3d(var(--pm-amp),calc(0px - var(--pm-amp)),24px)
+      rotateZ(var(--pm-turn))}
+}
+@keyframes pt-photo-tilt{
+  0%{transform:rotateY(calc(0deg - var(--pm-turn))) rotateX(0deg)}
+  100%{transform:rotateY(var(--pm-turn)) rotateX(var(--pm-turn))}
+}
+@keyframes pt-photo-orbit{
+  0%{transform:translate3d(calc(0px - var(--pm-orbit)),0,0)
+      rotateZ(calc(0deg - var(--pm-turn)))}
+  50%{transform:translate3d(var(--pm-orbit),calc(0px - var(--pm-amp)),0) rotateZ(var(--pm-turn))}
+  100%{transform:translate3d(0,var(--pm-amp),0) rotateZ(var(--pm-turn))}
+}
+@keyframes pt-photo-breathe{
+  0%{transform:scale(1) translate3d(0,0,0)}
+  100%{transform:scale(var(--pm-breath)) translate3d(0,calc(0px - var(--pm-amp)),0)}
+}
+@keyframes pt-photo-magnetic{
+  0%{transform:translate3d(0,0,0)}
+  100%{transform:translate3d(calc(0px - var(--pm-amp)),var(--pm-amp),0)}
+}
+/* Preview shows continuous movement. Direct-edit freezes everything to make
+ * pointer dragging and resize handles precise and repeatable. */
+.pt-site .pt-photo-motion.is-photo-paused .pt-photo-motion__hover,
+.pt-site .pt-photo-motion.is-photo-paused .pt-photo-motion__animated,
+.pt-site.pt-site--motion-paused .pt-photo-motion__hover,
+.pt-site.pt-site--motion-paused .pt-photo-motion__animated{
+  transform:none!important;animation:none!important;
+  transition:none!important;
+}
+.pt-site .pt-photo-motion.is-photo-paused::after,
+.pt-site.pt-site--motion-paused .pt-photo-motion::after{
+  opacity:0!important;
+}
+@media(pointer:coarse){
+  .pt-site .pt-photo-motion__hover{transform:none!important}
+  .pt-site .pt-photo-motion__animated{animation-duration:19s}
+  .pt-site .pt-photo-motion--spotlight::after{opacity:.17}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site .pt-photo-motion__hover,.pt-site .pt-photo-motion__animated{
+    transform:none!important;animation:none!important;transition:none!important;
+  }
+  .pt-site .pt-photo-motion--spotlight::after{opacity:0!important}
+}

@@ -6,6 +6,7 @@ import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './res
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
 import {isCutoutArtwork,cutoutStageStyle,CUTOUT_STAGE_STYLES} from './imagePresentation'
+import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer} from './photoMotionConfig'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
   SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
@@ -168,7 +169,12 @@ export default function PortfolioInstanceEditor({
         contentType:file.type,cacheControl:'3600',upsert:false
       })
       if(uploadError)throw uploadError
-      const next=setSlotImage(content,slot,{path,alt:previous?.alt||'',...(cutout?{cutout:true}:{})})
+      const next=setSlotImage(content,slot,{path,alt:previous?.alt||'',
+        ...(previous?.motion?{motion:previous.motion}:{}),
+        ...(previous?.motionIntensity!=null?{motionIntensity:previous.motionIntensity}:{}),
+        ...(previous?.motionPointer!=null?{motionPointer:previous.motionPointer}:{}),
+        ...(cutout?{cutout:true}:{})
+      })
       try{
         await persist(next,'Đã tải ảnh vào '+section.label+' · vị trí '+(index+1)+'.')
       }catch(e){
@@ -214,6 +220,15 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>{
       const image=prev.images?.[slot]
       return image?.path?setSlotImage(prev,slot,{...image,cutoutStyle:style}):prev
+    })
+    setDirty(true)
+  }
+  function changePhotoMotion(section,index,patch){
+    if(patch.motion&&!PHOTO_MOTION_OPTIONS.some(mode=>mode.id===patch.motion))return
+    const slot=getSlot(section,index)
+    setContent(prev=>{
+      const image=prev.images?.[slot]
+      return image?.path?setSlotImage(prev,slot,{...image,...patch}):prev
     })
     setDirty(true)
   }
@@ -523,6 +538,36 @@ export default function PortfolioInstanceEditor({
                     </select>
                     <small>Bóng đi theo chủ thể, không tạo bóng hình chữ nhật.</small>
                   </label>}
+                  <div className="pt-upload__motion">
+                    <strong>Chuyển động ảnh · CSS 3D</strong>
+                    <label>Kiểu chuyển động
+                      <select value={photoMotionMode(image)} disabled={busy}
+                        onChange={event=>changePhotoMotion(current,index,{motion:event.target.value})}>
+                        {PHOTO_MOTION_OPTIONS.map(option=><option key={option.id} value={option.id}>
+                          {option.label}
+                        </option>)}
+                      </select>
+                    </label>
+                    <label className="pt-upload__motion-intensity">
+                      <span>Cường độ · {photoMotionIntensity(image)}%</span>
+                      <input type="range" min="0" max="100" step="5"
+                        value={photoMotionIntensity(image)} disabled={busy}
+                        onChange={event=>changePhotoMotion(current,index,{
+                          motionIntensity:Number(event.target.value)
+                        })}/>
+                    </label>
+                    <label className="pt-upload__motion-pointer">
+                      <input type="checkbox" checked={photoMotionPointer(image)}
+                        disabled={busy||photoMotionMode(image)==='still'}
+                        onChange={event=>changePhotoMotion(current,index,{
+                          motionPointer:event.target.checked
+                        })}/>
+                      <span>Ảnh nghiêng / di chuyển theo vị trí chuột</span>
+                    </label>
+                    <small>Ảnh tự chuyển động ở chế độ xem trước và website.
+                      Khi chỉnh trực tiếp, hiệu ứng tạm dừng để kéo thả chính xác.
+                      Trên thiết bị bật giảm chuyển động, ảnh sẽ đứng yên.</small>
+                  </div>
                 </>}
               </div>
             })}

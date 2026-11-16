@@ -2,6 +2,7 @@ import React,{useRef} from 'react'
 import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
+import PhotoMotion from './PhotoMotion'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
 /**
@@ -239,10 +240,12 @@ export default function RibbonPortfolioSection({
         data-image-selected={editing&&selectedLayer==='image:'+position?'true':undefined}
         key={section.id+':'+position}
         {...draggableProps('image:'+position)}>
-        {url?<img src={url}
-          alt={asset?.alt||section.title||section.label}
-          loading={index===0&&position===0?'eager':'lazy'}
-          decoding="async" draggable={false}/>:
+        {url?<PhotoMotion asset={asset} paused={editing}>
+          <img src={url}
+            alt={asset?.alt||section.title||section.label}
+            loading={index===0&&position===0?'eager':'lazy'}
+            decoding="async" draggable={false}/>
+        </PhotoMotion>:
           editing?<button type="button" className="pt-ribbon__upload-trigger"
             onClick={()=>{
               pendingSlot.current=position
