@@ -3,13 +3,14 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {
   PHOTO_MOTION_OPTIONS,DEFAULT_PHOTO_MOTION,photoMotionMode,
-  photoMotionIntensity,photoMotionPointer,photoPointerOffsets,photoMotionSetting
+  photoMotionIntensity,photoMotionPointer,photoPointerOffsets,photoMotionSetting,
+  POINTER_MOTION_IDS,supportsPhotoPointer
 } from '../src/features/portfolio/templates/photoMotionConfig.js'
 const source=file=>readFileSync(new URL('../src/features/portfolio/templates/'+file,import.meta.url),'utf8')
 
-test('Eight motion options: existing uploads animate by default; per-photo opt-out',()=>{
+test('Nine photo modes with exactly three mouse-driven effects and Water Wave',()=>{
   assert.deepEqual(PHOTO_MOTION_OPTIONS.map(x=>x.id),[
-    'still','float','depth','tilt','orbit','breathe','magnetic','spotlight'
+    'still','float','depth','tilt','orbit','breathe','magnetic','spotlight','wave'
   ])
   assert.equal(DEFAULT_PHOTO_MOTION,'float')
   assert.equal(photoMotionMode({path:'artist/hero/cutout.png'}),'float')
@@ -20,7 +21,16 @@ test('Eight motion options: existing uploads animate by default; per-photo opt-o
   assert.equal(photoMotionIntensity({motionIntensity:110}),100)
   assert.equal(photoMotionIntensity({motionIntensity:-30}),0)
   assert.equal(photoMotionIntensity({motionIntensity:NaN}),45)
-  assert.equal(photoMotionPointer({}),true)
+  assert.deepEqual(POINTER_MOTION_IDS,['depth','tilt','magnetic'])
+  assert.equal(photoMotionPointer({}),false)
+  assert.equal(photoMotionPointer({motion:'float',motionPointer:true}),false)
+  assert.equal(photoMotionPointer({motion:'wave',motionPointer:true}),false)
+  assert.equal(photoMotionPointer({motion:'spotlight'}),false)
+  assert.equal(photoMotionPointer({motion:'depth'}),true)
+  assert.equal(photoMotionPointer({motion:'tilt'}),true)
+  assert.equal(photoMotionPointer({motion:'magnetic'}),true)
+  assert.equal(supportsPhotoPointer('orbit'),false)
+  assert.equal(supportsPhotoPointer('wave'),false)
   assert.equal(photoMotionPointer({motionPointer:false}),false)
   assert.deepEqual(photoMotionSetting({motion:'depth',motionIntensity:72,motionPointer:false}),
     {mode:'depth',intensity:72,pointer:false})
@@ -49,7 +59,7 @@ test('Image wrapper uses one requestAnimationFrame, never modifies drag coordina
   assert.match(component,/requestAnimationFrame/)
   assert.match(component,/cancelAnimationFrame/)
   assert.match(component,/IntersectionObserver/)
-  assert.match(component,/onPointerMove=\{handleMove\}/)
+  assert.match(component,/onPointerMove=\{pointer\?handleMove:undefined\}/)
   assert.match(component,/pointerType!=='mouse'/)
   assert.match(component,/prefers-reduced-motion: reduce/)
   assert.match(component,/photoMotionSetting\(asset\)/)
@@ -62,6 +72,13 @@ test('Image wrapper uses one requestAnimationFrame, never modifies drag coordina
   assert.match(css,/@keyframes pt-photo-orbit/)
   assert.match(css,/@keyframes pt-photo-breathe/)
   assert.match(css,/pt-photo-motion--spotlight/)
+  assert.match(css,/@keyframes pt-photo-spotlight-scan/)
+  assert.match(css,/pt-photo-motion--wave/)
+  assert.match(css,/pt-photo-water-sway/)
+  assert.match(component,/feDisplacementMap/)
+  assert.match(component,/feTurbulence/)
+  assert.match(component,/animate attributeName="baseFrequency"/)
+  assert.match(component,/animate attributeName="scale"/)
   assert.doesNotMatch(component,/onMoveElement|setSlotImage|patchSceneLayer/)
 })
 
@@ -84,7 +101,9 @@ test('Admin lets each photo independently select effect, strength and mouse inte
   assert.match(editor,/value=\{photoMotionMode\(image\)\}/)
   assert.match(editor,/value=\{photoMotionIntensity\(image\)\}/)
   assert.match(editor,/checked=\{photoMotionPointer\(image\)\}/)
-  assert.match(editor,/PHOTO_MOTION_OPTIONS\.map/)
+  assert.match(editor,/PHOTO_MOTION_OPTIONS\.filter/)
+  assert.match(editor,/supportsPhotoPointer\(option\.id\)/)
+  assert.match(editor,/supportsPhotoPointer\(photoMotionMode\(image\)\)/)
   assert.match(editor,/motionPointer:event\.target\.checked/)
   assert.match(editor,/motionIntensity:Number\(event\.target\.value\)/)
   assert.match(editor,/setDirty\(true\)/)

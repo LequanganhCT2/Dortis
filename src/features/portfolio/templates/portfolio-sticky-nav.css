@@ -1,0 +1,192 @@
+/* Portfolio navigation follows the scrolling document / embedded preview.
+ * Every Form section is reachable through one horizontally scrolling header. */
+.pt-site{overflow:clip}
+.pt-site.pt-site--continuous-silk{overflow:clip!important}
+.pt-site > .pt-site__nav.pt-site__nav--sticky,
+.pt-site.pt-site--continuous-silk > .pt-site__nav.pt-site__nav--sticky{
+  position:sticky!important;
+  top:0;
+  z-index:95!important;
+  display:grid!important;
+  grid-template-columns:minmax(108px,max-content) minmax(0,1fr) max-content;
+  align-items:center;
+  gap:clamp(12px,2.1vw,32px);
+  width:100%;
+  min-height:78px;
+  padding:12px clamp(14px,2.5vw,34px)!important;
+  isolation:isolate;
+  color:#fff1e0;
+  background:linear-gradient(104deg,#230408ed 0%,#45101ee8 43%,#26050ce8 100%)!important;
+  border-bottom:1px solid #f4bf795c!important;
+  box-shadow:0 15px 35px #17040855,0 1px 0 #ffefb520 inset;
+  -webkit-backdrop-filter:blur(16px) saturate(125%);
+  backdrop-filter:blur(16px) saturate(125%);
+  animation:pt-nav-appear .75s cubic-bezier(.18,.85,.24,1) both;
+}
+.pt-site > .pt-site__nav--sticky::before{
+  content:'';
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  inset:0;
+  opacity:.6;
+  background:linear-gradient(115deg,transparent 6%,#ffdcb311 35%,
+    #ffc68025 48%,transparent 62%);
+  background-size:220% 100%;
+  animation:pt-nav-sheen 19s ease-in-out infinite alternate;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__brand{
+  position:relative;
+  min-width:0;
+  max-width:25vw;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  font:600 clamp(16px,1.7vw,25px)/1.05 'Cormorant Garamond',Georgia,serif;
+  letter-spacing:-.035em;
+  color:#fff1dd!important;
+}
+.pt-site > .pt-site__nav--sticky nav.pt-site__nav-links{
+  display:flex!important;
+  align-items:center;
+  gap:clamp(6px,.8vw,13px);
+  width:100%;
+  min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  overscroll-behavior-inline:contain;
+  scrollbar-width:none;
+  padding:8px 2px 11px;
+  scroll-behavior:smooth;
+}
+.pt-site > .pt-site__nav--sticky nav.pt-site__nav-links::-webkit-scrollbar{display:none}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a{
+  position:relative;
+  display:inline-flex;
+  flex:none;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  max-width:270px;
+  padding:8px 11px;
+  border:1px solid transparent;
+  border-radius:100px;
+  color:#ecd4c2!important;
+  background:transparent;
+  font:600 10px/1.4 'Be Vietnam Pro',system-ui,sans-serif;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:background .28s ease,border-color .28s ease,
+    color .28s ease,transform .28s ease,box-shadow .28s ease;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a::after{
+  content:'';
+  position:absolute;
+  left:17px;right:17px;bottom:3px;height:1px;
+  background:linear-gradient(90deg,transparent,#fff1b7,transparent);
+  opacity:0;
+  transform:scaleX(.2);
+  transition:transform .35s ease,opacity .35s ease;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a:hover,
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a:focus-visible{
+  background:#ffce8824;
+  color:#fff6df!important;
+  transform:translateY(-2px);
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a.is-active{
+  background:linear-gradient(125deg,#f5c98132,#ffefb812);
+  border-color:#f1cc7d7a;
+  box-shadow:0 0 18px #ffba6234,0 0 20px #ffdb671a inset;
+  color:#fff9e3!important;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-links a.is-active::after{
+  opacity:1;transform:scaleX(1);
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-number{
+  font:800 10px/1 'Barlow Condensed',system-ui,sans-serif;
+  color:#f6ca7c!important;
+  opacity:.9;
+  letter-spacing:.055em;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-label{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:inherit!important;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-meta{
+  max-width:145px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  text-align:right;
+  font:700 9px/1.4 'Be Vietnam Pro',system-ui,sans-serif;
+  white-space:nowrap;
+  color:#e9c490!important;
+}
+.pt-site > .pt-site__nav--sticky .pt-site__nav-progress{
+  position:absolute;bottom:0;left:0;
+  width:var(--pt-nav-progress,0%);
+  max-width:100%;
+  height:2px;
+  z-index:3;
+  background:linear-gradient(90deg,#e9664b,#fff1bb 56%,#ecb46b);
+  box-shadow:0 0 13px #ffe5a78c;
+  transition:width .18s linear;
+  pointer-events:none;
+}
+.pt-site section[id^="pt-"]{scroll-margin-top:95px}
+@keyframes pt-nav-appear{
+  from{opacity:.3;transform:translateY(-20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pt-nav-sheen{
+  from{background-position:115% 50%}
+  to{background-position:-40% 50%}
+}
+@media(max-width:950px){
+  .pt-site > .pt-site__nav.pt-site__nav--sticky{
+    grid-template-columns:minmax(80px, max-content) minmax(0,1fr);
+    min-height:72px;
+  }
+  .pt-site > .pt-site__nav--sticky .pt-site__nav-meta{display:none}
+}
+@media(max-width:680px){
+  .pt-site > .pt-site__nav.pt-site__nav--sticky{
+    grid-template-columns:minmax(0,1fr) max-content;
+    gap:3px 10px;
+    min-height:110px;
+    padding:10px 13px 7px!important;
+  }
+  .pt-site > .pt-site__nav--sticky .pt-site__brand{
+    max-width:75vw;
+    font-size:22px;
+  }
+  .pt-site > .pt-site__nav--sticky .pt-site__nav-meta{
+    display:block;font-size:8px;max-width:32vw;
+  }
+  .pt-site > .pt-site__nav--sticky nav.pt-site__nav-links{
+    grid-column:1/-1;
+    grid-row:2;
+    gap:6px;
+    padding:5px 1px 10px;
+  }
+  .pt-site > .pt-site__nav--sticky .pt-site__nav-links a{
+    max-width:210px;
+    min-height:32px;
+    padding:7px 9px;
+    font-size:9px;
+  }
+  .pt-site section[id^="pt-"]{scroll-margin-top:124px}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site > .pt-site__nav--sticky,
+  .pt-site > .pt-site__nav--sticky::before{
+    animation:none!important;
+  }
+  .pt-site > .pt-site__nav--sticky nav.pt-site__nav-links{
+    scroll-behavior:auto!important;
+  }
+  .pt-site > .pt-site__nav--sticky .pt-site__nav-links a{
+    transition:none!important;
+  }
+}

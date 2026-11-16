@@ -1,4 +1,4 @@
-import React,{useEffect,useRef} from 'react'
+import React,{useEffect,useId,useRef} from 'react'
 import {
   photoMotionSetting,photoPointerOffsets
 } from './photoMotionConfig'
@@ -13,9 +13,13 @@ export default function PhotoMotion({
   asset,paused=false,children
 }){
   const host=useRef(null),frame=useRef(0),pending=useRef(null)
+  const svgId='pt-water-'+useId().replace(/:/g,'')
   const {mode,intensity,pointer}=photoMotionSetting(asset)
   const enabled=!paused&&mode!=='still'&&intensity>0
   const power=Math.max(0,Math.min(1,intensity/100))
+  const wave=enabled&&mode==='wave'
+  const waveLow=(3+Math.round(power*5)).toString()
+  const waveHigh=(6+Math.round(power*13)).toString()
   const apply=values=>{
     const element=host.current
     if(!element)return
@@ -79,10 +83,30 @@ export default function PhotoMotion({
       '--pm-turn':(power*2.4).toFixed(2)+'deg',
       '--pm-breath':(1+power*.055).toFixed(4),
       '--pm-rx':'0deg','--pm-ry':'0deg','--pm-x':'0px','--pm-y':'0px',
-      '--pm-lx':'50%','--pm-ly':'50%'
+      '--pm-lx':'50%','--pm-ly':'50%',
+      '--pm-wave-filter':'url(#'+svgId+')'
     }}
-    onPointerMove={handleMove} onPointerLeave={reset}
-    onPointerCancel={reset}>
+    onPointerMove={pointer?handleMove:undefined}
+    onPointerLeave={pointer?reset:undefined}
+    onPointerCancel={pointer?reset:undefined}>
+    {wave&&<svg className="pt-photo-motion__filters" width="0" height="0"
+      aria-hidden="true" focusable="false">
+      <defs><filter id={svgId} x="-7%" y="-7%" width="114%" height="114%"
+        colorInterpolationFilters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.006 0.027"
+          numOctaves="2" seed="7" result="water-noise">
+          <animate attributeName="baseFrequency"
+            values="0.006 0.027;0.009 0.034;0.006 0.027"
+            dur="10s" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feDisplacementMap in="SourceGraphic" in2="water-noise"
+          scale={waveLow} xChannelSelector="R" yChannelSelector="G">
+          <animate attributeName="scale"
+            values={waveLow+';'+waveHigh+';'+waveLow}
+            dur="7s" repeatCount="indefinite"/>
+        </feDisplacementMap>
+      </filter></defs>
+    </svg>
     <div className="pt-photo-motion__hover">
       <div className="pt-photo-motion__animated">
         {children}

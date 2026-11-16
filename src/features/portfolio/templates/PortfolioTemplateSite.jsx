@@ -15,6 +15,7 @@ import PhotoMotion from './PhotoMotion'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
+import './portfolio-sticky-nav.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
@@ -335,9 +336,67 @@ export default function PortfolioTemplateSite({
   })
   const continuousSilk=!useClassic||hasSilk||hasArtboardSilk||
     view.sections.some(section=>section.backdrop===LUXURY_RIBBON)
-  const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
+  // The header navigates to Form section labels (01 ·, 02 ·, ...), NOT
+  // the artist's editable heading. Include every section, even empty ones.
+  const navSections=view.sections
+  const rootRef=useRef(null),navRef=useRef(null),navScrollRef=useRef(null)
+  const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
+  const navIds=navSections.map(s=>s.id).join('|')
+  useEffect(()=>{
+    const root=rootRef.current
+    if(!root||focusedSectionId)return undefined
+    const nav=root.querySelector('.pt-site__nav')
+    const scrollHost=root.closest('.pt-device')
+    // Admin preview scrolls internally; the published site scrolls the window.
+    const embedded=scrollHost&&scrollHost.scrollHeight>scrollHost.clientHeight+12&&
+      getComputedStyle(scrollHost).overflowY!=='visible'
+    const scrollTarget=embedded?scrollHost:window
+    let raf=0
+    function update(){
+      raf=0
+      const sections=Array.from(root.querySelectorAll('section[id^="pt-"]'))
+      if(!sections.length)return
+      const limit=(nav?.getBoundingClientRect().bottom||0)+44
+      let current=sections[0]
+      for(const section of sections){
+        if(section.getBoundingClientRect().top<=limit)current=section
+      }
+      const id=current.id.slice(3)
+      setActiveSectionId(old=>old===id?old:id)
+      const top=sections[0].getBoundingClientRect().top
+      const end=sections[sections.length-1].getBoundingClientRect().bottom
+      const fraction=Math.min(1,Math.max(0,(limit-top)/Math.max(1,end-top)))
+      nav?.style.setProperty('--pt-nav-progress',(fraction*100).toFixed(2)+'%')
+    }
+    const schedule=()=>{if(!raf)raf=requestAnimationFrame(update)}
+    update()
+    scrollTarget.addEventListener('scroll',schedule,{passive:true})
+    window.addEventListener('resize',schedule,{passive:true})
+    return ()=>{
+      scrollTarget.removeEventListener('scroll',schedule)
+      window.removeEventListener('resize',schedule)
+      if(raf)cancelAnimationFrame(raf)
+    }
+  },[navIds,focusedSectionId,device])
+  useEffect(()=>{
+    const nav=navScrollRef.current
+    const current=Array.from(nav?.querySelectorAll('a[data-pt-section]')||[])
+      .find(node=>node.dataset.ptSection===activeSectionId)
+    if(!nav||!current)return
+    const left=current.offsetLeft-nav.offsetLeft-(nav.clientWidth-current.clientWidth)/2
+    nav.scrollTo({left:Math.max(0,left),behavior:'smooth'})
+  },[activeSectionId,device])
+  function jumpToSection(event,id){
+    event.preventDefault()
+    const section=Array.from(rootRef.current?.querySelectorAll('section[id^="pt-"]')||[])
+      .find(node=>node.id==='pt-'+id)
+    if(!section)return
+    const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    section.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})
+    setActiveSectionId(id)
+  }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
@@ -346,13 +405,19 @@ export default function PortfolioTemplateSite({
       }:undefined}>
       {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
         direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}/>}
-    {!focusedSectionId&&<header className="pt-site__nav">
-        <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
-        <nav aria-label="Điều hướng Portfolio">
-          {activeSections.slice(0,4).map(s=><a key={s.id}
-            href={'#pt-'+s.id}>{s.title?s.title.slice(0,27):s.label}</a>)}
+    {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
+        <strong className="pt-site__brand">{view.artistName||'PORTFOLIO'}<span>.</span></strong>
+        <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
+          {navSections.map((s,i)=><a key={s.id} data-pt-section={s.id}
+            className={activeSectionId===s.id?'is-active':''}
+            aria-current={activeSectionId===s.id?'location':undefined}
+            href={'#pt-'+s.id} onClick={event=>jumpToSection(event,s.id)}>
+              <span className="pt-site__nav-number">{String(i+1).padStart(2,'0')} /</span>
+              <span className="pt-site__nav-label">{s.label}</span>
+            </a>)}
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
+        <span className="pt-site__nav-progress" aria-hidden="true"/>
       </header>}
       {visibleSections.map(section=>{
         const index=view.sections.findIndex(item=>item.id===section.id)

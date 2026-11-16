@@ -6,7 +6,7 @@ import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './res
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
 import {isCutoutArtwork,cutoutStageStyle,CUTOUT_STAGE_STYLES} from './imagePresentation'
-import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer} from './photoMotionConfig'
+import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer,supportsPhotoPointer} from './photoMotionConfig'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
   SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
@@ -543,9 +543,14 @@ export default function PortfolioInstanceEditor({
                     <label>Kiểu chuyển động
                       <select value={photoMotionMode(image)} disabled={busy}
                         onChange={event=>changePhotoMotion(current,index,{motion:event.target.value})}>
-                        {PHOTO_MOTION_OPTIONS.map(option=><option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>)}
+                        <optgroup label="Theo chuột · 3 kiểu">
+                          {PHOTO_MOTION_OPTIONS.filter(option=>supportsPhotoPointer(option.id))
+                            .map(option=><option key={option.id} value={option.id}>{option.label}</option>)}
+                        </optgroup>
+                        <optgroup label="Tự chuyển động · không theo chuột">
+                          {PHOTO_MOTION_OPTIONS.filter(option=>!supportsPhotoPointer(option.id))
+                            .map(option=><option key={option.id} value={option.id}>{option.label}</option>)}
+                        </optgroup>
                       </select>
                     </label>
                     <label className="pt-upload__motion-intensity">
@@ -556,17 +561,18 @@ export default function PortfolioInstanceEditor({
                           motionIntensity:Number(event.target.value)
                         })}/>
                     </label>
-                    <label className="pt-upload__motion-pointer">
-                      <input type="checkbox" checked={photoMotionPointer(image)}
-                        disabled={busy||photoMotionMode(image)==='still'}
-                        onChange={event=>changePhotoMotion(current,index,{
-                          motionPointer:event.target.checked
-                        })}/>
-                      <span>Ảnh nghiêng / di chuyển theo vị trí chuột</span>
-                    </label>
-                    <small>Ảnh tự chuyển động ở chế độ xem trước và website.
-                      Khi chỉnh trực tiếp, hiệu ứng tạm dừng để kéo thả chính xác.
-                      Trên thiết bị bật giảm chuyển động, ảnh sẽ đứng yên.</small>
+                    {supportsPhotoPointer(photoMotionMode(image))&&
+                      <label className="pt-upload__motion-pointer">
+                        <input type="checkbox" checked={photoMotionPointer(image)}
+                          disabled={busy}
+                          onChange={event=>changePhotoMotion(current,index,{
+                            motionPointer:event.target.checked
+                          })}/>
+                        <span>Phản ứng theo vị trí chuột</span>
+                      </label>}
+                    <small>Chỉ Chiều sâu 3D, Nghiêng 3D và Hút theo chuột phản ứng với con trỏ.
+                      Các kiểu còn lại tự chuyển động; Sóng nước làm méo ảnh nhẹ theo mặt nước.
+                      Khi chỉnh trực tiếp hoặc bật giảm chuyển động, ảnh sẽ đứng yên.</small>
                   </div>
                 </>}
               </div>

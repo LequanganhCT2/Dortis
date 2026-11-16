@@ -87,6 +87,37 @@
   transition:opacity 260ms ease;
 }
 .pt-site .pt-photo-motion--spotlight:hover::after{opacity:.42}
+/* Spotlight is one of the AUTO modes; its light no longer follows the cursor. */
+.pt-site .pt-photo-motion--spotlight.is-photo-visible::after{
+  animation:pt-photo-spotlight-scan 14s ease-in-out infinite alternate;
+}
+/* Actual soft optical distortion (SVG turbulence + displacement) combined
+   with a gentle water-surface sway, NOT merely scaling the PNG rectangle. */
+.pt-site .pt-photo-motion--wave .pt-photo-motion__animated{
+  animation-name:pt-photo-water-sway;
+  animation-duration:11s;
+}
+.pt-site .pt-photo-motion--wave.is-photo-visible .pt-photo-motion__animated{
+  filter:var(--pm-wave-filter,none);
+}
+.pt-site .pt-photo-motion__filters{
+  position:absolute;
+  width:0;
+  height:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+@keyframes pt-photo-water-sway{
+  0%{transform:translate3d(0,-2px,0) skewX(-.35deg) rotateZ(-.18deg)}
+  35%{transform:translate3d(3px,2px,0) skewX(.55deg) rotateZ(.2deg)}
+  70%{transform:translate3d(-3px,-3px,0) skewX(-.45deg) rotateZ(-.12deg)}
+  100%{transform:translate3d(0,3px,0) skewX(.35deg) rotateZ(.14deg)}
+}
+@keyframes pt-photo-spotlight-scan{
+  0%{transform:translate3d(-13%,8%,0) scale(.95);opacity:.22}
+  50%{transform:translate3d(10%,-9%,0) scale(1.03);opacity:.45}
+  100%{transform:translate3d(-6%,-5%,0) scale(1);opacity:.28}
+}
 @keyframes pt-photo-float{
   0%{transform:translate3d(0,0,0) rotateZ(0deg)}
   100%{transform:translate3d(0,var(--pm-amp),0) rotateZ(var(--pm-turn))}
@@ -127,6 +158,17 @@
 .pt-site.pt-site--motion-paused .pt-photo-motion::after{
   opacity:0!important;
 }
+.pt-site .pt-photo-motion.is-photo-paused .pt-photo-motion__animated,
+.pt-site.pt-site--motion-paused .pt-photo-motion__animated{
+  filter:none!important;
+}
+.pt-site .pt-photo-motion:not(.is-photo-visible) .pt-photo-motion__animated{
+  filter:none!important;
+}
+.pt-site .pt-photo-motion.is-photo-paused.pt-photo-motion--spotlight::after,
+.pt-site.pt-site--motion-paused .pt-photo-motion--spotlight::after{
+  animation:none!important;
+}
 @media(pointer:coarse){
   .pt-site .pt-photo-motion__hover{transform:none!important}
   .pt-site .pt-photo-motion__animated{animation-duration:19s}
@@ -137,4 +179,6 @@
     transform:none!important;animation:none!important;transition:none!important;
   }
   .pt-site .pt-photo-motion--spotlight::after{opacity:0!important}
+  .pt-site .pt-photo-motion--wave .pt-photo-motion__animated{filter:none!important}
+  .pt-site .pt-photo-motion--spotlight::after{animation:none!important}
 }
