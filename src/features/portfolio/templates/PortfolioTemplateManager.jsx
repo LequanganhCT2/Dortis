@@ -1,7 +1,7 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
-import {FORM_COLOR_PALETTES} from './portfolioPalette'
+import PortfolioPalettePicker from './PortfolioPalettePicker'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
@@ -218,6 +218,11 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             <button type="button" className="pt-btn" onClick={saveTemplate} disabled={working}>Lưu form gốc</button>
           </div>
         </div>
+        <PortfolioPalettePicker
+          heading="Bảng màu mặc định của Form"
+          hint="Màu mới áp dụng cho Portfolio kế thừa Form này sau khi lưu Form và xuất bản website."
+          value={blueprint.colorPalette||'red-gold'} disabled={working}
+          onChange={palette=>setBlueprint(current=>({...current,colorPalette:palette}))}/>
         <div className="pt-blueprint__themes">
           <label className="pt-blueprint__style">Phong cách chữ
             <select value={blueprint.style}
@@ -225,13 +230,6 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <option value="editorial">Editorial Story</option>
               <option value="cinematic">Cinematic Stage</option>
               <option value="minimal">Minimal Signature</option>
-            </select>
-          </label>
-          <label className="pt-blueprint__style">Bảng màu mặc định
-            <select value={blueprint.colorPalette||'red-gold'}
-              aria-label="Bảng màu mặc định của Form"
-              onChange={e=>setBlueprint(v=>({...v,colorPalette:e.target.value}))}>
-              {FORM_COLOR_PALETTES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
             </select>
           </label>
           <label className="pt-blueprint__style">Chủ đề nền xuyên suốt mọi trang

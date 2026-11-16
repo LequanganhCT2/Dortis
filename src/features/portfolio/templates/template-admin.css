@@ -518,3 +518,70 @@
   .pt-type-tools__quick-button{transition:none}
   .pt-type-tools__quick-button:hover{transform:none}
 }
+
+/* Portfolio color selection stays above the editor content, not buried in the
+   long section list. A large two-tone swatch makes all 4 choices discoverable. */
+.pt-palette-picker{
+  display:flex;flex-direction:column;gap:13px;
+  padding:15px clamp(12px,2vw,22px);
+  border:1px solid #d4dee5;border-radius:12px;
+  background:#fff;min-width:0;
+}
+.pt-palette-picker__head{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  flex-wrap:wrap;
+}
+.pt-palette-picker__head strong{
+  display:block;font:800 14px/1.4 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#172d3d;
+}
+.pt-palette-picker__head p{
+  margin:3px 0 0;font:500 11px/1.55 'Be Vietnam Pro',system-ui,sans-serif;
+  color:#687f8d;
+}
+.pt-palette-picker__options{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;
+}
+.pt-palette-picker__option{
+  display:flex;align-items:center;gap:9px;min-width:0;
+  border:1px solid #d5e1e6;border-radius:9px;padding:8px;
+  background:#fff;color:#293b46;cursor:pointer;text-align:left;
+  font:750 11px/1.3 'Be Vietnam Pro',system-ui,sans-serif;
+  transition:border-color .15s,background-color .15s,box-shadow .15s;
+}
+.pt-palette-picker__option:hover{
+  border-color:#7da4b1;background:#f4f9fa;
+}
+.pt-palette-picker__option.is-selected{
+  border-color:#213b4a;box-shadow:0 0 0 1px #213b4a inset;
+  background:#f2f7f8;
+}
+.pt-palette-picker__option:focus-visible,.pt-palette-picker__reset:focus-visible{
+  outline:2px solid #0b8192;outline-offset:2px;
+}
+.pt-palette-picker__option:disabled,.pt-palette-picker__reset:disabled{
+  opacity:.55;cursor:not-allowed;
+}
+.pt-palette-picker__swatch{
+  display:block;flex:0 0 56px;height:38px;min-width:0;
+  border:1px solid #ced6d999;border-radius:6px;
+}
+.pt-palette-picker__name{flex:1;min-width:0}
+.pt-palette-picker__mark{
+  flex:0 0 17px;text-align:center;color:#1d5567;font-size:15px;
+}
+.pt-palette-picker__reset{
+  border:0;background:transparent;color:#315e6b;
+  padding:5px 2px;font:750 10px 'Be Vietnam Pro',system-ui,sans-serif;
+  cursor:pointer;
+}
+@media(max-width:1080px){
+  .pt-palette-picker__options{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:460px){
+  .pt-palette-picker__option{gap:6px;padding:6px;font-size:10px}
+  .pt-palette-picker__swatch{flex-basis:38px;height:34px}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-palette-picker__option{transition:none}
+}

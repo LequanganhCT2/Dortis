@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
-import {FORM_COLOR_PALETTES} from './portfolioPalette'
+import PortfolioPalettePicker from './PortfolioPalettePicker'
 import {normalizeBlueprint,portfolioSections,setSectionField,setSlotImage,LUXURY_RIBBON} from './model'
 import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sourceBinding'
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
@@ -419,6 +419,22 @@ export default function PortfolioInstanceEditor({
     </header>
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
+    <PortfolioPalettePicker
+      heading="Bảng màu Portfolio" value={content.colorPalette||
+        normalizeBlueprint(template.blueprint).colorPalette}
+      hint="Chọn màu để đổi ngay trên bản xem trước. Lưu thay đổi và cập nhật website để xuất bản."
+      disabled={busy}
+      onChange={palette=>{
+        setContent(previous=>({...previous,colorPalette:palette}))
+        setDirty(true);setNotice('')
+      }}
+      onReset={content.colorPalette?()=>{
+        setContent(previous=>{
+          const {colorPalette,...rest}=previous
+          return rest
+        })
+        setDirty(true);setNotice('')
+      }:null}/>
     <div className="pt-editor__layout">
       <aside className="pt-editor__sidebar" inert={busy}>
         <h2>01 / Các khu vực</h2>
@@ -436,22 +452,6 @@ export default function PortfolioInstanceEditor({
         </button>
         {current&&<div className="pt-editor__form" key={current.id}>
           <h2>02 / Nội dung: {current.label}</h2>
-          <label>Bảng màu Portfolio
-            <select value={content.colorPalette||''} disabled={busy}
-              onChange={event=>{
-                setContent(previous=>({...previous,colorPalette:event.target.value}))
-                setDirty(true);setNotice('')
-              }}>
-              <option value="">Theo Form gốc ({FORM_COLOR_PALETTES.find(p=>
-                p.id===normalizeBlueprint(template.blueprint).colorPalette)?.label||'Đỏ – vàng'})</option>
-              {FORM_COLOR_PALETTES.map(p=><option key={p.id} value={p.id}>{p.label}</option>)}
-            </select>
-            <span className="pt-editor__palette-swatches" aria-hidden="true">
-              {(FORM_COLOR_PALETTES.find(p=>p.id===(content.colorPalette||
-                normalizeBlueprint(template.blueprint).colorPalette))?.swatches||
-                FORM_COLOR_PALETTES[0].swatches).map(color=><i key={color} style={{background:color}}/>)}
-            </span>
-          </label>
           <label>Nền mặc định của Portfolio
             <select value={content.defaultBackdrop||''} onChange={event=>{
               const defaultBackdrop=event.target.value

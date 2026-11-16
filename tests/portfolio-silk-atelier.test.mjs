@@ -103,3 +103,17 @@ test('New palettes are selectable per artist without changing the source form',(
   assert.ok(code('PortfolioTemplateManager.jsx').includes('Bảng màu mặc định'))
   assert.ok(code('PortfolioTemplateSite.jsx').includes('pt-palette--'))
 })
+
+test('Color selection is visible before the long artist section list',()=>{
+  const editor=code('PortfolioInstanceEditor.jsx')
+  const manager=code('PortfolioTemplateManager.jsx')
+  const picker=code('PortfolioPalettePicker.jsx')
+  const styles=code('template-admin.css')
+  assert.match(editor,/<PortfolioPalettePicker[\s\S]*?<div className="pt-editor__layout">/)
+  assert.match(editor,/setContent\(previous=>\(\{\.\.\.previous,colorPalette:palette\}\)\)/)
+  assert.match(editor,/setDirty\(true\);setNotice\(''\)/)
+  assert.match(manager,/<PortfolioPalettePicker[\s\S]*?Bảng màu mặc định của Form/)
+  assert.match(picker,/FORM_COLOR_PALETTES\.map/)
+  assert.match(picker,/aria-pressed=\{active===option\.id\}/)
+  assert.match(styles,/\.pt-palette-picker__options/)
+})
