@@ -408,12 +408,13 @@ export default function PortfolioTemplateSite({
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <strong className="pt-site__brand">{view.artistName||'PORTFOLIO'}<span>.</span></strong>
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
-          {navSections.map((s,i)=><a key={s.id} data-pt-section={s.id}
+          {navSections.map(s=><a key={s.id} data-pt-section={s.id}
             className={activeSectionId===s.id?'is-active':''}
             aria-current={activeSectionId===s.id?'location':undefined}
             href={'#pt-'+s.id} onClick={event=>jumpToSection(event,s.id)}>
-              <span className="pt-site__nav-number">{String(i+1).padStart(2,'0')} /</span>
-              <span className="pt-site__nav-label">{s.label}</span>
+              <span className="pt-site__nav-label">
+                {s.label.replace(/^\s*(?:\d+\s*\/\s*)?\d+\s*[·.:\-/]\s*/,'')}
+              </span>
             </a>)}
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
