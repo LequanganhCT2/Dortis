@@ -9,11 +9,12 @@ import {LUXURY_RIBBON} from './model'
 import './template-site.css'
 import RibbonPortfolioSection from './RibbonPortfolioSection'
 import './portfolio-effects.css'
+import './portfolio-continuous-silk.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
  */
-function MotionSection({section,index,styleName,urls,artistRole,isPublic,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio}){
+function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio}){
   const frame=useRef(0)
   const sectionRef=useRef(null)
   const drag=useRef(null),suppressClick=useRef(false),fileInput=useRef(null)
@@ -233,7 +234,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,ribbonL
           setImageMenu(null)
         }}/>
     </div>}
-    {luxuryRibbon&&<RibbonLuxuryBackground layout={ribbonLayout} direction={ribbonDirection}/>}
+    {luxuryRibbon&&!continuousSilk&&<RibbonLuxuryBackground layout={ribbonLayout} direction={ribbonDirection}/>}
     {firstImage&&!luxuryRibbon&&effect!=='ribbon'&&<div className="pt-fx__ambient" aria-hidden="true">
       <img src={firstImage} alt="" loading="lazy" decoding="async"/>
     </div>}
@@ -292,16 +293,22 @@ export default function PortfolioTemplateSite({
   const visibleSections=focusedSectionId?
     view.sections.filter(s=>s.id===focusedSectionId):view.sections
   const hasSilk=useClassic&&view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
+  const hasArtboardSilk=view.sections.some(section=>{
+    const design=getScene(instance?.content||{},section,device)
+    return design?.background==='ribbon-luxury'
+  })
+  const continuousSilk=!useClassic||hasSilk||hasArtboardSilk||
+    view.sections.some(section=>section.backdrop===LUXURY_RIBBON)
   const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(hasSilk?' pt-site--silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
         const id=page.id.slice(3)
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
-      {hasSilk&&<RibbonSilk layout={view.ribbonLayout||'vertical'} direction={view.ribbonDirection||'right'}/>}
+      {continuousSilk&&<RibbonSilk layout={view.ribbonLayout||'vertical'} direction={view.ribbonDirection||'right'}/>}
     {!focusedSectionId&&<header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
@@ -314,6 +321,7 @@ export default function PortfolioTemplateSite({
         const index=view.sections.findIndex(item=>item.id===section.id)
         const scene=getScene(instance?.content||{},section,device)
         return scene?<SectionArtboard key={section.id} index={index}
+          continuousSilk={continuousSilk}
           ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}
           section={section} scene={scene} device={device} urls={urls}
           editable={editSectionId===section.id}
@@ -322,6 +330,7 @@ export default function PortfolioTemplateSite({
           onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
           (useClassic||section.backdrop||editSectionId===section.id)?
           <MotionSection key={section.id} section={section} index={index}
+            continuousSilk={continuousSilk}
             ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}
             positions={instance?.content?.positions?.[section.id]?.[device]}
             typography={instance?.content?.typography?.[section.id]?.[device]}
@@ -331,8 +340,7 @@ export default function PortfolioTemplateSite({
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
             onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>:
           <RibbonPortfolioSection key={section.id} section={section}
-            index={index} urls={urls} artistRole={view.artistRole}
-            ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}/>
+            index={index} urls={urls} artistRole={view.artistRole}/>
       })}
       {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>

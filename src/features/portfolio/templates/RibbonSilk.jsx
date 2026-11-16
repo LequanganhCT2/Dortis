@@ -1,46 +1,24 @@
 import React,{useEffect,useRef} from 'react'
 
-const SCENE_WIDTH=1000
-const RIBBONS=[
-  {
-    width:125,phase:.45,
-    // Rose silk opens wide near the hero, folds in, then crosses back at the gallery.
-    path:[[0,925,.92],[.11,485,1.37],[.23,80,.46],[.39,846,1.13],
-      [.55,584,.62],[.67,91,1.24],[.81,780,.52],[1,962,1.26]],
-    colors:['#673745','#a64e6c','#d67f9d','#fedce6','#fff3ed','#e7a4b8','#a65574','#773f57']
-  },
-  {
-    width:164,phase:2.1,
-    path:[[0,114,.70],[.14,770,1.19],[.28,582,.45],[.42,118,.94],
-      [.59,878,1.18],[.73,478,.42],[.91,35,.90],[1,315,.58]],
-    colors:['#b99581','#dabeaa','#f5e8db','#fffefa','#fff7e3','#f0d9c7','#bc968b','#967370']
-  },
-  {
-    width:73,phase:3.4,
-    path:[[0,1025,.61],[.19,677,.76],[.29,916,1.48],[.46,437,.48],
-      [.58,235,.85],[.76,904,1.27],[.87,805,.49],[1,147,.7]],
-    colors:['#78502b','#ae773e','#e8b774','#ffeac1','#fff4d9','#ebc07d','#b78348','#8d5d33']
-  }
-]
+import {
+  RIBBON_SCENE_WIDTH,RIBBON_BRANCHES,ribbonGeometryAt,
+  normalizeRibbonGeometryChoice
+} from './ribbonGeometry.js'
 
-// Smooth curves with different positions and widths at each art-directed fold.
-function sampleRibbon({path,width,phase},height){
+const SCENE_WIDTH=RIBBON_SCENE_WIDTH
+const RIBBONS=RIBBON_BRANCHES
+
+// Four uninterrupted paths extend across the entire document, not one path
+// per page. Their central trajectories are long diagonal cuts, not vertical
+// wavy lines. Canvas renders once per size/style; CSS animates each branch.
+function sampleRibbon(ribbon,height,layout,direction){
   const steps=Math.ceil((height+240)/12)
-  let segment=0
   return Array.from({length:steps+1},(_,index)=>{
     const y=index/steps*(height+240)-120
-    const t=Math.max(0,Math.min(1,y/height))
-    while(segment<path.length-2&&t>path[segment+1][0])segment++
-    const [start,left,wide]=path[segment]
-    const [end,right,narrow]=path[segment+1]
-    const local=(t-start)/(end-start)
-    const ease=local*local*(3-2*local)
-    const x=left+(right-left)*ease+Math.sin(y/131+phase)*27
-    const slope=(right-left)*6*local*(1-local)/((end-start)*height)+Math.cos(y/131+phase)*27/131
+    const {x,slope,fold}=ribbonGeometryAt(ribbon,y,layout,direction)
     const normal=Math.hypot(slope,1)
-    const fold=(wide+(narrow-wide)*ease)*(1+.16*Math.sin(y/97+phase))
-    return {x,y,nx:1/normal,ny:-slope/normal,width:width*fold,
-      crease:.089*Math.sin(y/155+phase)+.031*Math.sin(y/42-phase)}
+    return {x,y,nx:1/normal,ny:-slope/normal,width:ribbon.width*fold,
+      crease:.065*Math.sin(y/155+ribbon.phase)+.019*Math.sin(y/42-ribbon.phase)}
   })
 }
 
@@ -76,8 +54,8 @@ function colorAt(colors,t){
   return 'rgb('+channels.join(',')+')'
 }
 
-function drawRibbon(ctx,ribbon,height){
-  const samples=sampleRibbon(ribbon,height)
+function drawRibbon(ctx,ribbon,height,layout,direction){
+  const samples=sampleRibbon(ribbon,height,layout,direction)
   const outline=band(samples,-.5,.5)
   ctx.save()
   ctx.shadowColor='#58344534'
@@ -135,6 +113,7 @@ const LIGHT_CLUSTERS=[
 
 export default function RibbonSilk({layout='vertical',direction='right'}){
   const layerRef=useRef(null)
+  const choice=normalizeRibbonGeometryChoice(layout,direction)
   useEffect(()=>{
     const layer=layerRef.current
     if(!layer)return
@@ -151,25 +130,25 @@ export default function RibbonSilk({layout='vertical',direction='right'}){
       const sceneHeight=clientHeight/clientWidth*SCENE_WIDTH
       canvases.forEach((canvas,index)=>{
         const ctx=contexts[index]
-        if(!ctx||(canvas.width===width&&canvas.height===height&&canvas.dataset.rendered))return
+        if(!ctx||(canvas.width===width&&canvas.height===height&&
+          canvas.dataset.rendered===choice.layout+':'+choice.direction))return
         canvas.width=width
         canvas.height=height
         ctx.setTransform(width/SCENE_WIDTH,0,0,height/sceneHeight,0,0)
-        drawRibbon(ctx,RIBBONS[index],sceneHeight)
-        canvas.dataset.rendered='true'
+        drawRibbon(ctx,RIBBONS[index],sceneHeight,choice.layout,choice.direction)
+        canvas.dataset.rendered=choice.layout+':'+choice.direction
       })
     }
     render()
     const observer=new ResizeObserver(render)
     observer.observe(layer)
     return ()=>observer.disconnect()
-  },[])
-  const layouts=['vertical','diagonal','horizontal','curtain']
-  const safeLayout=layouts.includes(layout)?layout:'vertical'
-  const safeDirection=/^(right|left|down-right|down-left|up-right|up-left|to-right|to-left|inward|outward)$/.test(direction)?direction:'right'
+  },[choice.layout,choice.direction])
+  const safeLayout=choice.layout
+  const safeDirection=choice.direction
   return <div ref={layerRef} className={'pt-ribbon__silk pt-ribbon__silk--layout-'+safeLayout+
     ' pt-ribbon__silk--direction-'+safeDirection} aria-hidden="true">
-    {RIBBONS.map(({phase},index)=><canvas key={phase}
+    {RIBBONS.map(({id},index)=><canvas key={id}
       className={'pt-ribbon__strand pt-ribbon__strand--'+(index+1)}/>)}
     {LIGHT_CLUSTERS.map(({x,y,size,delay,duration})=><span key={y} className="pt-ribbon__bokeh"
       style={{left:x,top:y,width:size,'--pt-bokeh-delay':delay,'--pt-bokeh-duration':duration}}/>)}

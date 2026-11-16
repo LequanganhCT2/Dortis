@@ -23,7 +23,7 @@ function toPosition(layer,board){
     transform:'rotate('+layer.rotation+'deg)'}
 }
 function LayerElement({section,layerId,layer,scene,urls,device,editable,selected,
-  onSelectLayer,onPatchLayer,boardRef,dragRef,lockImageRatio}){
+  onSelectLayer,onPatchLayer,boardRef,dragRef,lockImageRatio,continuousSilk=false}){
   const type=sceneLayerType(layerId)
   const index=type==='image'?Number(layerId.split(':')[1]):-1
   const image=index>=0?section.images[index]:null
@@ -35,7 +35,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
   const label=sceneLayerTitle(layerId)
   const ratio=device==='mobile'?390:1200
   const textStyle={
-    color:section.backdrop===LUXURY_RIBBON?ribbonTextColor(layer.color):layer.color,textAlign:layer.align,fontFamily:sceneFont(layer.font),
+    color:section.backdrop===LUXURY_RIBBON||continuousSilk?ribbonTextColor(layer.color):layer.color,textAlign:layer.align,fontFamily:sceneFont(layer.font),
     fontWeight:layer.weight,lineHeight:layer.lineHeight,
     letterSpacing:layer.spacing+'px',whiteSpace:'pre-line',
     fontSize:'clamp(9px,'+(layer.size*100/ratio).toFixed(3)+'cqw,180px)',
@@ -143,7 +143,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
  */
 export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
-  index=0,ribbonLayout='vertical',ribbonDirection='right',selectedLayer='',onSelectLayer,
+  index=0,ribbonLayout='vertical',ribbonDirection='right',continuousSilk=false,
+  selectedLayer='',onSelectLayer,
   onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
@@ -213,8 +214,10 @@ export default function SectionArtboard({
           onClick={()=>setMenu(null)}>Đóng</button>
       </div>}
     </div>}
-    <div ref={boardRef} className={'pt-artboard'+(hasRibbon?' pt-artboard--ribbon':'')}
-      style={{background:sceneGradient(section.backdrop==='none'&&scene.background==='ribbon-luxury'?'paper':scene.background)}}
+    <div ref={boardRef} className={'pt-artboard'+(hasRibbon?' pt-artboard--ribbon':'')+
+      (continuousSilk?' pt-artboard--continuous-silk':'')}
+      style={{background:continuousSilk?'transparent':sceneGradient(
+        section.backdrop==='none'&&scene.background==='ribbon-luxury'?'paper':scene.background)}}
       onContextMenu={openMenu}
       onDragOver={event=>{
         if(!editable||!event.dataTransfer.types.includes('Files'))return
@@ -223,14 +226,14 @@ export default function SectionArtboard({
       }}
       onDrop={dropImage}
       onClick={()=>{if(editable){setMenu(null);onSelectLayer?.('')}}}>
-      {section.backdrop===LUXURY_RIBBON&&<RibbonLuxuryBackground
+      {!continuousSilk&&section.backdrop===LUXURY_RIBBON&&<RibbonLuxuryBackground
         layout={ribbonLayout} direction={ribbonDirection}/>}
-      {hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}
+      {!continuousSilk&&hasRibbon&&<PortfolioRibbonBackdrop index={index} variant={ribbonVariant}
         layout={ribbonLayout} direction={ribbonDirection}/>}
-      {firstUrl&&!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__ambient" aria-hidden="true">
+      {firstUrl&&!continuousSilk&&!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__ambient" aria-hidden="true">
         <img src={firstUrl} alt=""/>
       </div>}
-      {!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__flare" aria-hidden="true"/>}
+      {!continuousSilk&&!hasRibbon&&section.backdrop!==LUXURY_RIBBON&&<div className="pt-artboard__flare" aria-hidden="true"/>}
       <span className="pt-artboard__watermark" aria-hidden="true">
         {(section.title||'PORTFOLIO').slice(0,45)}
       </span>
@@ -240,7 +243,8 @@ export default function SectionArtboard({
           layer={scene.layers[layerId]} urls={urls} device={device}
           editable={editable} selected={selectedLayer===layerId}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
-          boardRef={boardRef} dragRef={dragRef} lockImageRatio={lockImageRatio}/>)}
+          boardRef={boardRef} dragRef={dragRef} lockImageRatio={lockImageRatio}
+          continuousSilk={continuousSilk}/>)}
       {editable&&<div className="pt-artboard__edit-hint">
         Kéo chữ hoặc ảnh để đổi vị trí · Thả file lên ô ảnh hoặc nhấp chuột phải để thêm ảnh
       </div>}

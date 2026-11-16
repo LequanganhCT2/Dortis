@@ -1,0 +1,161 @@
+/*
+ * DORTIS / CONTINUOUS SILK STAGE
+ *
+ * A single document-height Canvas field, never duplicated per section.
+ * Four independently animated branches sweep diagonally through the viewport,
+ * cross, separate, and continue under the next section without seams.
+ */
+.pt-site.pt-site--continuous-silk{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  color:#fff1e3;
+  --pt-ink:#fff1e3;
+  --pt-muted:#eed0b8;
+  --pt-accent:#f5c982;
+  --pt-gold:#f5c982;
+  --pt-border:#e4b97c42;
+  background:
+    radial-gradient(ellipse at 78% 9%,#91312278,transparent 27%),
+    radial-gradient(ellipse at 14% 45%,#a91a2345,transparent 39%),
+    radial-gradient(ellipse at 91% 91%,#84401c54,transparent 38%),
+    linear-gradient(143deg,#26020a 0%,#52040d 34%,#37040c 67%,#1a060e 100%)!important;
+}
+/* The Canvas takes its size from the entire portfolio, including the footer.
+   z-index 0: behind text and photos but above the dark base gradient. */
+.pt-site.pt-site--continuous-silk > .pt-ribbon__silk{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  z-index:0;
+  opacity:.93;
+  pointer-events:none;
+  overflow:hidden;
+  transform:none!important;
+  filter:none;
+}
+.pt-site.pt-site--continuous-silk > .pt-ribbon__silk > .pt-ribbon__strand{
+  position:absolute;
+  display:block;
+  inset:0;
+  width:100%;
+  height:100%;
+  transform-origin:50% 50%;
+  max-width:none;
+  /* Four physical layers, with their own motion period and trajectory. */
+  will-change:auto;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__strand--1{
+  --pt-silk-period:19s;--pt-silk-phase:-4s;--pt-silk-x:31px;--pt-silk-y:-12px;
+  opacity:.91;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__strand--2{
+  --pt-silk-period:27s;--pt-silk-phase:-16s;--pt-silk-x:-24px;--pt-silk-y:16px;
+  opacity:.89;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__strand--3{
+  --pt-silk-period:23s;--pt-silk-phase:-8s;--pt-silk-x:16px;--pt-silk-y:20px;
+  opacity:.81;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__strand--4{
+  --pt-silk-period:32s;--pt-silk-phase:-19s;--pt-silk-x:-29px;--pt-silk-y:-7px;
+  opacity:.84;
+}
+/* A single uninterrupted lighting field complements the silk texture. */
+.pt-site.pt-site--continuous-silk > .pt-ribbon__silk:after{
+  content:'';
+  position:absolute;
+  inset:0;
+  z-index:1;
+  background:
+    linear-gradient(90deg,#1f030c8c 0%,#1f030c42 31%,transparent 73%),
+    radial-gradient(ellipse at 20% 70%,#10030b82,transparent 52%);
+  pointer-events:none;
+}
+.pt-site.pt-site--continuous-silk > :not(.pt-ribbon__silk){
+  position:relative;
+  z-index:1;
+}
+/* No per-page background plate: the underlying strands stay connected while
+   scrolling. Content still keeps its own safe image slots and spacing. */
+.pt-site.pt-site--continuous-silk .pt-ribbon-section,
+.pt-site.pt-site--continuous-silk .pt-fx-section,
+.pt-site.pt-site--continuous-silk .pt-site__section,
+.pt-site.pt-site--continuous-silk .pt-scene-section{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+}
+.pt-site.pt-site--continuous-silk .pt-artboard{
+  background-color:transparent!important;
+  background-image:none!important;
+}
+.pt-site.pt-site--continuous-silk .pt-scene-section.is-editing .pt-artboard{
+  background-image:linear-gradient(#ffffff1a 1px,transparent 1px),
+    linear-gradient(90deg,#ffffff1a 1px,transparent 1px)!important;
+  background-size:10% 10%;
+}
+.pt-site.pt-site--continuous-silk .pt-fx-section:before,
+.pt-site.pt-site--continuous-silk .pt-fx-section:after{
+  content:none!important;
+}
+.pt-site.pt-site--continuous-silk .pt-fx__ambient,
+.pt-site.pt-site--continuous-silk .pt-artboard__ambient{
+  display:none!important;
+}
+/* Keep text legible over bright crossing highlights without flattening the
+   ribbon, and never blur/reposition the actual artist photographs. */
+.pt-site.pt-site--continuous-silk .pt-fx-section .pt-site__copy :is(h2,p,small),
+.pt-site.pt-site--continuous-silk .pt-fx-section .pt-site__placeholder-text{
+  color:#fff1df!important;
+  text-shadow:0 4px 24px #170108bd;
+}
+.pt-site.pt-site--continuous-silk .pt-fx-section .pt-site__copy>small{
+  color:#f2d08b!important;
+}
+.pt-site.pt-site--continuous-silk .pt-site__nav{
+  background:#21020a60!important;
+  border-bottom:1px solid #efc78942;
+  backdrop-filter:blur(3px);
+}
+.pt-site.pt-site--continuous-silk .pt-site__nav :is(strong,a,span){
+  color:#fff0df!important;
+}
+.pt-site.pt-site--continuous-silk .pt-site__nav strong>span,
+.pt-site.pt-site--continuous-silk .pt-site__nav-meta{
+  color:#f8d38f!important;
+}
+.pt-site.pt-site--continuous-silk .pt-site__footer{
+  background:#21020a61!important;
+  border-top:1px solid #efc78938;
+  color:#fff1df!important;
+}
+.pt-site.pt-site--continuous-silk .pt-site__footer :is(span,small){
+  color:#fcead7!important;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon-section{
+  border-bottom:1px solid #f1bd7130;
+}
+.pt-site.pt-site--continuous-silk .pt-ribbon__tile img,
+.pt-site.pt-site--continuous-silk .pt-site__media-tile img,
+.pt-site.pt-site--continuous-silk .pt-artboard__photo img{
+  filter:none!important;
+  opacity:1!important;
+}
+/* Prevent the old "one-page" ornament from covering the continuous field. */
+.pt-site.pt-site--continuous-silk .pt-artboard--ribbon:before{
+  background:linear-gradient(90deg,#23010a6e,transparent 68%);
+}
+@media(max-width:680px){
+  .pt-site.pt-site--continuous-silk > .pt-ribbon__silk{opacity:.76}
+  .pt-site.pt-site--continuous-silk .pt-ribbon__bokeh:nth-of-type(n+8){display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site.pt-site--continuous-silk .pt-ribbon__strand,
+  .pt-site.pt-site--continuous-silk .pt-ribbon__bokeh{
+    animation:none!important;
+    transform:none!important;
+    transition:none!important;
+  }
+}

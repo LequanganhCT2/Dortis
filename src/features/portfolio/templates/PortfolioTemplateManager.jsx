@@ -179,7 +179,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <div className="pt-blueprint__header">
           <div><span className="pt-overline">FORM BLUEPRINT · INHERITED DESIGN</span>
             <h2>Chỉnh bố cục: {templates.find(t=>t.id===editingTemplate)?.name}</h2>
-            <p>Form chung được kế thừa bởi mọi nghệ sĩ. Luxury Motion dùng dải lụa đỏ vàng chuyển động nhẹ, đồng bộ giữa các trang; ảnh tự vào từng khu vực riêng, không chồng nhau. Chỉnh mẫu dùng chung sẽ áp dụng cho các nghệ sĩ đang kế thừa, nhưng chữ và ảnh của họ vẫn độc lập.</p>
+            <p>Form chung được kế thừa bởi mọi nghệ sĩ. Luxury Motion dùng MỘT hệ lụa đỏ vàng chạy xuyên suốt Portfolio: các nhánh vắt chéo màn hình, cắt nhau và chuyển động độc lập. Lụa không lặp lại tại đầu mỗi khu vực; ảnh tự vào các ô riêng, không chồng nhau. Chỉnh mẫu dùng chung sẽ áp dụng cho các nghệ sĩ đang kế thừa, nhưng chữ và ảnh của họ vẫn độc lập.</p>
           </div>
           <div className="pt-action-row">
             <button type="button" className="pt-btn pt-btn--light"
@@ -220,8 +220,9 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           </label>
         </div>
         <p className="pt-blueprint__visual-note">
-          Luxury Motion dùng chung dải lụa đỏ vàng chuyển động nhẹ cho mọi khu vực.
-          Hình ảnh tự xếp trong các ô Grid riêng, không tự chồng lên nhau.
+          Kiểu và hướng lụa được áp dụng cho một dòng lụa liền mạch từ đầu đến cuối Form,
+          không lặp lại ở mỗi trang. Các nhánh chuyển động độc lập, cắt chéo chiều ngang;
+          ảnh nghệ sĩ giữ nguyên từng ô Grid độc lập và không bị làm mờ.
           Bố cục chữ và ảnh chỉnh tay của nghệ sĩ vẫn là lớp tùy chỉnh độc lập.
         </p>
         <div className="pt-blueprint__sections">

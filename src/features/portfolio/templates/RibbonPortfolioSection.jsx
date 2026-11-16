@@ -1,13 +1,12 @@
 import React from 'react'
-import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
-import {ribbonGridColumns,ribbonVariant} from './ribbonLayout'
+import {ribbonGridColumns} from './ribbonLayout'
 
 /**
  * Safe, non-overlapping layout for every shared Dortis form.
  * All original photos map to their own slots. No negative margins,
  * absolute photo positioning, auto-generated artist imagery or hidden tiles.
  */
-export default function RibbonPortfolioSection({section,index=0,urls={},artistRole='',ribbonLayout='vertical',ribbonDirection='right'}){
+export default function RibbonPortfolioSection({section,index=0,urls={},artistRole=''}){
   const tiles=(section.images||[]).map((asset,position)=>({
     asset,position,url:asset?.path?urls[asset.path]:null
   }))
@@ -18,8 +17,6 @@ export default function RibbonPortfolioSection({section,index=0,urls={},artistRo
     className={'pt-ribbon-section '+layout+
       ' pt-ribbon-effect--'+(section.effect||'auto')+
       (index===0?' is-first':'')}>
-    <PortfolioRibbonBackdrop index={index} variant={ribbonVariant(section,index)}
-      layout={ribbonLayout} direction={ribbonDirection}/>
     <div className="pt-ribbon__copy">
       <small>{String(index+1).padStart(2,'0')} / {section.eyebrow||
         (index===0&&artistRole?artistRole:section.label)}</small>
