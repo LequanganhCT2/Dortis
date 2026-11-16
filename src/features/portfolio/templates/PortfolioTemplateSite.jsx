@@ -79,10 +79,12 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   function positionProps(key){
     const initial=positions?.[key]||{x:0,y:0}
     const text=isTextFrame(key)
+    const angle=Number(initial.rotation)
     const position={
       translate:initial.x||initial.y?initial.x+'% '+initial.y+'%':undefined,
       scale:!text&&initial.scaleX&&initial.scaleY?initial.scaleX+' '+initial.scaleY:undefined,
       ...(text?textBoxWidthStyle(initial):{}),
+      rotate:text&&Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':undefined,
       '--pt-inverse-resize-x':!text&&initial.scaleX?1/initial.scaleX:undefined,
       '--pt-inverse-resize-y':!text&&initial.scaleY?1/initial.scaleY:undefined
     }
@@ -210,6 +212,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     const type=typography?.[field]
     if(type)placement.style={
       ...placement.style,
+      textAlign:['left','center','right'].includes(type.align)?type.align:undefined,
       fontFamily:type.font?sceneFont(type.font):undefined,
       fontSize:Number.isFinite(type.size)?Math.max(8,Math.min(180,type.size)):undefined,
       lineHeight:Number.isFinite(type.lineHeight)?Math.max(.7,Math.min(3,type.lineHeight)):undefined

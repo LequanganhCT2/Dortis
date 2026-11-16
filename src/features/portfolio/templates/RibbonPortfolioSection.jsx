@@ -14,12 +14,19 @@ const clamp=(value,min,max)=>Math.max(min,Math.min(max,value))
 const clampPosition=value=>Math.round(clamp(value,-95,95)*10)/10
 function positionStyle(position={},type={},key=''){
   const text=isTextFrame(key)
+  const align=['left','center','right'].includes(type?.align)?type.align:'left'
+  const angle=Number(position?.rotation)
   return {
     translate:position.x||position.y?(Number(position.x)||0)+'% '+(Number(position.y)||0)+'%':undefined,
     // Legacy scale fields are ignored on text: wrapping never changes the font.
     scale:!text&&position.scaleX&&position.scaleY?
       position.scaleX+' '+position.scaleY:undefined,
     ...(text?textBoxWidthStyle(position):{}),
+    ...(text?{
+      textAlign:align,
+      alignSelf:align==='center'?'center':align==='right'?'flex-end':'flex-start',
+      rotate:Number.isFinite(angle)?clamp(angle,-15,15)+'deg':undefined
+    }:{}),
     fontFamily:type.font?sceneFont(type.font):undefined,
     fontSize:Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     lineHeight:Number.isFinite(type.lineHeight)?clamp(type.lineHeight,.7,3):undefined

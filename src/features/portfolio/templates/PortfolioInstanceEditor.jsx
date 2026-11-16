@@ -5,6 +5,7 @@ import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sour
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
+import {TEXT_QUICK_LAYOUTS,quickSceneTextPlacement,quickRibbonTextPlacement} from './textQuickLayouts'
 import {isCutoutArtwork,cutoutStageStyle,CUTOUT_STAGE_STYLES} from './imagePresentation'
 import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer,supportsPhotoPointer} from './photoMotionConfig'
 import {
@@ -324,6 +325,30 @@ export default function PortfolioInstanceEditor({
     })
     setDirty(true)
   }
+  function quickPlaceText(layoutId){
+    if(!current||busy||!textLayers.includes(textLayer))return
+    if(scene){
+      patchLayer(textLayer,quickSceneTextPlacement(layoutId,scene.layers[textLayer],device))
+    }else{
+      const original=content.positions?.[current.id]?.[device]?.[textLayer]||{}
+      const next=quickRibbonTextPlacement(layoutId,original)
+      moveElement(textLayer,next.position)
+      patchTypography(next.typography)
+    }
+    setNotice('Đã áp dụng bố cục chữ. Cỡ font được giữ nguyên; nhấn Lưu để ghi nhận.')
+  }
+  function resetTextPlacement(){
+    if(!current||busy)return
+    if(scene){
+      const defaults=sceneLayerDefault(textLayer,current,device)
+      patchLayer(textLayer,{x:defaults.x,align:defaults.align,rotation:0})
+    }else{
+      const original=content.positions?.[current.id]?.[device]?.[textLayer]||{}
+      moveElement(textLayer,{...original,x:0,y:0,widthPct:null,rotation:0})
+      patchTypography({align:null})
+    }
+    setNotice('Đã khôi phục căn chữ mặc định của Form.')
+  }
   function patchLayer(layerId,patch){
     if(!current)return
     setContent(prev=>patchSceneLayer(prev,current,device,layerId,patch))
@@ -597,7 +622,7 @@ export default function PortfolioInstanceEditor({
           </button>}
           <div className="pt-segment">
           <button type="button" className={device==='desktop'?'is-active':''}
-            onClick={()=>setDevice('desktop')}>Desktop</button>
+            onClick={()=>setDevice('desktop')}>Desktop · 16:9</button>
           <button type="button" className={device==='mobile'?'is-active':''}
             onClick={()=>{setDevice('mobile');setSelectedLayer('title')}}>Mobile</button>
         </div></div></div>
@@ -627,6 +652,23 @@ export default function PortfolioInstanceEditor({
           <button type="button" className="pt-btn pt-btn--light" onClick={resetTypography}>
             Đặt lại kiểu chữ
           </button>
+          <div className="pt-type-tools__quick">
+            <strong>Bố cục nhanh · {sceneLayerTitle(textLayer)}</strong>
+            <div className="pt-type-tools__quick-buttons" role="group"
+              aria-label={'Căn nhanh '+sceneLayerTitle(textLayer)}>
+              {TEXT_QUICK_LAYOUTS.map(option=><button key={option.id}
+                type="button" className="pt-type-tools__quick-button"
+                title={option.label+' · giữ nguyên cỡ chữ'}
+                onClick={()=>quickPlaceText(option.id)}>
+                  <span aria-hidden="true">{option.symbol}</span>
+                  {option.label}
+                </button>)}
+              <button type="button" className="pt-type-tools__quick-button is-reset"
+                onClick={resetTextPlacement}>Mặc định</button>
+            </div>
+            <small>Chỉ thay đổi phần chữ đang chọn trên {device==='desktop'?'Desktop':'Mobile'}.
+              Căn trái, giữa, phải hoặc nghiêng chéo; không phóng to hay thu nhỏ chữ.</small>
+          </div>
         </fieldset>}
         <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
           urls={urls} device={device}

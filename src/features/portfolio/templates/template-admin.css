@@ -431,3 +431,90 @@
 .pt-upload__motion :is(select,input):disabled{
   opacity:.55;cursor:not-allowed;
 }
+
+
+/* Desktop live preview: a true 16:9 VIEWPORT (1920 x 1080 proportions).
+   The whole long portfolio remains vertically scrollable inside the frame.
+   The editor itself must not compress the viewport below its aspect ratio. */
+.pt-editor__preview{
+  max-height:none;
+}
+.pt-editor__preview > .pt-device.pt-device--desktop{
+  display:block;
+  width:100%!important;
+  min-width:0;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  aspect-ratio:1920 / 1080;
+  flex:none!important;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+}
+.pt-editor__preview > .pt-device.pt-device--mobile{
+  flex:none;
+  overflow-y:auto;
+}
+.pt-type-tools__quick{
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:center;
+  gap:9px;
+  padding:10px 12px;
+  background:linear-gradient(135deg,#f4faf9,#edf6f7);
+  border:1px solid #d1e5e5;
+  border-radius:9px;
+  min-width:min(100%,260px);
+  flex:1 1 360px;
+}
+.pt-type-tools__quick strong{
+  color:#285b68;
+  font:800 10px/1.5 'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pt-type-tools__quick-buttons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.pt-type-tools__quick-button{
+  display:inline-flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-width:63px;
+  min-height:49px;
+  gap:2px;
+  background:#fff;
+  border:1px solid #c8dce0;
+  border-radius:8px;
+  padding:6px 9px;
+  cursor:pointer;
+  color:#2c5568;
+  font:750 10px/1.4 'Be Vietnam Pro',system-ui,sans-serif;
+  transition:background .16s,border-color .16s,transform .16s;
+}
+.pt-type-tools__quick-button span{
+  font:700 18px/1.05 system-ui,sans-serif;
+}
+.pt-type-tools__quick-button:hover{
+  background:#e4f2f5;
+  border-color:#84bdc9;
+  transform:translateY(-1px);
+}
+.pt-type-tools__quick-button.is-reset{color:#7f6770;background:#fefafa}
+.pt-type-tools__quick-button:focus-visible{outline:2px solid #278d9a;outline-offset:2px}
+.pt-type-tools__quick small{
+  color:#6b8591;
+  font:500 10px/1.65 'Be Vietnam Pro',system-ui,sans-serif;
+}
+@media(max-width:1000px){
+  .pt-editor__preview{max-height:none}
+  .pt-editor__preview > .pt-device.pt-device--desktop{aspect-ratio:16/9}
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-type-tools__quick-button{transition:none}
+  .pt-type-tools__quick-button:hover{transform:none}
+}
