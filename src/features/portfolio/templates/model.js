@@ -7,7 +7,7 @@ export const PRESET_FORMS=Object.freeze([
       {id:'hero',label:'Mở đầu / Hero',layout:'split',slots:1},
       {id:'story',label:'Câu chuyện nghệ sĩ',layout:'split-reverse',slots:1},
       {id:'skills',label:'Thế mạnh',layout:'grid',slots:3},
-      {id:'moments',label:'Dấu ấn biểu diễn',layout:'mosaic',slots:4},
+      {id:'moments',label:'Dấu ấn biểu diễn',layout:'mosaic',effect:'ribbon',slots:4},
       {id:'gallery',label:'Thư viện ảnh',layout:'grid',slots:6},
       {id:'contact',label:'Liên hệ booking',layout:'text',slots:0}
     ]},
@@ -15,7 +15,7 @@ export const PRESET_FORMS=Object.freeze([
     style:'cinematic',sections:[
       {id:'hero',label:'Chân dung sân khấu',layout:'cover',slots:1},
       {id:'bio',label:'Giới thiệu',layout:'split',slots:1},
-      {id:'live',label:'Biểu diễn trực tiếp',layout:'mosaic',slots:4},
+      {id:'live',label:'Biểu diễn trực tiếp',layout:'mosaic',effect:'ribbon',slots:4},
       {id:'highlights',label:'Khoảnh khắc',layout:'grid',slots:6},
       {id:'media',label:'Tư liệu hình ảnh',layout:'wide',slots:2},
       {id:'booking',label:'Booking',layout:'text',slots:0}
@@ -24,7 +24,7 @@ export const PRESET_FORMS=Object.freeze([
     style:'minimal',sections:[
       {id:'hero',label:'Giới thiệu nhanh',layout:'split',slots:1},
       {id:'about',label:'Tiểu sử / Hồ sơ',layout:'text',slots:0},
-      {id:'portfolio',label:'Tác phẩm tiêu biểu',layout:'grid',slots:3},
+      {id:'portfolio',label:'Tác phẩm tiêu biểu',layout:'grid',effect:'ribbon',slots:3},
       {id:'gallery',label:'Hình ảnh',layout:'mosaic',slots:4},
       {id:'press',label:'Thông tin truyền thông',layout:'text',slots:0},
       {id:'contact',label:'Liên hệ',layout:'text',slots:0}
@@ -33,6 +33,7 @@ export const PRESET_FORMS=Object.freeze([
 export const FORM_LAYOUTS=['split','split-reverse','cover','grid','mosaic','wide','text']
 export const FORM_EFFECTS=[
   {id:'auto',label:'Tự động theo khu vực'},
+  {id:'ribbon',label:'Sân khấu dải lụa'},
   {id:'depth',label:'Ảnh nổi 3D + nền mờ'},
   {id:'overlap',label:'Chữ đè ảnh'},
   {id:'spotlight',label:'Spotlight sân khấu'},
@@ -61,6 +62,15 @@ export function normalizeBlueprint(input={}){
     }))
   return {style,sections,source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }
+export function portfolioSections(template,content){
+  const shared=normalizeBlueprint(template?.blueprint||{}).sections
+  const sharedIds=new Set(shared.map(section=>section.id))
+  const personal=normalizeBlueprint({sections:content?.extraSections}).sections
+  return [...shared,...personal.filter(section=>!sharedIds.has(section.id))]
+}
+export const LUXURY_RIBBON='luxury-ribbon'
+const validBackdrop=value=>value==='none'||value===LUXURY_RIBBON
+
 export function resolveInstance(template,instance,profile){
   const blueprint=normalizeBlueprint(template?.blueprint||{})
   const content=instance?.content||{}
@@ -69,9 +79,12 @@ export function resolveInstance(template,instance,profile){
     templateName:template?.name||'',templateVersion:template?.version||1,
     artistName,artistRole:String(profile?.role||''),
     style:blueprint.style,profileId:profile?.id,
-    sections:blueprint.sections.map(section=>{
+    sections:portfolioSections(template,content).map(section=>{
       const own=content.sections?.[section.id]||{}
-      return {...section,
+      const effect=content.effects?.[section.id]
+      const localBackdrop=content.sectionBackdrops?.[section.id]
+      const backdrop=validBackdrop(localBackdrop)?localBackdrop:content.defaultBackdrop
+      return {...section,...(validBackdrop(backdrop)?{backdrop}:{}),effect:FORM_EFFECT_IDS.includes(effect)?effect:section.effect,
         title:typeof own.title==='string'?own.title:section.id==='hero'?artistName:'',
         eyebrow:String(own.eyebrow||''),
         body:String(own.body||''),

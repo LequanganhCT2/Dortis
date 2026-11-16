@@ -1,23 +1,38 @@
-import React,{useEffect,useRef} from 'react'
+import React,{useEffect,useRef,useState} from 'react'
 import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
-import {getScene} from './sectionDesign'
+import {getScene,sceneFont,resizeDimensions} from './sectionDesign'
 import SectionArtboard from './SectionArtboard'
+import RibbonSilk from './RibbonSilk'
+import RibbonLuxuryBackground from './RibbonLuxuryBackground'
+import {LUXURY_RIBBON} from './model'
+import './template-site.css'
 import './portfolio-effects.css'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
  */
-function MotionSection({section,index,styleName,urls,artistRole}){
+function MotionSection({section,index,styleName,urls,artistRole,isPublic,onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio}){
   const frame=useRef(0)
+  const sectionRef=useRef(null)
+  const drag=useRef(null),suppressClick=useRef(false),fileInput=useRef(null)
+  const [imageMenu,setImageMenu]=useState(null)
   const realAssets=(section.images||[]).filter(asset=>asset?.path&&urls[asset.path])
   const hasImage=sectionHasRealImage(section,urls)
   const effect=chooseSectionEffect({effect:section.effect,layout:section.layout,
     index,style:styleName,imageCount:realAssets.length})
   const firstImage=realAssets[0]&&urls[realAssets[0].path]
-  useEffect(()=>()=>{if(frame.current)cancelAnimationFrame(frame.current)},[])
+  const tiles=section.images.map((asset,index)=>({asset,index}))
+  if(effect==='spotlight'&&firstImage){
+    const featured=tiles.findIndex(({asset})=>asset?.path&&urls[asset.path])
+    if(featured>0)tiles.unshift(...tiles.splice(featured,1))
+  }
+  useEffect(()=>{
+    if(motionPaused&&sectionRef.current)resetMotion(sectionRef.current)
+    return ()=>{if(frame.current)cancelAnimationFrame(frame.current)}
+  },[motionPaused])
   function handleMove(event){
-    if(event.pointerType==='touch'||!hasImage)return
+    if(motionPaused||event.pointerType==='touch'||!hasImage||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
     const element=event.currentTarget
     const bounds=element.getBoundingClientRect()
     if(!bounds.width||!bounds.height)return
@@ -31,51 +46,235 @@ function MotionSection({section,index,styleName,urls,artistRole}){
       element.style.setProperty('--pt-shift-y',(y*13).toFixed(1)+'px')
     })
   }
-  function handleLeave(event){
+  function resetMotion(el){
     if(frame.current)cancelAnimationFrame(frame.current)
     frame.current=0
-    const el=event.currentTarget
     for(const key of ['--pt-rotate-x','--pt-rotate-y','--pt-shift-x','--pt-shift-y'])el.style.removeProperty(key)
   }
+  function imageDropSlot(target){
+    const tile=target.closest('[data-image-slot]')
+    return tile?Number(tile.dataset.imageSlot):section.images.findIndex(image=>!image?.path)
+  }
+  function allowImageDrop(event){
+    if(!event.dataTransfer.types.includes('Files'))return
+    event.preventDefault()
+    event.dataTransfer.dropEffect=imageDropSlot(event.target)>=0?'copy':'none'
+  }
+  function dropImage(event){
+    if(!event.dataTransfer.types.includes('Files'))return
+    event.preventDefault()
+    const slot=imageDropSlot(event.target)
+    const file=event.dataTransfer.files[0]
+    if(slot>=0&&file)onUploadImage(slot,file)
+  }
+  function positionProps(key){
+    const initial=positions?.[key]||{x:0,y:0}
+    const position={
+      translate:initial.x||initial.y?initial.x+'% '+initial.y+'%':undefined,
+      scale:initial.scaleX&&initial.scaleY?initial.scaleX+' '+initial.scaleY:undefined,
+      '--pt-inverse-resize-x':initial.scaleX?1/initial.scaleX:undefined,
+      '--pt-inverse-resize-y':initial.scaleY?1/initial.scaleY:undefined
+    }
+    if(!onMoveElement)return {style:position}
+    return {
+      style:position,
+      'data-portfolio-movable':'',
+      onPointerDown:event=>{
+        if(event.button!==0||!event.isPrimary)return
+        const {width,height}=event.currentTarget.getBoundingClientRect()
+        if(!width||!height)return
+        suppressClick.current=false
+        onSelectLayer?.(key)
+        drag.current={pointer:event.pointerId,startX:event.clientX,startY:event.clientY,
+          initial,width,height,element:event.currentTarget}
+        event.currentTarget.setPointerCapture(event.pointerId)
+      },
+      onPointerMove:event=>{
+        const current=drag.current
+        if(current?.pointer!==event.pointerId||current.element!==event.currentTarget)return
+        const dx=event.clientX-current.startX,dy=event.clientY-current.startY
+        if(!current.next&&Math.hypot(dx,dy)<5)return
+        const clamp=value=>Math.max(-100,Math.min(100,Math.round(value*10)/10))
+        current.next={...current.initial,x:clamp(current.initial.x+dx/current.width*100),
+          y:clamp(current.initial.y+dy/current.height*100)}
+        current.element.style.translate=current.next.x+'% '+current.next.y+'%'
+      },
+      onPointerUp:event=>{
+        const current=drag.current
+        if(current?.pointer!==event.pointerId||current.element!==event.currentTarget)return
+        drag.current=null
+        if(!current.next)return
+        suppressClick.current=true
+        onMoveElement(key,current.next)
+      },
+      onLostPointerCapture:event=>{
+        const current=drag.current
+        if(current?.pointer!==event.pointerId||current.element!==event.currentTarget)return
+        drag.current=null
+        current.element.style.translate=position.translate||''
+      }
+    }
+  }
+  function elementResizeProps(key,locked){
+    function setElementScale(element,x,y){
+      element.style.scale=x+' '+y
+      element.style.setProperty('--pt-inverse-resize-x',1/x)
+      element.style.setProperty('--pt-inverse-resize-y',1/y)
+    }
+    function resize(current,dx,dy){
+      const {w,h}=resizeDimensions(current.scaleX,current.scaleY,dx,dy,{
+        locked:current.locked,minWidth:.25,minHeight:.25,maxWidth:2,maxHeight:2
+      })
+      current.next={...current.initial,scaleX:w,scaleY:h}
+      setElementScale(current.element,w,h)
+    }
+    function start(event){
+      if(event.button!==0||!event.isPrimary)return
+      event.stopPropagation()
+      const element=event.currentTarget.parentElement
+      const initial=positions?.[key]||{x:0,y:0}
+      drag.current={element,initial,pointer:event.pointerId,
+        startX:event.clientX,startY:event.clientY,width:element.offsetWidth,height:element.offsetHeight,
+        scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked}
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+    function move(event){
+      const current=drag.current
+      if(current?.pointer!==event.pointerId||!current.width||!current.height)return
+      event.stopPropagation()
+      resize(current,(event.clientX-current.startX)*2/current.width,
+        (event.clientY-current.startY)*2/current.height)
+    }
+    function finish(event,save){
+      const current=drag.current
+      if(current?.pointer!==event.pointerId)return
+      event.stopPropagation()
+      drag.current=null
+      if(save&&current.next)onMoveElement(key,current.next)
+      else setElementScale(current.element,current.scaleX,current.scaleY)
+    }
+    return {
+      onPointerDown:start,onPointerMove:move,onPointerUp:event=>finish(event,true),
+      onLostPointerCapture:event=>finish(event,false),
+      onKeyDown:event=>{
+        const dx=event.key==='ArrowLeft'?-.05:event.key==='ArrowRight'?.05:0
+        const dy=event.key==='ArrowUp'?-.05:event.key==='ArrowDown'?.05:0
+        if(!dx&&!dy)return
+        event.preventDefault()
+        const initial=positions?.[key]||{x:0,y:0}
+        const current={element:event.currentTarget.parentElement,initial,
+          scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked}
+        resize(current,dx,dy)
+        onMoveElement(key,current.next)
+      }
+    }
+  }
+  function editTextProps(field){
+    const placement=positionProps(field)
+    const type=typography?.[field]
+    if(type)placement.style={
+      ...placement.style,
+      fontFamily:type.font?sceneFont(type.font):undefined,
+      fontSize:Number.isFinite(type.size)?Math.max(8,Math.min(180,type.size)):undefined,
+      lineHeight:Number.isFinite(type.lineHeight)?Math.max(.7,Math.min(3,type.lineHeight)):undefined
+    }
+    if(!onEditText)return placement
+    return {
+      ...placement,
+      'data-portfolio-edit-field':field,
+      'data-portfolio-edit-selected':selectedLayer===field?'true':undefined,
+      tabIndex:0,
+      onClick:()=>{
+        if(!suppressClick.current)onEditText(field)
+        suppressClick.current=false
+      },
+      onKeyDown:event=>{
+        if(event.key==='Enter'||event.key===' '){
+          event.preventDefault()
+          onEditText(field)
+        }
+      }
+    }
+  }
+  function textResizeHandle(field,label){
+    if(!onMoveElement||selectedLayer!==field)return null
+    return <button type="button" className="pt-artboard__handle pt-element-resize-handle"
+      aria-label={'Đổi kích thước '+label} onClick={event=>event.stopPropagation()}
+      {...elementResizeProps(field,true)}>↘</button>
+  }
   const textPresent=Boolean(section.title||section.body||section.eyebrow)
-  return <section id={'pt-'+section.id}
+  const luxuryRibbon=section.backdrop===LUXURY_RIBBON
+  return <section data-backdrop={section.backdrop} ref={sectionRef} id={'pt-'+section.id}
     className={'pt-site__section pt-layout--'+section.layout+
       ' pt-fx-section pt-fx--'+effect+
       (hasImage?' pt-fx--has-photo':' pt-fx--waiting-photo')+
+      (effect==='ribbon'&&section.slots===1?' pt-ribbon--portrait':'')+
+      (luxuryRibbon?' pt-section--luxury-ribbon':'')+
       (index===0?' is-first':'')}
-    onPointerMove={handleMove} onPointerLeave={handleLeave}>
-    {firstImage&&<div className="pt-fx__ambient" aria-hidden="true">
+    onPointerMove={handleMove} onPointerLeave={event=>resetMotion(event.currentTarget)}
+    onDragOver={onUploadImage?allowImageDrop:undefined}
+    onDrop={onUploadImage?dropImage:undefined}
+    onContextMenu={onUploadImage&&section.slots?event=>{
+      const slot=imageDropSlot(event.target)
+      if(slot<0)return
+      event.preventDefault()
+      setImageMenu(slot)
+    }:undefined}>
+    {onUploadImage&&imageMenu!==null&&<div className="pt-site__image-menu">
+      <button type="button" onClick={()=>fileInput.current?.click()}>
+        {section.images[imageMenu]?.path?'Thay ảnh':'Thêm ảnh'} vào ô {imageMenu+1}
+      </button>
+      <button type="button" onClick={()=>setImageMenu(null)}>Đóng</button>
+      <input ref={fileInput} type="file" hidden accept="image/jpeg,image/png,image/webp,image/avif"
+        onChange={event=>{
+          const file=event.target.files?.[0]
+          if(file)onUploadImage(imageMenu,file)
+          setImageMenu(null)
+        }}/>
+    </div>}
+    {luxuryRibbon&&<RibbonLuxuryBackground/>}
+    {firstImage&&!luxuryRibbon&&effect!=='ribbon'&&<div className="pt-fx__ambient" aria-hidden="true">
       <img src={firstImage} alt="" loading="lazy" decoding="async"/>
     </div>}
-    <span className="pt-fx__index" aria-hidden="true">{String(index+1).padStart(2,'0')}</span>
+
     {section.title&&<span className="pt-fx__type-echo" aria-hidden="true">{section.title}</span>}
-    <div className="pt-site__copy">
-      <small>{String(index+1).padStart(2,'0')} / {section.eyebrow||
-        (index===0&&artistRole?artistRole:section.label)}</small>
-      {section.title?<h2>{section.title}</h2>:
-        <h2 className="pt-site__placeholder-text">Chưa có tiêu đề trong hồ sơ</h2>}
-      {section.body?<p>{section.body}</p>:
-        <p className="pt-site__placeholder-text">
+    <div className="pt-site__copy" style={onEditText?{pointerEvents:'auto'}:undefined}>
+      {(section.eyebrow||index===0||!isPublic)&&<small {...editTextProps('eyebrow')}>
+        {section.eyebrow||(index===0&&artistRole?artistRole:section.label)}
+        {textResizeHandle('eyebrow','nhãn phụ')}
+      </small>}
+      {section.title?<h2 {...editTextProps('title')}>{section.title}{textResizeHandle('title','tiêu đề')}</h2>:
+        onEditText&&<button type="button" className="pt-copy-add" onClick={()=>onEditText('title')}>Thêm tiêu đề</button>}
+      {section.body?<p {...editTextProps('body')}>{section.body}{textResizeHandle('body','nội dung')}</p>:
+        onEditText?<button type="button" className="pt-copy-add" onClick={()=>onEditText('body')}>Thêm mô tả</button>:
+        !isPublic&&<p className="pt-site__placeholder-text">
           {section.sourceStatus==='missing'
             ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'
-            :textPresent?'':'Chưa có nội dung từ Hồ sơ nghệ sĩ.'}
+            :textPresent?'':section.sourceStatus==='linked'?'Mục đã chọn chưa có chữ.':'Chọn mục PDF nguồn hoặc nhập tiêu đề cho khu vực này.'}
         </p>}
       {section.sourceStatus==='linked'&&<span className="pt-fx__source-note">
         Hồ sơ nghệ sĩ · Trang {String(section.sourcePage).padStart(2,'0')}
       </span>}
     </div>
     {section.slots>0&&<div className="pt-site__media" aria-label={'Ảnh khu vực '+section.label}>
-      {section.images.map((asset,i)=>{
+      {tiles.map(({asset,index:i})=>{
         const url=asset?.path?urls[asset.path]:null
-        return <div key={section.id+':'+i}
-          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')}>
-          {url?<img src={url} alt={asset?.alt||section.title||section.label}
+        if(isPublic&&!url)return null
+        return <div key={section.id+':'+i} data-image-slot={onUploadImage?i:undefined} {...positionProps('image:'+i)}
+          className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(asset?.cutout?' is-cutout':'')}
+          data-ribbon-slot={effect==='ribbon'?i:undefined}
+          data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
+          {url?<img src={url} draggable={onMoveElement?false:undefined} alt={asset?.alt||section.title||section.label}
             loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>:
             <div className="pt-site__empty-image">
               <span aria-hidden="true">+</span>
               <small>ẢNH {String(i+1).padStart(2,'0')}</small>
-              <em>Tải ảnh riêng trong Admin</em>
+              <em>{onUploadImage?'Thả ảnh từ máy vào đây':'Tải ảnh riêng trong Admin'}</em>
             </div>}
+          {url&&onMoveElement&&selectedLayer==='image:'+i&&<button type="button"
+            className="pt-artboard__handle pt-element-resize-handle"
+            aria-label={'Đổi kích thước ảnh '+(i+1)}
+            {...elementResizeProps('image:'+i,lockImageRatio)}>↘</button>}
         </div>
       })}
     </div>}
@@ -84,38 +283,50 @@ function MotionSection({section,index,styleName,urls,artistRole}){
 }
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
-  focusedSectionId='',editSectionId='',selectedLayer='',
-  onSelectLayer,onPatchLayer
+  editSectionId='',selectedLayer='',lockImageRatio=true,
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false
 }){
-  const view=resolveArtistPortfolio(template,instance,profile)
+  const view=publishedView||resolveArtistPortfolio(template,instance,profile)
+  const hasSilk=view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
   const activeSections=view.sections.filter(s=>s.title||s.body||s.slots)
-  const visibleSections=focusedSectionId?
-    view.sections.filter(s=>s.id===focusedSectionId):view.sections
-  return <div className={'pt-device pt-device--'+device+
-    (focusedSectionId?' pt-device--focused':'')}>
-    <main className={'pt-site pt-site--'+view.style} aria-label={'Xem trước '+view.templateName}>
-      {!focusedSectionId&&<header className="pt-site__nav">
+  return <div className={'pt-device pt-device--'+device}>
+    <main className={'pt-site pt-site--'+view.style+(hasSilk?' pt-site--silk':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+      onClickCapture={onSelectSection?event=>{
+        const page=event.target.closest('section[id^="pt-"]')
+        if(!page)return
+        const id=page.id.slice(3)
+        if(id!==editSectionId)onSelectSection(id)
+      }:undefined}>
+      {hasSilk&&<RibbonSilk/>}
+    <header className="pt-site__nav">
         <strong>{view.artistName||'Chưa có tên trong hồ sơ'}<span>.</span></strong>
         <nav aria-label="Điều hướng Portfolio">
           {activeSections.slice(0,4).map(s=><a key={s.id}
             href={'#pt-'+s.id}>{s.title?s.title.slice(0,27):s.label}</a>)}
         </nav>
         <span className="pt-site__nav-meta">{view.artistRole||'PORTFOLIO'}</span>
-      </header>}
-      {visibleSections.map((section,index)=>{
+      </header>
+      {view.sections.map((section,index)=>{
         const scene=getScene(instance?.content||{},section,device)
         return scene?<SectionArtboard key={section.id}
           section={section} scene={scene} device={device} urls={urls}
           editable={editSectionId===section.id}
-          selectedLayer={selectedLayer}
-          onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}/>:
+          selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
+          onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
+          onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
           <MotionSection key={section.id} section={section} index={index}
-            styleName={view.style} urls={urls} artistRole={view.artistRole}/>
+            positions={instance?.content?.positions?.[section.id]?.[device]}
+            typography={instance?.content?.typography?.[section.id]?.[device]}
+            onMoveElement={editSectionId===section.id?onMoveElement:undefined}
+            onSelectLayer={onSelectLayer} lockImageRatio={lockImageRatio}
+            styleName={view.style} urls={urls} artistRole={view.artistRole} isPublic={Boolean(publishedView)}
+            motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
+            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>
       })}
-      {!focusedSectionId&&<footer className="pt-site__footer">
+      <footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>
-        <small>Hồ sơ nghệ sĩ / Bản xem trước nội bộ · Nội dung từ PDF đã xác nhận.</small>
-      </footer>}
+        {!publishedView&&<small>Bản xem trước nội bộ</small>}
+      </footer>
     </main>
   </div>
 }

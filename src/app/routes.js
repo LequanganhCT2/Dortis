@@ -17,6 +17,7 @@ export function resolveRoute(pathname = '/') {
   if (path === ROUTES.admin || path.startsWith(ROUTES.admin + '/')) return 'admin'
   if (path === ROUTES.publicArtists || path.startsWith(ROUTES.publicArtists + '/')) return 'artists'
   if (path === ROUTES.longNhatPublic) return 'portfolio-unpublished'
+  if (/^\/portfolio\/[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(path)) return 'portfolio-public'
   return 'not-found'
 }
 

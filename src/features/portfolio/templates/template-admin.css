@@ -139,7 +139,8 @@
 .pt-upload__area input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 .pt-upload__area:focus-within{outline:2px solid #008e91;outline-offset:2px}
 .pt-editor__preview{background:#e8edef;border:1px solid #d9e4e7;border-radius:13px;
-  padding:13px;min-width:0;position:sticky;top:86px;max-height:calc(100dvh - 100px);overflow:auto}
+  padding:13px;min-width:0;position:sticky;top:86px;max-height:calc(100dvh - 100px);display:flex;flex-direction:column}
+.pt-editor__preview > .pt-device{min-height:0;margin:0 auto;overscroll-behavior:contain}
 .pt-editor__preview-head{display:flex;align-items:center;justify-content:space-between;
   gap:12px;flex-wrap:wrap;padding:6px 3px 14px}
 .pt-editor__preview-head>div:first-child{display:flex;flex-direction:column;gap:6px}
@@ -253,12 +254,51 @@
   cursor:pointer}
 .pt-editor__view-button.is-active{background:#163c4a;color:#fff;border-color:#163c4a}
 .pt-editor__view-button:disabled{opacity:.5;cursor:not-allowed}
-.pt-editor .pt-device--focused{border:1px solid #9fc1c6;box-shadow:0 14px 36px #122f3820;
-  max-height:none;overflow:visible}
-.pt-editor .pt-device--focused .pt-site{min-height:0}
-.pt-editor .pt-device--focused.pt-device--mobile{max-width:390px;margin:0 auto}
-.pt-editor .pt-device--focused.pt-device--desktop{width:100%}
-.pt-editor__preview:has(.pt-device--focused){position:sticky;top:85px}
-@media(max-width:1000px){
-  .pt-editor__preview:has(.pt-device--focused){position:static}
+.pt-published > .pt-device{max-height:none;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.pt-published > .pt-device--mobile{width:100%}
+.pt-published__toolbar{display:flex;justify-content:flex-end;padding:10px clamp(16px,4vw,64px);background:#edf3f4}
+.pt-site [data-portfolio-edit-field]{position:relative;cursor:text;outline-offset:4px;outline:1px dashed #11858b80}
+.pt-site [data-portfolio-edit-field]:hover,
+.pt-site [data-portfolio-edit-field]:focus-visible,
+.pt-site [data-portfolio-edit-selected="true"]{
+  outline:2px solid #16acae;box-shadow:0 0 0 6px #12888c26;
+}
+.pt-editor :is(#pt-edit-title,#pt-edit-eyebrow,#pt-edit-body):focus{
+  outline:2px solid #0b8087;outline-offset:2px;
+}
+.pt-site [data-portfolio-movable]{touch-action:none;user-select:none}
+.pt-site [data-image-slot][data-portfolio-movable]{cursor:grab}
+.pt-site [data-portfolio-movable]:active{cursor:grabbing}
+.pt-site__image-menu{
+  position:absolute;inset:12px 12px auto auto;z-index:12;display:flex;gap:8px;
+  color:#152b2a;background:#fff;padding:8px;border:1px solid #bfd4d4;border-radius:6px;
+}
+.pt-site__image-menu button{
+  color:inherit;background:#eef5f3;border:1px solid #bfd4d4;border-radius:4px;
+  padding:8px 10px;cursor:pointer;
+}
+.pt-type-tools{
+  display:flex;flex-wrap:wrap;align-items:end;gap:8px;margin:0 0 12px;
+  min-width:0;padding:8px 10px 10px;border:1px solid #c5d6dc;border-radius:6px;
+}
+.pt-type-tools legend{padding:0 5px;color:#254551;font-size:11px;font-weight:750}
+.pt-type-tools label{display:grid;gap:4px;color:#294855;font-size:11px;font-weight:650}
+.pt-type-tools :is(select,input){
+  min-height:34px;padding:5px 7px;border:1px solid #adbec6;border-radius:4px;
+  background:#fff;color:#122c35;font:inherit;
+}
+.pt-type-tools input{width:90px}
+.pt-cutout{display:grid;gap:10px;padding:12px;border:1px solid #c7d9dc;border-radius:7px}
+.pt-cutout__actions{display:flex;gap:8px;flex-wrap:wrap}
+.pt-cutout__file{position:relative;cursor:pointer}
+.pt-cutout__file>input{position:absolute;inset:0;width:100%;opacity:0;cursor:inherit}
+.pt-cutout__file:focus-within{outline:2px solid #008e91;outline-offset:2px}
+.pt-cutout__preview>img{
+  display:block;width:min(100%,180px);max-height:210px;object-fit:contain;margin:0 0 8px;
+  background:repeating-conic-gradient(#e2e8e9 0% 25%,white 0% 50%) 0 / 16px 16px;
+}
+.pt-site [data-image-selected="true"]{outline:2px solid #0e9699;outline-offset:-2px}
+.pt-site .pt-element-resize-handle{
+  right:6px;bottom:6px;z-index:12;transform-origin:bottom right;
+  scale:var(--pt-inverse-resize-x,1) var(--pt-inverse-resize-y,1);
 }

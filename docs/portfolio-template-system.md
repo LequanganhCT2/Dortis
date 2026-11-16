@@ -49,3 +49,17 @@
 - Nội dung không có ảnh vẫn hiển thị placeholder; tránh tải ảnh từ PDF.
 - Mobile: thanh chỉnh sửa xếp trên preview, không co trang; desktop: editor trái, preview phải.
 - Các phương pháp lưới editorial, split, gallery và responsive lấy từ Reference v2, **không sao chép** màu/font của ví dụ minh họa.
+
+### Luxury ribbon backdrop
+
+Select **Nền khu vực → Lụa đỏ ánh kim** in the instance editor to apply the
+SVG backdrop to Hero or another section. Set **Nền mặc định của Portfolio**
+to apply it across sections, then choose **Tắt nền lụa** wherever needed.
+
+The instance JSON uses `defaultBackdrop: 'luxury-ribbon'` and
+`sectionBackdrops: { hero: 'luxury-ribbon', contact: 'none' }`. Omit a
+section setting to inherit the instance default. Leaving both settings unset
+preserves existing designs. The shared renderer receives the resolved
+`section.backdrop` in preview and in the published snapshot. The layer editor
+uses the same backdrop behind the artboard layers; switching it off restores
+the artboard gradient and original text colors.

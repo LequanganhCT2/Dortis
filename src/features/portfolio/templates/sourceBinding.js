@@ -43,10 +43,10 @@ export function suggestSourceForLayout(section,sourcePages,used=new Set()){
   }
   const available=sourcePages.filter(page=>!used.has(page.page))
   const tokens=concept.keys.map(norm).filter(Boolean)
-  const exact=available.find(page=>
-    tokens.some(token=>norm(page.title).includes(token))||
-    concept.types.includes(page.layout))
+  const exact=available.find(page=>tokens.some(token=>norm(page.title).includes(token)))
   if(exact)return exact
+  const matchingLayout=available.find(page=>concept.types.includes(page.layout))
+  if(matchingLayout)return matchingLayout
   if(section.id==='hero')return available.find(page=>page.page===1)||available[0]||null
   // No arbitrary page must be used to invent an approved booking endpoint.
   if(['contact','booking'].includes(section.id))return null

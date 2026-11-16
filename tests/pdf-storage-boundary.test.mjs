@@ -17,8 +17,12 @@ test('Document parsing retains unmodified text lines for review',()=>{
   assert.match(parser,/body,rawText/)
   assert.doesNotMatch(parser,/role:.*\?'Biên đạo múa':'Ca sĩ'/)
 })
-test('Artist template management loads source sections and hydrates on assignment',()=>{
+test('Artist template management loads source sections and links them only on request',()=>{
   const manager=readFileSync(new URL('../src/features/portfolio/templates/PortfolioTemplateManager.jsx',import.meta.url),'utf8')
   assert.match(manager,/select\('id,name,role,slug,status,sections'\)/)
-  assert.match(manager,/hydrateInstanceFromArtist\(/)
+  const editor=readFileSync(new URL('../src/features/portfolio/templates/PortfolioInstanceEditor.jsx',import.meta.url),'utf8')
+  assert.match(manager,/content:\{sections:\{\},images:\{\}\}/)
+  assert.doesNotMatch(manager,/hydrateInstanceFromArtist/)
+  assert.doesNotMatch(editor,/hydrateInstanceFromArtist/)
+  assert.match(editor,/copySourceSection\(prev,current.id,chosen\)/)
 })

@@ -10,6 +10,7 @@ const loadAdmin=()=>import('../AdminPage')
 const loadArtists=()=>import('../ArtistPages')
 const AdminPage=lazy(loadAdmin)
 const ArtistPages=lazy(loadArtists)
+const PublishedPortfolio=lazy(()=>import('../features/portfolio/templates/PublishedPortfolio'))
 const PortfolioUnpublished=lazy(()=>import('../features/portfolio/long-nhat/LongNhatPortfolio')
   .then(mod=>({default:mod.PortfolioUnpublished})))
 
@@ -104,11 +105,12 @@ export default function AppRouter(){
   const route=resolveRoute(url.pathname)
   // Login and Admin share the same authorization lifecycle to avoid reloading
   // authentication state when the URL changes after signing in.
-  const routeKey=(route==='admin'||route==='login')?'private':route==='artists'?url.pathname:route
+  const routeKey=(route==='admin'||route==='login')?'private':(route==='artists'||route==='portfolio-public')?url.pathname:route
   let Screen=NotFound
   if(route==='home')Screen=DortisHome
   else if(route==='admin'||route==='login')Screen=AdminPage
   else if(route==='artists')Screen=ArtistPages
+  else if(route==='portfolio-public')Screen=PublishedPortfolio
   else if(route==='portfolio-unpublished')Screen=PortfolioUnpublished
 
   return <RouteErrorBoundary routeKey={routeKey}>

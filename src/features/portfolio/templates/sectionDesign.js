@@ -193,3 +193,14 @@ export function sceneGradient(background){
 export function sceneFont(font){
   return SCENE_FONTS.find(x=>x.id===font)?.css||SCENE_FONTS[0].css
 }
+
+/** Resize using the starting ratio and the pointer axis with the larger relative change. */
+export function resizeDimensions(width,height,dx,dy,{locked,minWidth,minHeight,maxWidth,maxHeight}){
+  if(!locked)return {
+    w:safe(width+dx,minWidth,maxWidth,width),h:safe(height+dy,minHeight,maxHeight,height)
+  }
+  const x=dx/width,y=dy/height
+  const factor=safe(1+(Math.abs(x)>=Math.abs(y)?x:y),
+    Math.max(minWidth/width,minHeight/height),Math.min(maxWidth/width,maxHeight/height),1)
+  return {w:width*factor,h:height*factor}
+}

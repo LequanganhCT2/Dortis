@@ -1,14 +1,15 @@
-import React,{useEffect,useMemo,useState} from 'react'
+import React,{useEffect,useMemo,useRef,useState} from 'react'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
-import {normalizeBlueprint,setSectionField,setSlotImage} from './model'
-import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist} from './sourceBinding'
-import {sourceBoundField,restoreLinkedFields} from './resolvedPortfolio'
+import {normalizeBlueprint,portfolioSections,setSectionField,setSlotImage,LUXURY_RIBBON} from './model'
+import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sourceBinding'
+import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
+import PortraitCutout from './PortraitCutout'
 import {
   getScene,enableSectionScene,resetSectionScene,disableSectionScene,
+  SCENE_FONTS,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,
   patchSceneLayer,patchSceneBackground,addSceneNote,patchSceneNote,removeSceneNote
 } from './sectionDesign'
-import './template-site.css'
 
 const BUCKET='dortis-artist-web-drafts'
 const ALLOWED=new Set(['image/jpeg','image/png','image/webp','image/avif'])
@@ -17,40 +18,29 @@ const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif'
 const getSlot=(section,index)=>section.id+':'+index
 
 export default function PortfolioInstanceEditor({
-  supabase,user,template,instance,profile,onBack,onSaved
+  supabase,user,template,instance,profile,onBack,onSaved,onPublished,backLabel='← Quay về chọn mẫu Portfolio'
 }){
-  // Backfill existing assigned portfolios (including legacy empty drafts) from
-  // verified artist profile text, without ever replacing artist-specific photos.
-  const [content,setContent]=useState(()=>hydrateInstanceFromArtist(
-    template,profile,instance.content||{},true))
+  const [content,setContent]=useState(()=>instance.content||{})
   const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
   const [sourcePage,setSourcePage]=useState('')
   const [sourceProfile,setSourceProfile]=useState(profile)
   const [refreshingProfile,setRefreshingProfile]=useState(false)
+  const previewRef=useRef(null)
+  const pendingSectionScroll=useRef(null)
   const [device,setDevice]=useState('desktop')
   const [visualEditing,setVisualEditing]=useState(false)
   const [selectedLayer,setSelectedLayer]=useState('title')
+  const [lockImageRatio,setLockImageRatio]=useState(true)
   const [urls,setUrls]=useState({})
   const [dirty,setDirty]=useState(false)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   const [notice,setNotice]=useState('')
-  const sections=useMemo(()=>normalizeBlueprint(template.blueprint).sections,[template.blueprint])
+  const [published,setPublished]=useState(Boolean(onPublished))
+  const websitePath='/portfolio/'+instance.id
+  const sections=useMemo(()=>portfolioSections(template,content),[template,content.extraSections])
   const current=sections.find(s=>s.id===active)||sections[0]
   const sourcePages=useMemo(()=>artistSourcePages(sourceProfile),[sourceProfile])
-  useEffect(()=>{
-    const inferred=hydrateInstanceFromArtist(template,profile,instance.content||{},true)
-    setSourceProfile(profile)
-    const changed=JSON.stringify(inferred)!==JSON.stringify(instance.content||{})
-    setContent(inferred)
-    setActive(normalizeBlueprint(template.blueprint).sections[0]?.id||'')
-    setSourcePage('')
-    setVisualEditing(false)
-    setSelectedLayer('title')
-    setDirty(changed)
-    setNotice(changed?'Đã tự lấy chữ và các mục từ Hồ sơ nghệ sĩ. Nhấn Lưu thay đổi để lưu bản nháp.':'')
-    setError('')
-  },[instance.id,template.id])
   useEffect(()=>{
     let alive=true
     const entries=Object.values(content.images||{}).filter(x=>x&&x.path)
@@ -64,6 +54,35 @@ export default function PortfolioInstanceEditor({
     }).catch(e=>{if(alive)setError('Không tải được ảnh xem trước: '+e.message)})
     return ()=>{alive=false}
   },[instance.id,supabase,content.images])
+  useEffect(()=>{
+    if(onPublished)return
+    let active=true
+    supabase.from('artist_portfolio_publications').select('instance_id')
+      .eq('instance_id',instance.id).maybeSingle().then(({data})=>{
+        if(active&&data)setPublished(true)
+      })
+    return ()=>{active=false}
+  },[supabase,instance.id,onPublished])
+  useEffect(()=>{
+    if(!dirty)return
+    const guard=event=>{event.preventDefault();event.returnValue=''}
+    window.addEventListener('beforeunload',guard)
+    return ()=>window.removeEventListener('beforeunload',guard)
+  },[dirty])
+  useEffect(()=>{
+    if(pendingSectionScroll.current!==active)return
+    pendingSectionScroll.current=null
+    scrollToSection(active)
+  },[active])
+  function confirmLeave(){
+    return !dirty||window.confirm('Bạn có thay đổi chưa lưu. Rời trình chỉnh sửa?')
+  }
+  function acceptSaved(data,message){
+    setContent(data.content||{})
+    setDirty(false)
+    onSaved(data)
+    setNotice(message)
+  }
   async function persist(next,message='Đã lưu nội dung riêng của nghệ sĩ.'){
     const {data,error:dbError}=await supabase.from('artist_website_instances')
       .update({content:next,updated_by:user.id,updated_at:new Date().toISOString(),
@@ -72,11 +91,7 @@ export default function PortfolioInstanceEditor({
       .select().maybeSingle()
     if(dbError)throw dbError
     if(!data)throw new Error('Nội dung đã thay đổi ở phiên khác. Hãy mở lại Portfolio để tránh ghi đè.')
-    setContent(data.content||{})
-    setDirty(false)
-    onSaved(data)
-    setNotice(message)
-    return data
+    acceptSaved(data,message)
   }
   function changeText(field,value){
     setContent(prev=>setSectionField(prev,current.id,field,value))
@@ -99,16 +114,12 @@ export default function PortfolioInstanceEditor({
     setContent(prev=>restoreLinkedFields(prev,current.id))
     setDirty(true);setNotice('Đã liên kết lại tiêu đề và mô tả với mục nguồn. Lưu để áp dụng.')
   }
-  function importCurrentSource(){
-    if(!current||!sourcePage)return
-    const chosen=sourcePages.find(p=>p.page===Number(sourcePage))
+  function importCurrentSource(pageNumber=sourcePage){
+    if(!current||!pageNumber)return
+    const chosen=sourcePages.find(p=>p.page===Number(pageNumber))
     if(!chosen)return
     setContent(prev=>copySourceSection(prev,current.id,chosen))
     setDirty(true);setNotice('Đã nạp mục từ hồ sơ PDF. Nhấn Lưu thay đổi để ghi nhận.')
-  }
-  function importAllBlank(){
-    setContent(prev=>hydrateInstanceFromArtist(template,sourceProfile,prev,true))
-    setDirty(true);setNotice('Các khu vực còn trống đã được điền từ hồ sơ nghệ sĩ. Ảnh riêng không thay đổi.')
   }
   async function save(){
     if(busy)return
@@ -117,7 +128,32 @@ export default function PortfolioInstanceEditor({
     catch(e){setError('Không lưu được: '+e.message)}
     finally{setBusy(false)}
   }
-  async function upload(section,index,file){
+  async function publishWebsite(){
+    if(busy||!window.confirm('Xuất bản nội dung và ảnh hiện tại lên website công khai?'))return
+    setBusy(true);setError('');setNotice('')
+    try{
+      const view=resolveArtistPortfolio(template,{...instance,content},sourceProfile)
+      const visible=view.sections.filter(section=>section.title||section.body||
+        section.eyebrow||section.images.some(image=>image?.path)||content.scenes?.[section.id])
+      const publicSections=visible.map(section=>{
+        const {sourcePage,sourceStatus,fieldOverrides,...publishedSection}=section
+        return publishedSection
+      })
+      const imagePaths=[...new Set(publicSections.flatMap(section=>
+        section.images.map(image=>image?.path).filter(Boolean)))]
+      const snapshot={view:{...view,sections:publicSections},scenes:content.scenes||{},positions:content.positions||{},typography:content.typography||{}}
+      const {data,error:publishError}=await supabase.rpc('publish_artist_portfolio',{
+        p_instance_id:instance.id,p_revision:instance.revision||1,
+        p_content:content,p_snapshot:snapshot,p_image_paths:imagePaths
+      }).single()
+      if(publishError)throw publishError
+      setPublished(true)
+      acceptSaved(data,'Đã cập nhật website công khai.')
+      onPublished?.()
+    }catch(e){setError('Không xuất bản được website: '+e.message)}
+    finally{setBusy(false)}
+  }
+  async function upload(section,index,file,cutout=false){
     if(!file||busy)return
     if(!ALLOWED.has(file.type)){setError('Chỉ hỗ trợ JPG, PNG, WebP hoặc AVIF.');return}
     if(file.size>MAX_SIZE){setError('Ảnh cần nhỏ hơn hoặc bằng 4 MB.');return}
@@ -130,7 +166,7 @@ export default function PortfolioInstanceEditor({
         contentType:file.type,cacheControl:'3600',upsert:false
       })
       if(uploadError)throw uploadError
-      const next=setSlotImage(content,slot,{path,alt:previous?.alt||''})
+      const next=setSlotImage(content,slot,{path,alt:previous?.alt||'',...(cutout?{cutout:true}:{})})
       try{
         await persist(next,'Đã tải ảnh vào '+section.label+' · vị trí '+(index+1)+'.')
       }catch(e){
@@ -140,6 +176,7 @@ export default function PortfolioInstanceEditor({
       if(previous?.path&&previous.path!==path){
         await supabase.storage.from(BUCKET).remove([previous.path]).catch(()=>{})
       }
+      return true
     }catch(e){setError('Tải ảnh thất bại: '+e.message)}
     finally{setBusy(false)}
   }
@@ -161,15 +198,95 @@ export default function PortfolioInstanceEditor({
     setDirty(true)
   }
   const currentOwn=content.sections?.[current?.id]||{}
+  const suggestedSource=current&&!currentOwn.sourcePage
+    ?suggestSourceForLayout(current,sourcePages):null
+  const sectionEffect=content.effects?.[current?.id]||current?.effect
+  function changeSectionEffect(effect){
+    setContent(previous=>{
+      const effects={...previous.effects}
+      if(effect)effects[current.id]=effect
+      else delete effects[current.id]
+      return {...previous,effects}
+    })
+    setDirty(true)
+  }
   const scene=current?getScene(content,current,device):null
+  function scrollToSection(sectionId){
+    const preview=previewRef.current?.querySelector('.pt-device')
+    const target=preview?.querySelector('#'+CSS.escape('pt-'+sectionId))
+    if(target){
+      const top=preview.scrollTop+target.getBoundingClientRect().top-preview.getBoundingClientRect().top
+      const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      preview.scrollTo({top,behavior:reducedMotion?'auto':'smooth'})
+    }
+  }
+  function selectSection(section){
+    scrollToSection(section.id)
+    if(current?.id===section.id)return
+    setActive(section.id);setSourcePage('');setSelectedLayer('title')
+  }
+  function addSection(){
+    if(busy||sections.length>=12)return
+    const section={id:'extra_'+crypto.randomUUID().replaceAll('-',''),label:'Khu vực '+(sections.length+1),
+      layout:'split',effect:'auto',slots:1}
+    setContent(previous=>({...previous,extraSections:[...(previous.extraSections||[]),section]}))
+    pendingSectionScroll.current=section.id
+    setActive(section.id);setSourcePage('');setSelectedLayer('title')
+    setDirty(true);setNotice('Đã thêm khu vực. Chọn trang PDF hoặc nhập nội dung, rồi lưu thay đổi.')
+  }
+  const textLayers=current?sceneLayerIds(current,scene)
+    .filter(id=>sceneLayerType(id)==='text'):[]
+  const textLayer=textLayers.includes(selectedLayer)?selectedLayer:'title'
+  const textStyle=scene?.layers[textLayer]||content.typography?.[current?.id]?.[device]?.[textLayer]||{}
+  function patchTypography(patch){
+    if(!current||busy)return
+    if(scene){patchLayer(textLayer,patch);return}
+    setContent(previous=>{
+      const typography=previous.typography||{}
+      const section=typography[current.id]||{}
+      const layers=section[device]||{}
+      return {...previous,typography:{...typography,[current.id]:{
+        ...section,[device]:{...layers,[textLayer]:{...layers[textLayer],...patch}}
+      }}}
+    })
+    setDirty(true)
+  }
+  function resetTypography(){
+    const defaults=scene?sceneLayerDefault(textLayer,current,device):{}
+    patchTypography({font:defaults.font??null,size:defaults.size??null,lineHeight:defaults.lineHeight??null})
+  }
+  function updateTypographyNumber(event,field){
+    const input=event.currentTarget
+    if(!input.validity.valid){
+      input.value=textStyle[field]??''
+      return
+    }
+    const value=Number.isFinite(input.valueAsNumber)?input.valueAsNumber:
+      scene?sceneLayerDefault(textLayer,current,device)[field]:null
+    if(value!==(textStyle[field]??null))patchTypography({[field]:value})
+    input.value=value??''
+  }
   function beginVisualEdit(){
     if(!current)return
-    if(!getScene(content,current,device)){
-      setContent(prev=>enableSectionScene(prev,current))
-      setDirty(true)
-    }
+    selectSection(current)
     setSelectedLayer('title')
     setVisualEditing(true);setNotice('')
+  }
+  function createLayerLayout(){
+    if(!current||scene)return
+    setContent(prev=>enableSectionScene(prev,current))
+    setDirty(true)
+    beginVisualEdit()
+  }
+  function moveElement(key,position){
+    setContent(previous=>{
+      const positions=previous.positions||{}
+      const section=positions[current.id]||{}
+      return {...previous,positions:{...positions,[current.id]:{
+        ...section,[device]:{...section[device],[key]:position}
+      }}}
+    })
+    setDirty(true)
   }
   function patchLayer(layerId,patch){
     if(!current)return
@@ -206,25 +323,28 @@ export default function PortfolioInstanceEditor({
   function disablePageDesign(){
     if(!current)return
     setContent(prev=>disableSectionScene(prev,current.id))
-    setVisualEditing(false);setDirty(true)
+    setDirty(true)
     setNotice('Đã trở về bố cục Form chung của khu vực này. Lưu để ghi nhận.')
   }
   return <div className="pt-editor">
     <header className="pt-editor__head">
-      <div><button type="button" onClick={onBack} className="pt-link">← Thư viện form</button>
+      <div>
         <p className="pt-overline">DORTIS / PORTFOLIO INSTANCE</p>
         <h1>{sourceProfile.name}</h1>
         <p>Đang kế thừa <strong>{template.name}</strong> · phiên bản {template.version}.
           Form lấy chữ theo {sourcePages.length} mục trong Hồ sơ nghệ sĩ đã nhập PDF.
           Ảnh bạn tải vào đây sẽ được giữ riêng, không dùng ảnh cắt từ PDF.</p></div>
       <div className="pt-editor__actions">
+        <button type="button" className="pt-btn pt-btn--light" disabled={busy}
+          onClick={()=>{if(confirmLeave())onBack()}}>{backLabel}</button>
         <button type="button" className="pt-btn pt-btn--light"
           disabled={busy||refreshingProfile} onClick={refreshSource}>
           {refreshingProfile?'Đang cập nhật...':'↻ Đọc lại Hồ sơ nghệ sĩ'}
         </button>
-        <button type="button" className="pt-btn pt-btn--light" disabled={busy||!sourcePages.length}
-          onClick={importAllBlank}>↓ Liên kết các mục còn trống</button>
-        <span className="pt-status">BẢN NHÁP · ADMIN ONLY</span>
+        {published&&<a className="pt-btn pt-btn--light" href={websitePath} target="_blank" rel="noopener">Xem website</a>}
+        <button type="button" className="pt-btn" disabled={busy} onClick={publishWebsite}>
+          {published?'Cập nhật website':'Tạo website'}
+        </button>
         <button type="button" className="pt-btn" disabled={!dirty||busy}
           onClick={save}>{busy?'Đang xử lý...':dirty?'Lưu thay đổi':'Đã lưu'}</button>
       </div>
@@ -232,19 +352,42 @@ export default function PortfolioInstanceEditor({
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
     <div className="pt-editor__layout">
-      <aside className="pt-editor__sidebar">
+      <aside className="pt-editor__sidebar" inert={busy}>
         <h2>01 / Các khu vực</h2>
         <div className="pt-editor__sections">
           {sections.map((section,i)=><button key={section.id} type="button"
             className={current?.id===section.id?'is-selected':''}
-            onClick={()=>{setActive(section.id);setSourcePage('');
-              setVisualEditing(false);setSelectedLayer('title')}}>
+            onClick={()=>selectSection(section)}>
             <span>{String(i+1).padStart(2,'0')}</span>{section.label}
             <small>{section.slots} ảnh</small>
           </button>)}
         </div>
+        <button type="button" className="pt-btn pt-btn--light"
+          disabled={busy||sections.length>=12} onClick={addSection}>
+          + Thêm khu vực ({sections.length}/12)
+        </button>
         {current&&<div className="pt-editor__form" key={current.id}>
           <h2>02 / Nội dung: {current.label}</h2>
+          <label>Nền mặc định của Portfolio
+            <select value={content.defaultBackdrop||''} onChange={event=>{
+              const defaultBackdrop=event.target.value
+              setContent(previous=>({...previous,defaultBackdrop}))
+            }}>
+              <option value="">Theo thiết kế hiện tại</option>
+              <option value={LUXURY_RIBBON}>Lụa đỏ ánh kim</option>
+            </select>
+          </label>
+          <label>Nền khu vực
+            <select value={content.sectionBackdrops?.[current.id]||''} onChange={event=>{
+              const backdrop=event.target.value
+              setContent(previous=>({...previous,
+                sectionBackdrops:{...previous.sectionBackdrops,[current.id]:backdrop}}))
+            }}>
+              <option value="">Theo Portfolio</option>
+              <option value={LUXURY_RIBBON}>Lụa đỏ ánh kim</option>
+              <option value="none">Tắt nền lụa</option>
+            </select>
+          </label>
           <div className="pt-editor__source">
             <span className="pt-overline">KẾ THỪA CÁC MỤC TỪ HỒ SƠ PDF</span>
             <p>{sourcePages.length?sourcePages.length+' mục đang có trong Hồ sơ nghệ sĩ. Khi sửa hồ sơ, bạn bấm Đọc lại để đồng bộ chữ đã liên kết.':
@@ -259,9 +402,13 @@ export default function PortfolioInstanceEditor({
               </select>
             </label>
             <button type="button" className="pt-btn pt-btn--light"
-              disabled={busy||!sourcePage} onClick={importCurrentSource}>
+              disabled={busy||!sourcePage} onClick={()=>importCurrentSource()}>
               Lấy chữ của mục đã chọn ↓
             </button>
+            {suggestedSource&&!sourcePage&&<button type="button" className="pt-btn pt-btn--light"
+              disabled={busy} onClick={()=>importCurrentSource(suggestedSource.page)}>
+              Dùng mục gợi ý · Trang {suggestedSource.page} · {suggestedSource.title||'Chưa đặt tiêu đề'}
+            </button>}
             {currentOwn.sourcePage&&<small>
               <strong>Đang liên kết trang {currentOwn.sourcePage}.</strong> Chữ mặc định lấy từ Hồ sơ nghệ sĩ;
               chỉ phần bạn trực tiếp thay trong Form mới là bản tùy chỉnh.
@@ -271,34 +418,47 @@ export default function PortfolioInstanceEditor({
                 onClick={restoreSourceText} disabled={busy}>Khôi phục chữ từ Hồ sơ nghệ sĩ ↺</button>}
           </div>
           <label>Nhãn phụ
-            <input type="text" value={sourceBoundField(sourceProfile,content,current.id,'eyebrow')}
+            <input id="pt-edit-eyebrow" type="text" value={sourceBoundField(sourceProfile,content,current.id,'eyebrow')}
               onChange={e=>changeText('eyebrow',e.target.value)} placeholder="Nhãn phụ lấy từ mục PDF"/>
           </label>
           <label>Tiêu đề
-            <input type="text" value={sourceBoundField(sourceProfile,content,current.id,'title')||
+            <input id="pt-edit-title" type="text" value={sourceBoundField(sourceProfile,content,current.id,'title')||
               (current.id==='hero'?sourceProfile.name:'')}
               onChange={e=>changeText('title',e.target.value)} placeholder="Tiêu đề trong Hồ sơ nghệ sĩ"/>
           </label>
           <label>Mô tả
-            <textarea rows={4} value={sourceBoundField(sourceProfile,content,current.id,'body')}
+            <textarea id="pt-edit-body" rows={4} value={sourceBoundField(sourceProfile,content,current.id,'body')}
               onChange={e=>changeText('body',e.target.value)} placeholder="Nội dung từ mục PDF đã duyệt..."/>
           </label>
           <div className="pt-editor__design-toggle">
             <div><strong>03 / THIẾT KẾ LAYER RIÊNG</strong>
-              <small>Vẫn kế thừa Form {template.name}. Chỉ đổi cách dàn trang của {sourceProfile.name}.</small></div>
-            <button type="button" onClick={beginVisualEdit} className="pt-btn"
-              disabled={busy}>{scene?'✥ Chỉnh layer trực tiếp':'✦ Bắt đầu thiết kế trang'}</button>
+              <small>{scene?'Kéo thả các lớp đã thiết kế trong bản xem trước.':
+                'Tạo bố cục layer riêng sẽ đổi cách dàn trang của khu vực này.'}</small></div>
+            <button type="button" onClick={scene?beginVisualEdit:createLayerLayout} className="pt-btn"
+              disabled={busy}>{scene?'✥ Chỉnh layer trực tiếp':'✦ Tạo bố cục layer riêng'}</button>
           </div>
           {scene&&<SceneLayerInspector
             scene={scene} section={current}
             selectedLayer={selectedLayer} onSelectLayer={setSelectedLayer}
-            onPatchLayer={patchLayer} onPatchBackground={changeBackground}
+            onPatchLayer={patchLayer} onMoveElement={moveElement} onPatchBackground={changeBackground}
             onAddNote={addNote} onPatchNote={editNote}
             onRemoveNote={deleteNote} onReset={resetPage}
             onDisable={disablePageDesign}
             onChangeText={changeText}
             textForField={field=>sourceBoundField(sourceProfile,content,current.id,field)||
               (field==='title'&&current.id==='hero'?sourceProfile.name:'')}/>}
+          {current.slots>0&&<label>Bố cục ảnh
+            <select value={content.effects?.[current.id]||''}
+              disabled={busy||Boolean(scene)} onChange={event=>changeSectionEffect(event.target.value)}>
+              <option value="">Theo mẫu ({current.effect==='ribbon'?'Sân khấu dải lụa':current.label})</option>
+              <option value="ribbon">Sân khấu dải lụa</option>
+            </select>
+          </label>}
+          {sectionEffect==='ribbon'&&current.slots>0&&!scene&&<>
+            <p>Ô 1 là chân dung chính. Dùng ô 2 và 3 cho ảnh biểu diễn hai bên.</p>
+            <PortraitCutout key={current.id} disabled={busy}
+              onApply={file=>upload(current,0,file,true)}/>
+          </>}
           <h3>04 / Ảnh riêng của khu vực ({current.slots})</h3>
           <p>Chọn ảnh gốc từ máy, tối đa 4 MB/ảnh. Không cắt hoặc nhập ảnh từ PDF.</p>
           {current.slots===0&&<p className="pt-editor__hint">Khu vực chỉ có chữ. Có thể thêm vị trí ảnh khi chỉnh bố cục form gốc.</p>}
@@ -326,29 +486,69 @@ export default function PortfolioInstanceEditor({
           </div>
         </div>}
       </aside>
-      <section className="pt-editor__preview">
+      <section className="pt-editor__preview" ref={previewRef}>
         <div className="pt-editor__preview-head"><div>
-          <strong>{visualEditing?'ART STUDIO · KÉO THẢ LAYER':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
-          <span> {visualEditing?'Đang chỉnh riêng trang '+current.label+' · thay đổi chỉ lưu vào nghệ sĩ này':
+          <strong>{visualEditing?'CHỈNH TRỰC TIẾP':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
+          <span> {visualEditing?(scene?'Kéo thả layer của '+current.label:'Bấm để sửa chữ, kéo để di chuyển · '+current.label):
             'Xem toàn bộ Form với nội dung và ảnh riêng của nghệ sĩ'}</span>
         </div><div className="pt-editor__preview-controls">
           <button type="button" className={'pt-editor__view-button'+(visualEditing?' is-active':'')}
             disabled={busy} onClick={()=>visualEditing?setVisualEditing(false):beginVisualEdit()}>
             {visualEditing?'◧ Xem toàn bộ bản hiện tại':'✥ Chỉnh trực tiếp trang này'}
           </button>
+          {visualEditing&&current.slots>0&&<button type="button"
+            className={'pt-editor__view-button'+(lockImageRatio?' is-active':'')}
+            aria-pressed={lockImageRatio} onClick={()=>setLockImageRatio(value=>!value)}>
+            Khóa tỷ lệ ảnh · {lockImageRatio?'Bật':'Tắt'}
+          </button>}
           <div className="pt-segment">
           <button type="button" className={device==='desktop'?'is-active':''}
             onClick={()=>setDevice('desktop')}>Desktop</button>
           <button type="button" className={device==='mobile'?'is-active':''}
             onClick={()=>{setDevice('mobile');setSelectedLayer('title')}}>Mobile</button>
         </div></div></div>
+        {visualEditing&&current&&<fieldset className="pt-type-tools" disabled={busy}>
+          <legend>Kiểu chữ · {device==='desktop'?'Desktop':'Mobile'}</legend>
+          <label>Phần chữ
+            <select value={textLayer} onChange={event=>setSelectedLayer(event.target.value)}>
+              {textLayers.map(id=><option key={id} value={id}>{sceneLayerTitle(id)}</option>)}
+            </select>
+          </label>
+          <label>Font
+            <select value={textStyle.font??''} onChange={event=>patchTypography({font:event.target.value||null})}>
+              {!scene&&<option value="">Theo mẫu</option>}
+              {SCENE_FONTS.map(font=><option key={font.id} value={font.id}>{font.label}</option>)}
+            </select>
+          </label>
+          <label>Cỡ chữ (px)
+            <input key={current.id+device+textLayer+'size'+textStyle.size} type="number" min="8" max="180" step="1"
+              defaultValue={textStyle.size??''} placeholder="Theo mẫu"
+              onBlur={event=>updateTypographyNumber(event,'size')} onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur()}}/>
+          </label>
+          <label>Giãn dòng
+            <input key={current.id+device+textLayer+'lineHeight'+textStyle.lineHeight} type="number" min=".7" max="3" step=".05"
+              defaultValue={textStyle.lineHeight??''} placeholder="Theo mẫu"
+              onBlur={event=>updateTypographyNumber(event,'lineHeight')} onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur()}}/>
+          </label>
+          <button type="button" className="pt-btn pt-btn--light" onClick={resetTypography}>
+            Đặt lại kiểu chữ
+          </button>
+        </fieldset>}
         <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
           urls={urls} device={device}
-          focusedSectionId={visualEditing?current.id:''}
-          editSectionId={visualEditing?current.id:''}
-          selectedLayer={selectedLayer}
+          editSectionId={visualEditing&&!busy?current.id:''} motionPaused={visualEditing}
+          selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={setSelectedLayer}
-          onPatchLayer={patchLayer}/>
+          onSelectSection={visualEditing&&!busy?id=>{
+            const section=sections.find(item=>item.id===id)
+            if(section)selectSection(section)
+          }:undefined}
+          onPatchLayer={patchLayer} onMoveElement={moveElement}
+          onUploadImage={(index,file)=>upload(current,index,file)} onAddNote={addNote}
+          onEditText={field=>{
+            setSelectedLayer(field)
+            document.getElementById('pt-edit-'+field)?.focus()
+          }}/>
       </section>
     </div>
   </div>

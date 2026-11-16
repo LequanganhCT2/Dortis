@@ -1,7 +1,6 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {PRESET_FORMS,blueprintFor,normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS} from './model'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
-import {hydrateInstanceFromArtist} from './sourceBinding'
 import './template-admin.css'
 
 /** Shared form => many artist instances. All data is protected by Admin RLS.
@@ -29,28 +28,20 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     ])
     if(t.error||i.error||p.error)throw (t.error||i.error||p.error)
     setTemplates(t.data||[]);setInstances(i.data||[]);setProfiles(p.data||[])
-    return {templates:t.data||[],instances:i.data||[],profiles:p.data||[]}
   },[supabase])
   useEffect(()=>{
     let active=true
-    load().then(({templates:ts,instances:is,profiles:ps})=>{
-      if(!active)return
-      if(initialArtistSlug){
-        const person=ps.find(p=>p.slug===initialArtistSlug)
-        const first=person&&is.find(i=>i.profile_id===person.id)
-        if(first&&ts.some(t=>t.id===first.template_id))setSelection(first.id)
-      }
-    }).catch(e=>{if(active)setError('Không tải được thư viện form: '+e.message)})
+    load().catch(e=>{if(active)setError('Không tải được thư viện form: '+e.message)})
       .finally(()=>{if(active)setLoading(false)})
     return ()=>{active=false}
-  },[load,initialArtistSlug])
+  },[load])
   const groups=useMemo(()=>templateAssignments(templates,instances,profiles),[templates,instances,profiles])
   const selected=instances.find(i=>i.id===selection)
   const artist=selected&&profiles.find(p=>p.id===selected.profile_id)
   const template=selected&&templates.find(t=>t.id===selected.template_id)
   const desired=profiles.find(p=>p.slug===initialArtistSlug)
   async function assign(t){
-    const profileId=choice[t.id]||desired?.id||profiles[0]?.id
+    const profileId=choice[t.id]
     if(!profileId){setError('Cần có hồ sơ nghệ sĩ trước khi gán form.');return}
     const existing=instances.find(i=>i.template_id===t.id&&i.profile_id===profileId)
     if(existing){setSelection(existing.id);return}
@@ -58,11 +49,26 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     try{
       const {data,error:e}=await supabase.from('artist_website_instances')
         .insert({template_id:t.id,profile_id:profileId,
-          content:hydrateInstanceFromArtist(t,profiles.find(p=>p.id===profileId)),
+          content:{sections:{},images:{}},
           updated_by:user.id,status:'draft'}).select().single()
       if(e)throw e
       setInstances(current=>[data,...current]);setSelection(data.id)
     }catch(e){setError('Không gán được form: '+e.message)}
+    finally{setWorking(false)}
+  }
+  async function detach(group,person){
+    if(working||!window.confirm(`Gỡ ${person.artist.name} khỏi mẫu ${group.name}? Bản nháp và website đã xuất bản trên mẫu này sẽ bị gỡ.`))return
+    setWorking(true);setError('');setNotice('')
+    try{
+      const {data,error:e}=await supabase.from('artist_website_instances')
+        .delete().eq('id',person.instance.id).eq('revision',person.instance.revision||1)
+        .select('id').maybeSingle()
+      if(e)throw e
+      if(!data)throw new Error('Bản nháp đã thay đổi. Hãy tải lại thư viện.')
+      setInstances(list=>list.filter(item=>item.id!==data.id))
+      setChoice(previous=>({...previous,[group.id]:''}))
+      setNotice('Đã gỡ '+person.artist.name+' khỏi mẫu '+group.name+'.')
+    }catch(e){setError('Không gỡ được mẫu: '+e.message)}
     finally{setWorking(false)}
   }
   function openTemplateEdit(t){
@@ -117,7 +123,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           blueprint:normalizeBlueprint(base.blueprint),created_by:user.id,status:'active'})
         .select().single()
       if(e)throw e
-      setTemplates(list=>[...list,data]);setCreateName('')
+      setTemplates(list=>[data,...list]);setCreateName('')
       setNotice('Đã tạo form "'+name+'". Bạn có thể tùy chỉnh bố cục và gán cho nhiều nghệ sĩ.')
     }catch(e){setError('Không tạo được form: '+e.message)}
     finally{setWorking(false)}
@@ -140,7 +146,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
     {desired&&<div className="pt-manager__focus">Đang chọn mẫu cho <strong>{desired.name}</strong>.
-      Chọn form bên dưới để tạo phiên bản riêng cho nghệ sĩ này.</div>}
+      Bạn có thể tạo mẫu từ bố cục có sẵn hoặc chọn hồ sơ này trên một mẫu để gán.</div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
     {editingTemplate&&blueprint?
@@ -152,7 +158,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           </div>
           <div className="pt-action-row">
             <button type="button" className="pt-btn pt-btn--light"
-              onClick={()=>{setEditingTemplate(null);setBlueprint(null)}}>Hủy</button>
+              onClick={()=>{setEditingTemplate(null);setBlueprint(null)}}>← Quay về chọn mẫu Portfolio</button>
             <button type="button" className="pt-btn" onClick={saveTemplate} disabled={working}>Lưu form gốc</button>
           </div>
         </div>
@@ -192,14 +198,27 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           disabled={blueprint.sections.length>=24}>+ Thêm khu vực vào form</button>
       </section>:
     <>
+      <section className="pt-create">
+        <div><span className="pt-overline">EXTEND / REUSABLE FORM</span>
+          <h2>Tạo mẫu Portfolio từ mẫu có sẵn</h2>
+          <p>Chọn mẫu có sẵn để sao chép bố cục. Sau khi tạo, bạn có thể gán mẫu mới cho nhiều hồ sơ nghệ sĩ.</p></div>
+        <div className="pt-create__fields">
+          <input type="text" value={createName} onChange={e=>setCreateName(e.target.value)}
+            placeholder="Tên form mới, ví dụ: Nghệ sĩ Acoustic"/>
+          <select aria-label="Mẫu Portfolio làm nền" value={createFrom||templates[0]?.id||''}
+            onChange={e=>setCreateFrom(e.target.value)}>
+            {templates.map(t=><option key={t.id} value={t.id}>Kế thừa từ {t.name}</option>)}
+          </select>
+          <button type="button" className="pt-btn" disabled={working||!templates.length}
+            onClick={createTemplate}>Tạo form mới</button>
+        </div>
+      </section>
       <section className="pt-catalog">
         <div className="pt-catalog__heading"><h2>Các form có thể tái sử dụng</h2>
-          <p>Form gốc là cấu trúc giao diện. Nghệ sĩ kế thừa cấu trúc và tự nhập nội dung.</p></div>
+          <p>Mỗi mẫu có thể dùng cho nhiều nghệ sĩ. Chọn từng hồ sơ để gán hoặc mở bản chỉnh sửa riêng.</p></div>
         <div className="pt-catalog__grid">{groups.map(group=>{
-          const attached=new Set(group.people.map(x=>x.artist.id))
-          const available=profiles.filter(p=>!attached.has(p.id))
-          const chosen=choice[group.id]||(
-            desired&&!attached.has(desired.id)?desired.id:available[0]?.id||'')
+          const chosen=choice[group.id]||''
+          const person=group.people.find(item=>item.artist.id===chosen)
           return <article key={group.id} className="pt-template">
             <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')}>
               <span>{group.name}</span>
@@ -214,43 +233,26 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                 <span>{group.people.length} nghệ sĩ sử dụng</span><span>3D / layered visuals</span></div>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
-              <div className="pt-template__people">
-                <strong>NGHỆ SĨ KẾ THỪA FORM · CHỮ TỪ HỒ SƠ PDF</strong>
-                {group.people.length?group.people.map(({artist,instance})=>
-                  <button type="button" key={instance.id} className="pt-template__person"
-                    onClick={()=>setSelection(instance.id)}>
-                    <span className="pt-template__avatar">{artist.name.slice(0,1)}</span>
-                    <span><b>{artist.name}</b><small>{Array.isArray(artist.sections)?artist.sections.length:0} mục PDF · Ảnh riêng</small></span>
-                    <em>Mở chỉnh sửa ↗</em>
-                  </button>):<p className="pt-template__empty">Chưa có nghệ sĩ sử dụng.</p>}
-              </div>
               <div className="pt-template__assign">
-                {available.length?<><label>Thêm nghệ sĩ vào form
-                    <select value={chosen} onChange={e=>setChoice(s=>({...s,[group.id]:e.target.value}))}>
-                      {available.map(p=><option value={p.id} key={p.id}>{p.name}</option>)}
+                {profiles.length?<><label>Nghệ sĩ
+                    <select value={chosen} disabled={working}
+                      onChange={e=>setChoice(previous=>({...previous,[group.id]:e.target.value}))}>
+                      <option value="">Chọn một nghệ sĩ</option>
+                      {profiles.map(p=><option value={p.id} key={p.id}>
+                        {p.name}{group.people.some(item=>item.artist.id===p.id)?' · Đã gán':''}
+                      </option>)}
                     </select></label>
-                    <button type="button" className="pt-btn" disabled={working}
-                      onClick={()=>assign(group)}>+ Gán form</button></>:
-                  <span className="pt-template__empty">{profiles.length?'Mọi nghệ sĩ hiện có đã được gán form này.':'Chưa có hồ sơ nghệ sĩ. Hãy nhập PDF ở /admin/artists trước.'}</span>}
+                    <button type="button" className="pt-btn" disabled={working||!chosen}
+                      onClick={()=>person?setSelection(person.instance.id):assign(group)}>
+                      {person?'Mở chỉnh sửa':'Gán mẫu'}
+                    </button>
+                    {person&&<button type="button" className="pt-btn pt-btn--light"
+                      disabled={working} onClick={()=>detach(group,person)}>Gỡ khỏi mẫu</button>}</>:
+                  <span className="pt-template__empty">Chưa có hồ sơ nghệ sĩ.</span>}
               </div>
             </div>
           </article>
         })}</div>
-      </section>
-      <section className="pt-create">
-        <div><span className="pt-overline">EXTEND / REUSABLE FORM</span>
-          <h2>+ Tạo thêm mẫu Portfolio</h2>
-          <p>Tạo mẫu mới từ một bố cục nền, sau đó sửa độc lập. Mẫu ban đầu và các nghệ sĩ đang sử dụng không bị thay đổi.</p></div>
-        <div className="pt-create__fields">
-          <input type="text" value={createName} onChange={e=>setCreateName(e.target.value)}
-            placeholder="Tên form mới, ví dụ: Nghệ sĩ Acoustic"/>
-          <select value={createFrom||templates[0]?.id||''}
-            onChange={e=>setCreateFrom(e.target.value)}>
-            {templates.map(t=><option key={t.id} value={t.id}>Kế thừa từ {t.name}</option>)}
-          </select>
-          <button type="button" className="pt-btn" disabled={working||!templates.length}
-            onClick={createTemplate}>Tạo form mới</button>
-        </div>
       </section>
       <p className="pt-manager__disclaimer">
         Tài liệu DORTIS Design Reference v2 hướng dẫn phương pháp thiết kế; mọi palette hiện tại chỉ là gợi ý nội bộ.

@@ -4,6 +4,7 @@
  */
 const effects=['depth','overlap','spotlight','glass','orbit','typography']
 export function chooseSectionEffect({effect='auto',layout='split',index=0,style='editorial',imageCount=0}={}){
+  if(effect==='ribbon')return 'ribbon'
   if(effects.includes(effect)){
     if(imageCount===0&&effect!=='typography')return 'typography'
     // Spotlight is reserved for a single hero photo. When more photos arrive
