@@ -24,6 +24,8 @@ function ribbonTextColor(color){
 function toPosition(layer,board){
   return {left:layer.x+'%',top:layer.y+'%',width:layer.w+'%',height:layer.h+'%',
     zIndex:layer.z,opacity:layer.opacity/100,
+    borderRadius:layer.radius+'px',
+    border:layer.borderWidth>0?layer.borderWidth+'px solid '+layer.borderColor:undefined,
     transform:'rotate('+layer.rotation+'deg)'}
 }
 function LayerElement({section,layerId,layer,scene,urls,device,editable,selected,

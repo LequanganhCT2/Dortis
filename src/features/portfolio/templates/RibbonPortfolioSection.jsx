@@ -19,9 +19,11 @@ function positionStyle(position={},type={},key=''){
   const align=['left','center','right'].includes(type?.align)?type.align:'left'
   const angle=Number(position?.rotation)
   return {
+    borderRadius:position.radius!=null?Number(position.radius)+'px':undefined,
+    opacity:position.opacity==null?undefined:Number(position.opacity)/100,
+    border:Number(position.borderWidth)>0?
+      Number(position.borderWidth)+'px solid '+(position.borderColor||'#ffffff'):undefined,
     ...(key.startsWith('image:')?{
-      borderRadius:Number.isFinite(Number(position.radius))?Number(position.radius)+'px':undefined,
-      opacity:position.opacity==null?undefined:Number(position.opacity)/100,
       '--pt-direct-image-fit':position.fit||undefined
     }:{}),
     translate:position.x||position.y?(Number(position.x)||0)+'% '+(Number(position.y)||0)+'%':undefined,
@@ -34,7 +36,11 @@ function positionStyle(position={},type={},key=''){
       alignSelf:align==='center'?'center':align==='right'?'flex-end':'flex-start',
       rotate:Number.isFinite(angle)?clamp(angle,-15,15)+'deg':undefined
     }:{}),
+    rotate:!text&&Number.isFinite(angle)?clamp(angle,-15,15)+'deg':undefined,
     fontFamily:type.font?sceneFont(type.font):undefined,
+    fontWeight:Number.isFinite(Number(type.weight))?Number(type.weight):undefined,
+    letterSpacing:Number.isFinite(Number(type.spacing))?Number(type.spacing)+'px':undefined,
+    color:/^#[0-9a-f]{6}$/i.test(type.color||'')?type.color:undefined,
     '--pt-direct-font-size':Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     fontSize:Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     lineHeight:Number.isFinite(type.lineHeight)?clamp(type.lineHeight,.7,3):undefined

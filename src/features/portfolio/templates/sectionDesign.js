@@ -98,6 +98,9 @@ export function sanitizeSceneLayer(id,raw={},section={},device='desktop'){
     rotation:safe(v.rotation,-45,45,d.rotation),
     blur:safe(v.blur,0,24,d.blur),
     radius:safe(v.radius,0,50,d.radius),
+    borderWidth:safe(v.borderWidth,0,12,d.borderWidth??0),
+    borderColor:/^#[a-f0-9]{6}$/i.test(v.borderColor||'')?
+      v.borderColor:(d.borderColor||'#ffffff'),
     fit:['cover','contain'].includes(v.fit)?v.fit:d.fit,
     size:safe(v.size,9,240,d.size),
     color:/^#[a-f0-9]{6}$/i.test(v.color||'')?v.color:d.color,

@@ -10,6 +10,38 @@ import './template-admin.css'
 
 const BUCKET='dortis-artist-web-drafts'
 
+function measurePublicElement(element){
+  const rect=element.getBoundingClientRect()
+  const surface=element.querySelector('.pt-artboard__photo')||element
+  const textNode=element.querySelector('.pt-artboard__text')||element
+  const actual=window.getComputedStyle(textNode)
+  const frame=window.getComputedStyle(element)
+  const surfaceStyle=window.getComputedStyle(surface)
+  const img=element.querySelector('img')
+  const parentWidth=element.parentElement?.getBoundingClientRect().width||rect.width||1
+  const fontSize=Number.parseFloat(actual.fontSize)||16
+  const lineHeightPx=Number.parseFloat(actual.lineHeight)
+  const borderWidth=Number.parseFloat(frame.borderTopWidth)||0
+  const radius=Number.parseFloat(surfaceStyle.borderTopLeftRadius)||
+    Number.parseFloat(frame.borderTopLeftRadius)||0
+  return {
+    rect:{top:rect.top,left:rect.left},
+    metrics:{
+      fontSize,fontFamily:actual.fontFamily,
+      lineHeight:Number.isFinite(lineHeightPx)?lineHeightPx/fontSize:1.3,
+      align:actual.textAlign||'left',
+      weight:Number.parseFloat(actual.fontWeight)||500,
+      spacing:Number.parseFloat(actual.letterSpacing)||0,
+      color:actual.color,
+      widthPct:Math.max(15,Math.min(100,rect.width/parentWidth*100)),
+      widthPx:rect.width,heightPx:rect.height,
+      radius,opacity:(Number.parseFloat(frame.opacity)||1)*100,
+      borderWidth,borderColor:frame.borderTopColor,
+      fit:img?window.getComputedStyle(img).objectFit:'cover'
+    }
+  }
+}
+
 /**
  * Public website always mounts the same renderer as Admin. A publication
  * update must re-hydrate it when returning to this tab, not keep an old
@@ -173,24 +205,27 @@ export default function PublishedPortfolio(){
 
   function selectPublicElement(sectionId,layerId,element){
     if(!admin||!element||!publication)return
-    const rect=element.getBoundingClientRect()
-    const actual=element.querySelector('.pt-artboard__text')||element
-    const computed=window.getComputedStyle(actual)
-    const parentWidth=element.parentElement?.getBoundingClientRect().width||rect.width||1
-    const fontSize=Number.parseFloat(computed.fontSize)||16
-    const lineHeightPx=Number.parseFloat(computed.lineHeight)
-    setSelection({
-      sectionId,layerId,rect:{top:rect.top,left:rect.left},
-      metrics:{
-        fontSize,
-        fontFamily:computed.fontFamily,
-        lineHeight:Number.isFinite(lineHeightPx)?lineHeightPx/fontSize:1.3,
-        align:computed.textAlign||'left',
-        widthPct:Math.min(100,Math.max(15,rect.width/parentWidth*100)),
-        radius:Number.parseFloat(computed.borderRadius)||0
-      }
-    })
+    setSelection({sectionId,layerId,...measurePublicElement(element)})
   }
+
+  useEffect(()=>{
+    if(!admin||!selection)return
+    const frame=window.requestAnimationFrame(()=>{
+      const element=document.querySelector('.pt-published [data-pt-public-selected="true"]')
+      if(!element)return
+      const measured=measurePublicElement(element)
+      setSelection(current=>current&&current.sectionId===selection.sectionId&&
+        current.layerId===selection.layerId?{...current,...measured}:current)
+    })
+    return ()=>window.cancelAnimationFrame(frame)
+  },[admin,publication,selection?.sectionId,selection?.layerId])
+
+  useEffect(()=>{
+    if(!selection)return
+    const close=event=>{if(event.key==='Escape')setSelection(null)}
+    document.addEventListener('keydown',close)
+    return ()=>document.removeEventListener('keydown',close)
+  },[selection?.sectionId,selection?.layerId])
 
   function applyPublicEdit(sectionId,layerId,group,patch){
     if(!admin||!publication||!supabase)return

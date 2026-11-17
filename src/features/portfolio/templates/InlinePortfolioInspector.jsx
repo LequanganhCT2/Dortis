@@ -4,41 +4,48 @@ import {SCENE_LAYER_LABELS} from './sectionDesign'
 import {TEXT_QUICK_LAYOUTS} from './textQuickLayouts'
 import './inline-portfolio-inspector.css'
 
-const displayNumber=(v,fallback=0,precision=1)=>{
-  const n=Number(v)
+const number=(value,fallback=0,precision=1)=>{
+  const n=Number(value)
   return Number.isFinite(n)?Number(n.toFixed(precision)):fallback
 }
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n))
+function hex(value,fallback='#ffffff'){
+  const raw=String(value||'').trim()
+  if(/^#[a-f0-9]{6}$/i.test(raw))return raw
+  if(/^#[a-f0-9]{3}$/i.test(raw))return '#'+raw.slice(1).split('').map(x=>x+x).join('')
+  const rgb=raw.match(/^rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/i)
+  return rgb?'#'+rgb.slice(1,4).map(v=>Number(v).toString(16).padStart(2,'0')).join(''):fallback
+}
 export default function InlinePortfolioInspector({
   selection,layer,device='desktop',onApply,onClose,onClearNotice
 }){
-  const [tab,setTab]=useState('layout')
-  useEffect(()=>setTab(isImageLayer(selection?.layerId)?'frame':'type'),
-    [selection?.sectionId,selection?.layerId])
+  const [tab,setTab]=useState('size')
+  useEffect(()=>setTab('size'),[selection?.sectionId,selection?.layerId])
   if(!selection||!layer)return null
+
   const id=selection.layerId
   const image=isImageLayer(id),scene=layer.scene
-  const vals=layer.values||{}
-  const measured=selection.metrics||{}
+  const vals=layer.values||{},measured=selection.metrics||{}
   const title=image?'Ảnh '+(Number(id.split(':')[1])+1):
-    SCENE_LAYER_LABELS[id]||'Chữ trang trí'
+    SCENE_LAYER_LABELS[id]||(id.startsWith('note:')?'Chữ trang trí':'Nội dung')
   const fontId=vals.font||detectCurrentFont(measured.fontFamily)
-  const size=displayNumber(vals.size,measured.fontSize||16)
-  const lineHeight=displayNumber(vals.lineHeight,measured.lineHeight||1.3,2)
-  const width=displayNumber(scene?vals.w:vals.widthPct,measured.widthPct||90)
-  const height=displayNumber(scene?vals.h:vals.scaleY?vals.scaleY*100:100,100)
-  const x=displayNumber(vals.x,0)
-  const y=displayNumber(vals.y,0)
-  const radius=displayNumber(vals.radius,measured.radius||0)
-  const opacity=displayNumber(vals.opacity,100)
-  const scaleX=displayNumber((vals.scaleX??1)*100,100)
-  const scaleY=displayNumber((vals.scaleY??1)*100,100)
+  // For a scene the stored font is a design unit (cqw). The input always
+  // shows real rendered pixels; edits are translated back to design units.
+  const size=number(measured.fontSize,number(vals.size,16))
+  const storedFontSize=number(vals.size,size)
+  const lineHeight=number(vals.lineHeight??measured.lineHeight,1.3,2)
+  const width=number(scene?vals.w:vals.widthPct,measured.widthPct||90)
+  const height=number(vals.h,100)
+  const radius=number(vals.radius??measured.radius,0)
+  const opacity=number(vals.opacity??measured.opacity,100)
+  const borderWidth=number(vals.borderWidth??measured.borderWidth,0)
   const align=vals.align||measured.align||'left'
   const rect=selection.rect||{}
-  const posTop=clamp(rect.top||120,74,Math.max(74,(typeof window!=='undefined'?window.innerHeight:850)-430))
+  const posTop=clamp(rect.top||120,74,Math.max(74,
+    (typeof window!=='undefined'?window.innerHeight:850)-430))
   const apply=(group,patch)=>{onApply(selection.sectionId,id,group,patch);onClearNotice?.()}
-  function numberField(label,value,group,key,min,max,step=1,suffix=''){
-    return <label className="pt-inline-inspector__field" key={key}>
+  const numberField=(label,value,group,key,min,max,step=1,suffix='',convert=n=>n)=>
+    <label className="pt-inline-inspector__field" key={key}>
       <span>{label}</span>
       <div className="pt-inline-inspector__input">
         <input key={selection.sectionId+id+device+key+String(value)}
@@ -49,12 +56,21 @@ export default function InlinePortfolioInspector({
             if(!event.currentTarget.validity.valid)return
             const n=Number(event.currentTarget.value)
             if(!Number.isFinite(n)||n<min||n>max||Math.abs(n-value)<.001)return
-            apply(group,{[key]:n})
+            apply(group,{[key]:convert(n)})
           }}/>
         {suffix&&<small>{suffix}</small>}
       </div>
     </label>
-  }
+  const colorField=(label,value,group,key)=>
+    <label className="pt-inline-inspector__field pt-inline-inspector__field--color" key={key}>
+      <span>{label}</span>
+      <input type="color" key={selection.sectionId+id+device+key+value}
+        defaultValue={hex(value)} aria-label={label}
+        onBlur={event=>{
+          const next=event.currentTarget.value
+          if(next!==hex(value))apply(group,{[key]:next})
+        }}/>
+    </label>
   return <aside className="pt-inline-inspector" role="dialog"
     aria-label={'Chỉnh trực tiếp '+title} style={{'--pt-inspector-top':posTop+'px'}}
     onClick={event=>event.stopPropagation()}
@@ -67,14 +83,68 @@ export default function InlinePortfolioInspector({
       <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
     </header>
     <div className="pt-inline-inspector__tabs" role="tablist" aria-label="Thông số phần tử">
-      {!image&&<button type="button" role="tab" aria-selected={tab==='type'}
-        className={tab==='type'?'is-active':''} onClick={()=>setTab('type')}>Chữ</button>}
+      <button type="button" role="tab" aria-selected={tab==='size'}
+        className={tab==='size'?'is-active':''} onClick={()=>setTab('size')}>Kích cỡ</button>
       <button type="button" role="tab" aria-selected={tab==='layout'}
         className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}>Bố cục</button>
+      {!image&&<button type="button" role="tab" aria-selected={tab==='type'}
+        className={tab==='type'?'is-active':''} onClick={()=>setTab('type')}>Font chữ</button>}
       <button type="button" role="tab" aria-selected={tab==='frame'}
-        className={tab==='frame'?'is-active':''} onClick={()=>setTab('frame')}>{image?'Ảnh / Khung':'Khung'}</button>
+        className={tab==='frame'?'is-active':''} onClick={()=>setTab('frame')}>
+        {image?'Ảnh / Khung':'Khung'}
+      </button>
     </div>
     <div className="pt-inline-inspector__body">
+      <div className="pt-inline-inspector__measure" role="status">
+        <span>Kích thước đang hiển thị:</span>
+        <strong>{number(measured.widthPx,0)} × {number(measured.heightPx,0)} px</strong>
+        {!image&&<small>Chữ thực tế: {size} px ·
+          {scene?' cỡ thiết kế '+storedFontSize+' px':' theo khung hiện tại'}</small>}
+      </div>
+      {tab==='size'&&<>
+        <div className="pt-inline-inspector__grid">
+          {!image&&numberField('Cỡ chữ hiện tại',size,'typography','size',8,180,1,'px',
+            n=>scene?clamp(number(storedFontSize*n/Math.max(size,1),storedFontSize,2),9,240):n)}
+          {scene?<>
+            {numberField('Rộng khung',width,'position','w',8,100,1,'%')}
+            {numberField('Cao khung',height,'position','h',3,100,1,'%')}
+          </>:image?<>
+            {numberField('Rộng ảnh',number(vals.scaleX??1,1,2),'position','scaleX',.25,3,.05,'×')}
+            {numberField('Cao ảnh',number(vals.scaleY??1,1,2),'position','scaleY',.25,3,.05,'×')}
+          </>:numberField('Rộng khung',width,'position','widthPct',15,100,1,'%')}
+        </div>
+        <p className="pt-inline-inspector__actual">
+          Thông số được lấy từ phần tử đang hiển thị, không đặt về kích thước mặc định.
+          Mỗi thiết bị có bộ thông số riêng.</p>
+      </>}
+      {tab==='layout'&&<>
+        {!image&&<>
+          <span className="pt-inline-inspector__hint">Chọn nhanh bố cục chữ</span>
+          <div className="pt-inline-inspector__presets">
+            {TEXT_QUICK_LAYOUTS.map(opt=><button key={opt.id} type="button"
+              title={'Bố cục '+opt.label} onClick={()=>apply('layout',{id:opt.id})}>
+              <span aria-hidden="true">{opt.symbol}</span> {opt.label}
+            </button>)}
+          </div>
+          <label className="pt-inline-inspector__field">
+            <span>Căn văn bản</span>
+            <select value={align} onChange={event=>apply('typography',{align:event.target.value})}>
+              <option value="left">Trái</option>
+              <option value="center">Giữa</option>
+              <option value="right">Phải</option>
+            </select>
+          </label>
+        </>}
+        <div className="pt-inline-inspector__grid">
+          {numberField('Ngang X',number(vals.x,0),'position','x',scene?0:-95,scene?100:95,.5,'%')}
+          {numberField('Dọc Y',number(vals.y,0),'position','y',scene?0:-95,scene?100:95,.5,'%')}
+          {numberField('Xoay',number(vals.rotation,0),'position','rotation',
+            scene?-45:-15,scene?45:15,1,'°')}
+          {scene&&numberField('Thứ tự lớp',number(vals.z,10),'position','z',0,99,1)}
+        </div>
+        <p className="pt-inline-inspector__actual">
+          Kéo trực tiếp phần tử trên trang hoặc nhập tọa độ chính xác tại đây.</p>
+      </>}
       {tab==='type'&&!image&&<>
         <label className="pt-inline-inspector__field">
           <span>Font chữ hiện tại</span>
@@ -83,73 +153,42 @@ export default function InlinePortfolioInspector({
           </select>
         </label>
         <div className="pt-inline-inspector__grid">
-          {numberField('Cỡ chữ',size,'typography','size',8,scene?240:180,1,'px')}
           {numberField('Giãn dòng',lineHeight,'typography','lineHeight',.7,3,.05,'×')}
-        </div>
-        <p className="pt-inline-inspector__actual">
-          Kích thước đang hiển thị: <b>{displayNumber(measured.fontSize,size)} px</b>
-          {scene?' · Cỡ thiết kế thay đổi theo kích thước khung':''}
-        </p>
-      </>}
-      {tab==='layout'&&<>
-        {!image&&<>
-          <span className="pt-inline-inspector__hint">Căn chữ và hướng trình bày</span>
-          <div className="pt-inline-inspector__presets">
-            {TEXT_QUICK_LAYOUTS.map(opt=><button key={opt.id} type="button"
-              title={'Bố cục '+opt.label}
-              onClick={()=>apply('layout',{id:opt.id})}>
-              <span aria-hidden="true">{opt.symbol}</span> {opt.label}
-            </button>)}
-          </div>
+          {numberField('Giãn chữ',number(vals.spacing??measured.spacing,0),'typography',
+            'spacing',-8,20,.5,'px')}
           <label className="pt-inline-inspector__field">
-            <span>Căn văn bản</span>
-            <select value={align}
-              onChange={event=>apply('typography',{align:event.target.value})}>
-              <option value="left">Trái</option>
-              <option value="center">Giữa</option>
-              <option value="right">Phải</option>
+            <span>Độ đậm</span>
+            <select value={String(vals.weight??measured.weight??500)}
+              onChange={event=>apply('typography',{weight:Number(event.target.value)})}>
+              {[400,500,600,700,800,900].map(value=><option key={value} value={value}>
+                {value}
+              </option>)}
             </select>
           </label>
-        </>}
-        <div className="pt-inline-inspector__grid">
-          {numberField('Ngang X',x,'position','x',scene?0:-95,scene?100:95,.5,'%')}
-          {numberField('Dọc Y',y,'position','y',scene?0:-95,scene?100:95,.5,'%')}
-          {numberField('Xoay',displayNumber(vals.rotation,0),'position','rotation',
-            scene?-45:-15,scene?45:15,1,'°')}
+          {colorField('Màu chữ',vals.color||measured.color,'typography','color')}
         </div>
-        <p className="pt-inline-inspector__actual">Có thể kéo phần tử ngay trên website.
-          Các thay đổi được lưu riêng cho {device==='desktop'?'desktop':'mobile'}.</p>
       </>}
       {tab==='frame'&&<>
         <div className="pt-inline-inspector__grid">
-          {numberField('Rộng',image&&!scene?
-            displayNumber(vals.scaleX??1,1,2):width,'position',
-            scene?'w':image?'scaleX':'widthPct',
-            scene?8:(image ? 0.25 : 15),scene?100:(image?3:100),
-            (image&&!scene)?0.05:1,image&&!scene?'×':'%')}
-          {scene?
-            numberField('Cao',height,'position','h',3,100,1,'%'):
-            image?numberField('Chiều cao',displayNumber((vals.scaleY??1),1,2),
-              'position','scaleY',.25,3,.05,'×'):null}
-          {image&&!scene&&numberField('Bo góc',radius,'position','radius',0,80,1,'px')}
-          {image&&numberField('Độ mờ',opacity,'position','opacity',0,100,5,'%')}
-          {image&&scene&&numberField('Bo góc',radius,'position','radius',0,50,1,'px')}
+          {numberField('Bo góc',radius,'position','radius',0,scene?50:80,1,'px')}
+          {numberField('Độ hiển thị',opacity,'position','opacity',0,100,5,'%')}
+          {numberField('Độ dày viền',borderWidth,'position','borderWidth',0,12,1,'px')}
+          {colorField('Màu viền',vals.borderColor||measured.borderColor,'position','borderColor')}
         </div>
         {image&&<label className="pt-inline-inspector__field">
-          <span>Cách hiển thị ảnh trong khung</span>
-          <select value={vals.fit||'cover'} onChange={event=>apply('position',{fit:event.target.value})}>
-            <option value="cover">Lấp đầy (có thể cắt ảnh)</option>
-            <option value="contain">Hiện đầy đủ ảnh</option>
+          <span>Hiển thị ảnh trong khung</span>
+          <select value={vals.fit||measured.fit||'cover'}
+            onChange={event=>apply('position',{fit:event.target.value})}>
+            <option value="cover">Lấp đầy / cắt theo khung</option>
+            <option value="contain">Giữ toàn bộ ảnh gốc</option>
           </select>
         </label>}
-        {!image&&<p className="pt-inline-inspector__actual">
-          Chỉnh độ rộng khung chữ mà không tự đổi cỡ font.</p>}
-        {image&&<p className="pt-inline-inspector__actual">
-          Khung ảnh giữ nguyên ảnh gốc và tỷ lệ crop đã lưu nếu bạn không đổi.</p>}
+        <p className="pt-inline-inspector__actual">
+          Chỉnh viền và khung không làm thay đổi tệp ảnh hoặc nội dung gốc.</p>
       </>}
     </div>
     <footer className="pt-inline-inspector__footer">
-      <small>Thả chuột hoặc rời ô nhập để tự động lưu</small>
+      <small>Chỉnh xong rời ô nhập để tự lưu</small>
       <button type="button" onClick={onClose}>Xong</button>
     </footer>
   </aside>

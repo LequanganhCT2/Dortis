@@ -29,7 +29,7 @@ import {pickPortfolioActiveSection} from './sectionNavigation'
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
  */
-function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio}){
+function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio,onDirectMoveElement,onPublicSelect,publicSelection}){
   const frame=useRef(0)
   const sectionRef=useRef(null)
   const drag=useRef(null),suppressClick=useRef(false),fileInput=useRef(null)
@@ -87,25 +87,46 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   function positionProps(key){
     const initial=positions?.[key]||{x:0,y:0}
     const text=isTextFrame(key)
+    const direct=Boolean(onDirectMoveElement&&!onMoveElement)
     const angle=Number(initial.rotation)
     const position={
       translate:initial.x||initial.y?initial.x+'% '+initial.y+'%':undefined,
-      scale:!text&&initial.scaleX&&initial.scaleY?initial.scaleX+' '+initial.scaleY:undefined,
+      scale:!text&&(initial.scaleX!=null||initial.scaleY!=null)?
+        (initial.scaleX??1)+' '+(initial.scaleY??1):undefined,
       ...(text?textBoxWidthStyle(initial):{}),
-      rotate:text&&Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':undefined,
+      rotate:Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':undefined,
+      borderRadius:initial.radius!=null?initial.radius+'px':undefined,
+      border:Number(initial.borderWidth)>0?
+        Number(initial.borderWidth)+'px solid '+(initial.borderColor||'#ffffff'):undefined,
+      opacity:initial.opacity==null?undefined:Number(initial.opacity)/100,
+      '--pt-direct-image-fit':!text?initial.fit||undefined:undefined,
       '--pt-inverse-resize-x':!text&&initial.scaleX?1/initial.scaleX:undefined,
       '--pt-inverse-resize-y':!text&&initial.scaleY?1/initial.scaleY:undefined
     }
-    if(!onMoveElement)return {style:position}
+    if(!onMoveElement&&!onDirectMoveElement)return {style:position}
     return {
       style:position,
       'data-portfolio-movable':'',
+      ...(direct?{
+        'data-pt-public-editable':'',
+        'data-pt-public-selected':
+          publicSelection?.sectionId===section.id&&publicSelection?.layerId===key?'true':undefined,
+        tabIndex:0,
+        'aria-label':'Nhấp để chỉnh kích thước, kiểu chữ, vị trí hoặc khung',
+        onClick:event=>{
+          event.stopPropagation()
+          if(!suppressClick.current)onPublicSelect?.(section.id,key,event.currentTarget)
+          suppressClick.current=false
+        },
+        onFocus:event=>onPublicSelect?.(section.id,key,event.currentTarget)
+      }:{}),
       onPointerDown:event=>{
         if(event.button!==0||!event.isPrimary)return
         const {width,height}=event.currentTarget.getBoundingClientRect()
         if(!width||!height)return
         suppressClick.current=false
         onSelectLayer?.(key)
+        if(direct)onPublicSelect?.(section.id,key,event.currentTarget)
         drag.current={pointer:event.pointerId,startX:event.clientX,startY:event.clientY,
           initial,width,height,element:event.currentTarget}
         event.currentTarget.setPointerCapture(event.pointerId)
@@ -115,9 +136,9 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         if(current?.pointer!==event.pointerId||current.element!==event.currentTarget)return
         const dx=event.clientX-current.startX,dy=event.clientY-current.startY
         if(!current.next&&Math.hypot(dx,dy)<5)return
-        const clamp=value=>Math.max(-100,Math.min(100,Math.round(value*10)/10))
-        current.next={...current.initial,x:clamp(current.initial.x+dx/current.width*100),
-          y:clamp(current.initial.y+dy/current.height*100)}
+        const clamp=value=>Math.max(-95,Math.min(95,Math.round(value*10)/10))
+        current.next={...current.initial,x:clamp((Number(current.initial.x)||0)+dx/current.width*100),
+          y:clamp((Number(current.initial.y)||0)+dy/current.height*100)}
         current.element.style.translate=current.next.x+'% '+current.next.y+'%'
       },
       onPointerUp:event=>{
@@ -126,7 +147,8 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         drag.current=null
         if(!current.next)return
         suppressClick.current=true
-        onMoveElement(key,current.next)
+        if(onMoveElement)onMoveElement(key,current.next)
+        else onDirectMoveElement?.(section.id,key,current.next)
       },
       onLostPointerCapture:event=>{
         const current=drag.current
@@ -224,7 +246,10 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       textAlign:['left','center','right'].includes(type.align)?type.align:undefined,
       fontFamily:type.font?sceneFont(type.font):undefined,
       fontSize:Number.isFinite(type.size)?Math.max(8,Math.min(180,type.size)):undefined,
-      lineHeight:Number.isFinite(type.lineHeight)?Math.max(.7,Math.min(3,type.lineHeight)):undefined
+      lineHeight:Number.isFinite(type.lineHeight)?Math.max(.7,Math.min(3,type.lineHeight)):undefined,
+      fontWeight:Number.isFinite(Number(type.weight))?Number(type.weight):undefined,
+      letterSpacing:Number.isFinite(Number(type.spacing))?type.spacing+'px':undefined,
+      color:/^#[a-f0-9]{6}$/i.test(type.color||'')?type.color:undefined
     }
     if(!onEditText)return placement
     return {
@@ -322,6 +347,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
           {url?<PhotoReveal order={i}><PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)} revealOrder={i}>
             <img src={url} draggable={false} alt={asset?.alt||section.title||section.label}
+              style={{objectFit:positions?.['image:'+i]?.fit||undefined}}
               loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>
           </PhotoMotion></PhotoReveal>:
             <div className="pt-site__empty-image">
@@ -520,6 +546,8 @@ export default function PortfolioTemplateSite({
             positions={instance?.content?.positions?.[section.id]?.[device]}
             typography={instance?.content?.typography?.[section.id]?.[device]}
             onMoveElement={editSectionId===section.id?onMoveElement:undefined}
+            onDirectMoveElement={onDirectMoveElement}
+            onPublicSelect={onPublicSelect} publicSelection={publicSelection}
             onSelectLayer={onSelectLayer} lockImageRatio={lockImageRatio}
             styleName={view.style} urls={urls} artistRole={view.artistRole} isPublic={Boolean(publishedView)}
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}

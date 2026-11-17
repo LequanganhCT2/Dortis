@@ -59,6 +59,11 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
     if(next.lineHeight!==undefined)next.lineHeight=safe(next.lineHeight,.7,3)
     if(next.font&&!FONT_OPTIONS.some(o=>o.id===next.font))next.font=old.font
     if(next.align&&!['left','center','right'].includes(next.align))next.align=old.align
+    if(next.weight!==undefined)next.weight=[400,500,600,700,800,900]
+      .includes(Number(next.weight))?Number(next.weight):old.weight??500
+    if(next.spacing!==undefined)next.spacing=safe(next.spacing,-8,20)
+    if(next.color!==undefined&&!/^#[a-f0-9]{6}$/i.test(next.color))
+      next.color=old.color||'#ffffff'
     return {...document,typography:{...typography,[sectionId]:{
       ...layers,[device]:{...deviceValues,[layerId]:next}
     }}}
@@ -73,11 +78,14 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
   if(next.y!==undefined)next.y=safe(next.y,-95,95)
   if(next.rotation!==undefined)next.rotation=safe(next.rotation,-15,15)
   if(next.widthPct!==undefined&&next.widthPct!==null)next.widthPct=safe(next.widthPct,15,100)
+  if(next.radius!==undefined)next.radius=safe(next.radius,0,80)
+  if(next.opacity!==undefined)next.opacity=safe(next.opacity,0,100)
+  if(next.borderWidth!==undefined)next.borderWidth=safe(next.borderWidth,0,12)
+  if(next.borderColor!==undefined&&!/^#[a-f0-9]{6}$/i.test(next.borderColor))
+    next.borderColor=old.borderColor||'#ffffff'
   if(isImageLayer(layerId)){
     if(next.scaleX!==undefined)next.scaleX=safe(next.scaleX,.25,3)
     if(next.scaleY!==undefined)next.scaleY=safe(next.scaleY,.25,3)
-    if(next.radius!==undefined)next.radius=safe(next.radius,0,80)
-    if(next.opacity!==undefined)next.opacity=safe(next.opacity,0,100)
     if(next.fit&&!['cover','contain'].includes(next.fit))next.fit=old.fit
   }
   return {...document,positions:{...positions,[sectionId]:{

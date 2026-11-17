@@ -100,3 +100,43 @@ test('Public UI provides a floating submenu only to admins and persists using se
   assert.match(src('inline-portfolio-inspector.css'),/position:fixed/)
   assert.match(src('inline-portfolio-inspector.css'),/pt-published--admin-edit/)
 })
+
+test('Text and image frames keep independently saved border, opacity and typography',()=>{
+  const framed=patchPublishedElement(snapshot,'story','desktop','title','position',{
+    radius:12,opacity:72,borderWidth:3,borderColor:'#dca679'
+  })
+  assert.equal(framed.positions.story.desktop.title.radius,12)
+  assert.equal(framed.positions.story.desktop.title.opacity,72)
+  assert.equal(framed.positions.story.desktop.title.borderWidth,3)
+  assert.equal(framed.positions.story.desktop.title.borderColor,'#dca679')
+  const typed=patchPublishedElement(framed,'story','desktop','title','typography',{
+    weight:700,spacing:1.5,color:'#faf1e4'
+  })
+  assert.equal(typed.typography.story.desktop.title.weight,700)
+  assert.equal(typed.typography.story.desktop.title.spacing,1.5)
+  assert.equal(typed.typography.story.desktop.title.color,'#faf1e4')
+  assert.deepEqual(typed.positions.story.desktop['image:0'],
+    snapshot.positions.story.desktop['image:0'])
+  assert.deepEqual(typed.positions.story.mobile,snapshot.positions.story.mobile)
+})
+test('Scene borders are bounded and all renderer paths expose editable content',()=>{
+  const board=enableSectionScene(snapshot,section)
+  const edited=patchPublishedElement(board,'story','desktop','image:0','position',{
+    borderWidth:60,borderColor:'#debcaa',radius:30
+  })
+  const image=getScene(edited,section,'desktop').layers['image:0']
+  assert.equal(image.borderWidth,12)
+  assert.equal(image.borderColor,'#debcaa')
+  assert.equal(image.radius,30)
+  const menu=src('InlinePortfolioInspector.jsx')
+  const site=src('PortfolioTemplateSite.jsx')
+  const pub=src('PublishedPortfolio.jsx')
+  assert.match(menu,/Cỡ chữ hiện tại/)
+  assert.match(menu,/Rộng ảnh/)
+  assert.match(menu,/Độ dày viền/)
+  assert.match(menu,/Kích thước đang hiển thị:/)
+  assert.match(site,/function MotionSection/)
+  assert.match(site,/onDirectMoveElement=\{onDirectMoveElement\}/)
+  assert.match(site,/data-pt-public-selected/)
+  assert.match(pub,/measurePublicElement/)
+})

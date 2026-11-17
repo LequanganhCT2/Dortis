@@ -107,3 +107,44 @@
 @media(prefers-reduced-motion:reduce){
   .pt-inline-inspector{transition:none!important}
 }
+
+/* Measurement strip is read from the selected element, not a template default. */
+.pt-inline-inspector__measure{
+  display:flex;flex-direction:column;gap:3px;
+  border:1px solid #d4e6ee;border-radius:10px;
+  background:#eff7fa;padding:9px 11px;color:#466477;
+}
+.pt-inline-inspector__measure>span{
+  font:650 10px/1.4 'Be Vietnam Pro',system-ui;
+}
+.pt-inline-inspector__measure>strong{
+  font:750 15px/1.45 'Be Vietnam Pro',system-ui;
+  color:#153b50;font-variant-numeric:tabular-nums;
+}
+.pt-inline-inspector__measure>small{font-size:10px;color:#617f8e}
+.pt-inline-inspector__field--color>input[type="color"]{
+  display:block;width:100%;height:36px;min-height:36px;
+  padding:4px;cursor:pointer;
+  border:1px solid #ccdee7;border-radius:8px;background:#fff;
+}
+.pt-inline-inspector__field--color>input[type="color"]::-webkit-color-swatch-wrapper{padding:0}
+.pt-inline-inspector__field--color>input[type="color"]::-webkit-color-swatch{
+  border:0;border-radius:5px;
+}
+.pt-inline-inspector__field>select:focus-visible,
+.pt-inline-inspector__field--color>input:focus-visible,
+.pt-inline-inspector__tabs button:focus-visible,
+.pt-inline-inspector__presets button:focus-visible{
+  outline:2px solid #6da9c5;outline-offset:2px;
+}
+@media(max-width:680px){
+  .pt-inline-inspector__tabs{gap:2px;padding:7px}
+  .pt-inline-inspector__tabs button{font-size:10px;padding:7px 2px}
+  .pt-inline-inspector__body{padding:10px 12px 14px}
+}
+
+/* Cover layouts normally disable copy hit-testing for visitors; re-enable
+   only the selected admin editing surface, without changing public pages. */
+.pt-published--admin-edit .pt-site [data-pt-public-editable]{
+  pointer-events:auto!important;
+}
