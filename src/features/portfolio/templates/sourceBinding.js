@@ -1,4 +1,4 @@
-import {normalizeBlueprint} from './model.js'
+import {portfolioSections} from './model.js'
 
 /** Reusable source mapping for any Portfolio. All texts originate from the
  * artist_profiles record. A mapping is a suggestion until Admin reviews it;
@@ -6,15 +6,17 @@ import {normalizeBlueprint} from './model.js'
  */
 const PURPOSES={
   hero:{types:['cover'],keys:['hero','trang bìa','cover','mở đầu']},
+  journey:{types:['stats','biography'],keys:['dấu ấn nghệ thuật','hành trình','dấu ấn','journey']},
+  achievements:{types:['awards','stats','list'],keys:['giải thưởng','thành tựu','chương trình','sự kiện','thành tích','achievements']},
   story:{types:['biography'],keys:['tiểu sử','biography','câu chuyện','giới thiệu','story']},
   about:{types:['biography'],keys:['tiểu sử','biography','giới thiệu','about']},
   bio:{types:['biography'],keys:['tiểu sử','biography','giới thiệu','about']},
   skills:{types:['feature','list'],keys:['kỹ năng','chuyên môn','skills','năng lực','thế mạnh']},
-  performance:{types:['feature'],keys:['biểu diễn','performance','thế mạnh','năng lực']},
+  performance:{types:['gallery','feature','media'],keys:['hình ảnh biểu diễn','biểu diễn','sân khấu','performance','thế mạnh','năng lực']},
   live:{types:['gallery','media'],keys:['live','biểu diễn','show','sân khấu','dự án']},
   highlights:{types:['stats','awards'],keys:['highlights','dấu ấn','thành tích','thành tựu']},
   moments:{types:['stats','awards','gallery'],keys:['khoảnh khắc','dấu ấn','moments','highlights']},
-  gallery:{types:['gallery','media'],keys:['thư viện','hình ảnh','gallery','photo','tác phẩm']},
+  gallery:{types:['gallery','media'],keys:['thư viện','hình ảnh','video','gallery','photo','tác phẩm']},
   portfolio:{types:['gallery','media'],keys:['portfolio','tác phẩm','dự án','gallery']},
   media:{types:['media','gallery'],keys:['media','video','ảnh','tư liệu']},
   press:{types:['awards','stats'],keys:['truyền thông','press','giải thưởng','thành tích']},
@@ -68,22 +70,27 @@ export function copySourceSection(content={},sectionId,source){
     sourcePage:Number(source.page)||null
   }}}
 }
-/** Hydrates only empty sections, preserves instance-specific images/text. */
+/** Connect blank Portfolio sections to existing PDF headings.
+ * Read-only callers can use the result as a live projection; saving the Form
+ * persists these explicit page links so future profile edits stay in sync.
+ * All manual text (including deliberate blank overrides) remains untouched.
+ */
 export function hydrateInstanceFromArtist(template,profile,content={},onlyBlank=true){
-  const blueprint=normalizeBlueprint(template?.blueprint||{})
+  const sections=portfolioSections(template,content)
   const sources=artistSourcePages(profile)
   let result={...content,sections:{...(content.sections||{})},images:{...(content.images||{})}}
-  const used=new Set()
-  for(const section of blueprint.sections){
-    const existing=result.sections[section.id]
-    if(onlyBlank&&existing&&(existing.title||existing.body)){
-      if(existing.sourcePage)used.add(Number(existing.sourcePage))
+  // Reserve all previously linked pages, including links later in the Form.
+  const used=new Set(Object.values(result.sections)
+    .filter(item=>item?.sourcePage).map(item=>Number(item.sourcePage)))
+  for(const section of sections){
+    const existing=result.sections[section.id]||{}
+    if(onlyBlank&&(existing.sourcePage||existing.title||existing.eyebrow||
+      existing.body||Object.values(existing.fieldOverrides||{}).some(Boolean)))
       continue
-    }
     const matched=suggestSourceForLayout(section,sources,used)
     if(!matched)continue
     result=copySourceSection(result,section.id,matched)
-    used.add(matched.page)
+    used.add(Number(matched.page))
   }
   return result
 }

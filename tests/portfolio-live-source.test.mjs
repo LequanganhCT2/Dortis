@@ -48,3 +48,24 @@ test('Each artist and template remain isolated even when instance IDs coincide',
  assert.equal(resolveArtistPortfolio(template,{content:c},other).sections[1].body,'Nội dung của B')
  assert.equal(resolveArtistPortfolio(template,{content:c},person).sections[1].body,'Tiểu sử gốc')
 })
+
+test('New blank Form resolves current PDF titles live and preserves manual overrides',()=>{
+ const flow={slug:'silk-flow',blueprint:{sections:[
+  {id:'hero',label:'Chân dung',layout:'cover',slots:1},
+  {id:'story',label:'Câu chuyện',layout:'split',slots:1}
+ ]}}
+ const draft={content:{sections:{},images:{'hero:0':{path:'photo.png'}}}}
+ const initial=resolveArtistPortfolio(flow,draft,person)
+ assert.equal(initial.sections[0].title,'A gốc')
+ assert.equal(initial.sections[1].title,'Tiểu sử')
+ assert.equal(initial.sections[1].sourcePage,2)
+ assert.equal(initial.sections[1].sourceStatus,'linked')
+ assert.equal(initial.sections[0].images[0].path,'photo.png')
+ const newProfile={...person,sections:person.sections.map(s=>s.page===2?
+   {...s,title:'HÀNH TRÌNH MỚI'}:s)}
+ assert.equal(resolveArtistPortfolio(flow,draft,newProfile).sections[1].title,'HÀNH TRÌNH MỚI')
+ const own={content:{sections:{story:{title:'Tiêu đề riêng',
+   fieldOverrides:{title:true}}}}}
+ assert.equal(resolveArtistPortfolio(flow,own,person).sections[1].title,'Tiêu đề riêng')
+ assert.equal(own.content.sections.story.sourcePage,undefined)
+})

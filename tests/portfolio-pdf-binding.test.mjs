@@ -59,3 +59,48 @@ test('Contact source is not synthesized from an unrelated profile page',()=>{
 test('Page order is determined by actual PDF page numbers not template type',()=>{
  assert.deepEqual(artistSourcePages({sections:[{page:3},{page:1},{page:2}]}).map(x=>x.page),[1,2,3])
 })
+
+test('Silk Flow automatically inherits actual PDF titles by section, with no clicks',()=>{
+ const flow={slug:'silk-flow',blueprint:{style:'editorial',sections:[
+  {id:'hero',label:'01 · Chân dung nghệ sĩ',layout:'cover',slots:1},
+  {id:'story',label:'02 · Câu chuyện nghệ thuật',layout:'split',slots:1},
+  {id:'journey',label:'03 · Hành trình & dấu ấn',layout:'split',slots:1},
+  {id:'skills',label:'04 · Thế mạnh',layout:'text',slots:0},
+  {id:'achievements',label:'05 · Thành tựu',layout:'grid',slots:3},
+  {id:'performance',label:'06 · Khoảnh khắc biểu diễn',layout:'mosaic',slots:4},
+  {id:'gallery',label:'07 · Thư viện nghệ thuật',layout:'grid',slots:6},
+  {id:'contact',label:'08 · Liên hệ',layout:'text',slots:0}
+ ]}}
+ const artist={name:'Nghệ sĩ thử nghiệm',sections:[
+  {page:1,title:'CA SĨ THỬ NGHIỆM',layout:'cover',body:'Bìa'},
+  {page:2,title:'HÀNH TRÌNH ÂM NHẠC',layout:'biography',body:'Tiểu sử'},
+  {page:3,title:'DẤU ẤN NGHỆ THUẬT',layout:'stats',body:'Thành tích'},
+  {page:4,title:'THỂ LOẠI ÂM NHẠC',layout:'list',body:'Chuyên môn'},
+  {page:5,title:'CHƯƠNG TRÌNH & SỰ KIỆN',layout:'list',body:'Sự kiện'},
+  {page:6,title:'HÌNH ẢNH BIỂU DIỄN',layout:'gallery',body:'Biểu diễn'},
+  {page:7,title:'CHƯƠNG TRÌNH VĂN HÓA',layout:'gallery',body:'Văn hóa'},
+  {page:10,title:'HÌNH ẢNH & VIDEO',layout:'media',body:'Thư viện'},
+  {page:11,title:'LIÊN HỆ & BOOKING',layout:'contact',body:'Liên hệ'}
+ ]}
+ const draft=hydrateInstanceFromArtist(flow,artist,{sections:{},images:{}},true)
+ const expected={hero:1,story:2,journey:3,skills:4,achievements:5,
+   performance:6,gallery:10,contact:11}
+ for(const [id,page] of Object.entries(expected))
+   assert.equal(draft.sections[id].sourcePage,page,id)
+ assert.equal(draft.sections.gallery.title,'HÌNH ẢNH & VIDEO')
+ assert.equal(draft.sections.journey.title,'DẤU ẤN NGHỆ THUẬT')
+ assert.deepEqual(Object.keys(draft.images),[])
+ const reserved=hydrateInstanceFromArtist(flow,artist,{
+  sections:{
+   hero:{sourcePage:1,title:'Chỉnh riêng',fieldOverrides:{title:true}},
+   gallery:{sourcePage:10},
+   skills:{title:'Chữ do người dùng nhập'}
+  },
+  images:{'gallery:0':{path:'private.webp'}}
+ },true)
+ assert.equal(reserved.sections.hero.title,'Chỉnh riêng')
+ assert.equal(reserved.sections.gallery.sourcePage,10)
+ assert.equal(reserved.sections.skills.title,'Chữ do người dùng nhập')
+ assert.equal(reserved.images['gallery:0'].path,'private.webp')
+ assert.notEqual(reserved.sections.performance.sourcePage,10)
+})

@@ -3,7 +3,7 @@ import PortfolioTemplateSite from './PortfolioTemplateSite'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
 import {paletteOptionsForTheme} from './portfolioPalette'
 import {normalizeBlueprint,normalizeTemplateBlueprint,portfolioSections,setSectionField,setSlotImage,LUXURY_RIBBON} from './model'
-import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sourceBinding'
+import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist,suggestSourceForLayout} from './sourceBinding'
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
@@ -27,7 +27,7 @@ export default function PortfolioInstanceEditor({
   supabase,user,template,instance,profile,onBack,onSaved,onPublished,
   onPreviewOther,otherTemplateName='',backLabel='← Quay về chọn mẫu Portfolio'
 }){
-  const [content,setContent]=useState(()=>instance.content||{})
+  const [content,setContent]=useState(()=>hydrateInstanceFromArtist(template,profile,instance.content||{},true))
   const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
   const [sourcePage,setSourcePage]=useState('')
   const [sourceProfile,setSourceProfile]=useState(profile)
@@ -85,7 +85,7 @@ export default function PortfolioInstanceEditor({
     return !dirty||window.confirm('Bạn có thay đổi chưa lưu. Rời trình chỉnh sửa?')
   }
   function acceptSaved(data,message){
-    setContent(data.content||{})
+    setContent(hydrateInstanceFromArtist(template,sourceProfile,data.content||{},true))
     setDirty(false)
     onSaved(data)
     setNotice(message)
@@ -112,7 +112,8 @@ export default function PortfolioInstanceEditor({
         .select('id,name,role,sections').eq('id',profile.id).single()
       if(dbError)throw dbError
       setSourceProfile(data)
-      setNotice('Đã đọc bản Hồ sơ nghệ sĩ mới nhất. Các trường đang liên kết tự cập nhật; thay đổi riêng được giữ nguyên.')
+      setContent(previous=>hydrateInstanceFromArtist(template,data,previous,true))
+      setNotice('Đã đọc Hồ sơ nghệ sĩ mới nhất. Tiêu đề và nội dung PDF tự đồng bộ vào các mục trống; phần sửa riêng được giữ nguyên.')
     }catch(e){setError('Không đọc lại được Hồ sơ nghệ sĩ: '+e.message)}
     finally{setRefreshingProfile(false)}
   }

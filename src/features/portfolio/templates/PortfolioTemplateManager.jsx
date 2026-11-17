@@ -7,6 +7,7 @@ import {paletteOptionsForTheme} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {resolveInstance} from './model'
+import {hydrateInstanceFromArtist} from './sourceBinding'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
 
@@ -123,7 +124,8 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     try{
       const {data,error:e}=await supabase.from('artist_website_instances')
         .insert({template_id:t.id,profile_id:profileId,
-          content:{sections:{},images:{}},
+          content:hydrateInstanceFromArtist(t,profiles.find(p=>p.id===profileId),
+            {sections:{},images:{}},true),
           updated_by:user.id,status:'draft'}).select().single()
       if(e)throw e
       setInstances(current=>[data,...current]);setSelection(data.id)

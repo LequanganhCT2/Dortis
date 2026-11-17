@@ -1,5 +1,5 @@
 import {resolveInstance} from './model.js'
-import {artistSourcePages,copySourceSection} from './sourceBinding.js'
+import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist} from './sourceBinding.js'
 
 const FIELDS=['title','eyebrow','body']
 /** Admin preview reads the artist profile as the source of truth.
@@ -7,9 +7,12 @@ const FIELDS=['title','eyebrow','body']
  * The JSON stored in the instance still holds snapshots as a recoverable cache.
  */
 export function resolveArtistPortfolio(template,instance,profile){
-  const base=resolveInstance(template,instance,profile)
+  // A newly assigned Form may have no saved page links yet. Project safe
+  // links in memory so its real PDF titles appear immediately in previews.
+  const linked=hydrateInstanceFromArtist(template,profile,instance?.content||{},true)
+  const base=resolveInstance(template,{...instance,content:linked},profile)
   const sections=artistSourcePages(profile)
-  const content=instance?.content?.sections||{}
+  const content=linked.sections||{}
   return {...base,sections:base.sections.map(section=>{
     const own=content[section.id]||{}
     if(!own.sourcePage)return {...section,sourceStatus:'unlinked',sourcePage:null}
