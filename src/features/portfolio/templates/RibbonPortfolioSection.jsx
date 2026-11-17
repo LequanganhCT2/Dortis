@@ -26,8 +26,8 @@ function positionStyle(position={},type={},key=''){
     }:{}),
     translate:position.x||position.y?(Number(position.x)||0)+'% '+(Number(position.y)||0)+'%':undefined,
     // Legacy scale fields are ignored on text: wrapping never changes the font.
-    scale:!text&&position.scaleX&&position.scaleY?
-      position.scaleX+' '+position.scaleY:undefined,
+    scale:!text&&(position.scaleX!=null||position.scaleY!=null)?
+      (Number(position.scaleX)||1)+' '+(Number(position.scaleY)||1):undefined,
     ...(text?textBoxWidthStyle(position):{}),
     ...(text?{
       textAlign:align,
