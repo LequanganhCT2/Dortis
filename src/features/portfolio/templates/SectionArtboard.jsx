@@ -6,6 +6,7 @@ import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
@@ -132,17 +133,18 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           borderRadius:layer.radius+'px',
           filter:layer.blur?'blur('+layer.blur+'px)':'none'
         }}>
-          {url?<PhotoMotion asset={image} paused={editable} revealOrder={index>=0?index:0}>
+          {url?<PhotoReveal order={index>=0?index:0}><PhotoMotion asset={image} paused={editable} revealOrder={index>=0?index:0}>
             <img src={url} alt={image?.alt||label} draggable={false}
               loading="lazy" decoding="async"
               style={{objectFit:isCutoutArtwork(image)?'contain':layer.fit}}/>
-          </PhotoMotion>:
+          </PhotoMotion></PhotoReveal>:
             <div className="pt-artboard__empty">+<small>{label}<br/>Tải ảnh ở bảng bên trái</small></div>}
         </div>
       : <div className="pt-artboard__text" style={textStyle}
           data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}>
           <CharacterBurst text={source||'Chạm để chỉnh '+label}
-            disabled={editable} maxCharacters={layerId==='body'?140:160}/>
+            disabled={editable} mode={layerId==='body'||layerId.startsWith('note:')?'words':'letters'}
+            maxCharacters={layerId==='body'||layerId.startsWith('note:')?1600:160}/>
         </div>}
     {editable&&selected&&<div className="pt-artboard__selection">
       <span>{label}</span>

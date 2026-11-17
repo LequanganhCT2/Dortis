@@ -3,6 +3,7 @@ import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
@@ -227,7 +228,7 @@ export default function RibbonPortfolioSection({
         !isPublic?<h2 className="pt-ribbon__missing">Chưa có tiêu đề trong hồ sơ</h2>:null}
       {section.body?<p {...editTextProps('body')}>
           <CharacterBurst text={section.body} disabled={editing}
-            maxCharacters={140}/>{resizeHandle('body','nội dung',true)}
+            mode="words" maxCharacters={1600}/>{resizeHandle('body','nội dung',true)}
         </p>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('body')}>+ Thêm mô tả</button>:
@@ -252,12 +253,12 @@ export default function RibbonPortfolioSection({
         data-image-selected={editing&&selectedLayer==='image:'+position?'true':undefined}
         key={section.id+':'+position}
         {...draggableProps('image:'+position)}>
-        {url?<PhotoMotion asset={asset} paused={editing} revealOrder={position}>
+        {url?<PhotoReveal order={position}><PhotoMotion asset={asset} paused={editing} revealOrder={position}>
           <img src={url}
             alt={asset?.alt||section.title||section.label}
             loading={index===0&&position===0?'eager':'lazy'}
             decoding="async" draggable={false}/>
-        </PhotoMotion>:
+        </PhotoMotion></PhotoReveal>:
           editing?<button type="button" className="pt-ribbon__upload-trigger"
             onClick={()=>{
               pendingSlot.current=position

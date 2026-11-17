@@ -178,3 +178,58 @@
   animation:none!important;
   opacity:1;
 }
+
+
+/* Descriptions use separately animated WORDS, not only one whole-paragraph
+ * opacity transition. The actual text stays semantically intact. */
+.pt-site .pt-burst-text--words .pt-burst-word[data-pt-burst-word]{
+  display:inline-block;
+  max-width:100%;
+  white-space:nowrap;
+  backface-visibility:hidden;
+}
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-reveal-part="body"][data-pt-reveal-state="visible"]
+  .pt-burst-word[data-pt-burst-word]{
+  animation:pt-description-word-rise var(--pt-reveal-letter-duration,410ms)
+    cubic-bezier(.16,.87,.26,1) both;
+  animation-delay:var(--pt-word-delay,0ms);
+}
+@keyframes pt-description-word-rise{
+  from{opacity:0;transform:translate3d(0,12px,0) scale(.97)}
+  75%{opacity:1;transform:translate3d(0,-1px,0) scale(1.005)}
+  to{opacity:1;transform:none}
+}
+/* This wrapper makes the photo/image card really reveal, while preserving
+ * the tile's own translate/scale and the PhotoMotion inside it. */
+.pt-site .pt-photo-reveal{
+  display:block;
+  position:relative;
+  width:100%;height:100%;
+  min-width:0;min-height:0;
+  transform-origin:center center;
+  backface-visibility:hidden;
+}
+.pt-site.pt-site--block-reveal-active > section
+  .pt-photo-reveal[data-pt-reveal-state="visible"]{
+  animation-duration:var(--pt-reveal-image-duration,490ms)!important;
+}
+.pt-site.pt-site--block-reveal-active.pt-site--waapi-reveal > section
+  .pt-burst-word[data-pt-burst-word]{
+  animation:none!important;
+  opacity:1;
+}
+.pt-site.pt-site--motion-paused > section .pt-photo-reveal,
+.pt-site.pt-site--motion-paused > section
+  .pt-burst-word[data-pt-burst-word]{
+  animation:none!important;
+  opacity:1!important;
+  transform:none!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site .pt-photo-reveal,
+  .pt-site .pt-burst-word[data-pt-burst-word]{
+    animation:none!important;
+    opacity:1!important;transform:none!important;
+  }
+}

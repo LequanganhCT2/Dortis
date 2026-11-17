@@ -59,7 +59,15 @@ export default function ScrollTextAtmosphere({
           register(node,kind,kind==='body'?bodyIndex++:0)
         }
       })
+      // Observe an independent photo wrapper. Moving the PhotoMotion node
+      // alone did not reveal the visible tile/frame, and legacy image CSS
+      // could suppress transforms on the actual <img>.
+      section.querySelectorAll('.pt-photo-reveal').forEach(node=>{
+        register(node,'image',photoIndex++)
+      })
+      // Compatibility for layouts created before PhotoReveal was introduced.
       section.querySelectorAll('.pt-photo-motion').forEach(node=>{
+        if(node.closest('.pt-photo-reveal'))return
         register(node,'image',photoIndex++)
       })
       // Empty image tiles also reveal; do not animate a saved drag/scale frame
@@ -111,6 +119,7 @@ export default function ScrollTextAtmosphere({
       const kind=node.dataset.ptRevealPart
       if(state==='visible'){
         const letters=node.querySelectorAll('.pt-burst-letter')
+        const words=node.querySelectorAll('.pt-burst-word[data-pt-burst-word]')
         if(letters.length){
           letters.forEach((letter,index)=>{
             start(letter,[
@@ -120,18 +129,37 @@ export default function ScrollTextAtmosphere({
             ],{duration:300,delay:Math.min(240,index*11),
               easing:'cubic-bezier(.18,.85,.27,1)'})
           })
-        }else if(kind==='image'&&node.classList.contains('pt-photo-motion')){
-          start(node,[
-            {opacity:0,transform:'translate3d(0,17px,0) scale(.94)'},
-            {opacity:1,transform:'translate3d(0,-2px,0) scale(1.01)',offset:.73},
+        }else if(kind==='body'&&words.length){
+          words.forEach((word,index)=>start(word,[
+            {opacity:0,transform:'translate3d(0,12px,0) scale(.97)'},
+            {opacity:1,transform:'translate3d(0,-1px,0) scale(1.005)',offset:.75},
             {opacity:1,transform:'none'}
-          ],{duration:380,delay:Number.parseFloat(
+          ],{duration:320,delay:Math.min(650,index*24),
+            easing:'cubic-bezier(.16,.87,.26,1)'}))
+        }else if(kind==='image'&&
+          (node.classList.contains('pt-photo-reveal')||
+            node.classList.contains('pt-photo-motion'))){
+          start(node,[
+            {opacity:0,transform:'translate3d(0,42px,0) scale(.88)'},
+            {opacity:.85,transform:'translate3d(0,-5px,0) scale(1.025)',offset:.68},
+            {opacity:1,transform:'none'}
+          ],{duration:560,delay:Number.parseFloat(
             node.style.getPropertyValue('--pt-reveal-delay'))||0,
             easing:'cubic-bezier(.18,.85,.25,1)'})
+        }else if(kind==='image'){
+          // Missing-photo placeholders reveal without moving draggable tiles.
+          start(node,[{opacity:0,clipPath:'inset(20% 15% 20% 15%)'},
+            {opacity:1,clipPath:'inset(0% 0% 0% 0%)'}],
+            {duration:420,easing:'ease-out'})
         }else{
           // Never override user-authored layer transforms/scale/position.
-          start(node,[{opacity:0},{opacity:1}],{
-            duration:kind==='body'?300:340,easing:'ease-out'})
+          // Fallback for very long descriptions: a visible lift, not an
+          // imperceptible opacity-only change, but never affect text frames.
+          const target=kind==='body'?
+            [{opacity:0,filter:'blur(5px)'},{opacity:1,filter:'blur(0px)'}]:
+            [{opacity:0},{opacity:1}]
+          start(node,target,{
+            duration:kind==='body'?430:340,easing:'ease-out'})
         }
       }else{
         start(node,[{opacity:1},{opacity:0}],{

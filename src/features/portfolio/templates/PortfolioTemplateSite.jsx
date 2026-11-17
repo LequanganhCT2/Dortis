@@ -13,6 +13,7 @@ import RibbonPortfolioSection from './RibbonPortfolioSection'
 import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWidthStyle} from './textFrameSizing'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import PhotoReveal from './PhotoReveal'
 import ScrollTextAtmosphere from './ScrollTextAtmosphere'
 import {normalizeRevealSpeed} from './blockRevealState'
 import CharacterBurst from './CharacterBurst'
@@ -299,7 +300,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         onEditText&&<button type="button" className="pt-copy-add" onClick={()=>onEditText('title')}>Thêm tiêu đề</button>}
       {section.body?<p {...editTextProps('body')}>
         <CharacterBurst text={section.body} disabled={Boolean(onEditText)}
-          maxCharacters={140}/>{textResizeHandle('body','nội dung')}</p>:
+          mode="words" maxCharacters={1600}/>{textResizeHandle('body','nội dung')}</p>:
         onEditText?<button type="button" className="pt-copy-add" onClick={()=>onEditText('body')}>Thêm mô tả</button>:
         !isPublic&&<p className="pt-site__placeholder-text">
           {section.sourceStatus==='missing'
@@ -318,10 +319,10 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
           className={'pt-site__media-tile pt-fx__tile'+(!url?' is-empty':'')+(isCutoutArtwork(asset)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(asset):'')}
           data-ribbon-slot={effect==='ribbon'?i:undefined}
           data-image-selected={onMoveElement&&url&&selectedLayer==='image:'+i?'true':undefined}>
-          {url?<PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)} revealOrder={i}>
+          {url?<PhotoReveal order={i}><PhotoMotion asset={asset} paused={motionPaused||Boolean(onMoveElement)} revealOrder={i}>
             <img src={url} draggable={false} alt={asset?.alt||section.title||section.label}
               loading={index===0&&i===0?'eager':'lazy'} decoding="async"/>
-          </PhotoMotion>:
+          </PhotoMotion></PhotoReveal>:
             <div className="pt-site__empty-image">
               <span aria-hidden="true">+</span>
               <small>ẢNH {String(i+1).padStart(2,'0')}</small>

@@ -5,9 +5,25 @@ import {allowCharacterBurst,splitBurstWords} from './characterBurstText.js'
  * normal wrapping; a single accessible copy avoids screen-reader spelling.
  * Long paragraphs stay native text to prevent a heavy DOM on mobile.
  */
-export default function CharacterBurst({text,disabled=false,maxCharacters=160}){
+export default function CharacterBurst({text,disabled=false,maxCharacters=160,mode='letters'}){
   const value=String(text||'')
   if(disabled||!allowCharacterBurst(value,maxCharacters))return value
+  if(mode==='words'){
+    const tokens=splitBurstWords(value)
+    if(tokens.filter(token=>token.letters).length>170)return value
+    let index=0
+    return <span className="pt-burst-text pt-burst-text--words" data-pt-burst="words">
+      <span className="pt-burst-sr">{value}</span>
+      <span className="pt-burst-visual" aria-hidden="true">
+        {tokens.map((token,i)=>token.space?
+          <React.Fragment key={i}>{token.space}</React.Fragment>:
+          <span className="pt-burst-word" key={i} data-pt-burst-word="true"
+            style={{'--pt-word-delay':Math.min(650,index++*24)+'ms'}}>
+            {token.letters.map(letter=>letter.text).join('')}
+          </span>)}
+      </span>
+    </span>
+  }
   return <span className="pt-burst-text" data-pt-burst="true">
     <span className="pt-burst-sr">{value}</span>
     <span className="pt-burst-visual" aria-hidden="true">
