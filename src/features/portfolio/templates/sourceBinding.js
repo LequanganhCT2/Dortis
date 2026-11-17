@@ -8,7 +8,7 @@ const PURPOSES={
   hero:{types:['cover'],keys:['hero','trang bìa','cover','mở đầu']},
   journey:{types:['stats','biography'],keys:['dấu ấn nghệ thuật','hành trình','dấu ấn','journey']},
   achievements:{types:['awards','stats','list'],keys:['giải thưởng','thành tựu','chương trình','sự kiện','thành tích','achievements']},
-  story:{types:['biography'],keys:['tiểu sử','biography','câu chuyện','giới thiệu','story']},
+  story:{types:['biography'],keys:['tiểu sử','biography','câu chuyện','giới thiệu','hành trình','story']},
   about:{types:['biography'],keys:['tiểu sử','biography','giới thiệu','about']},
   bio:{types:['biography'],keys:['tiểu sử','biography','giới thiệu','about']},
   skills:{types:['feature','list'],keys:['kỹ năng','chuyên môn','skills','năng lực','thế mạnh']},
