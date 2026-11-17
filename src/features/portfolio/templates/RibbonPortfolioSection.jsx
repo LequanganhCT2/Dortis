@@ -3,6 +3,7 @@ import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import CharacterBurst from './CharacterBurst'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
 /**
@@ -212,18 +213,21 @@ export default function RibbonPortfolioSection({
       }}/>}
     <div className="pt-ribbon__copy">
       <small {...editTextProps('eyebrow')}>
-        {String(index+1).padStart(2,'0')} / {section.eyebrow||
-        (index===0&&artistRole?artistRole:section.label)}
+        <CharacterBurst disabled={editing} maxCharacters={120}
+          text={String(index+1).padStart(2,'0')+' / '+(section.eyebrow||
+          (index===0&&artistRole?artistRole:section.label))}/>
         {resizeHandle('eyebrow','nhãn phụ',true)}
       </small>
       {section.title?<h2 {...editTextProps('title')}>
-          {section.title}{resizeHandle('title','tiêu đề',true)}
+          <CharacterBurst text={section.title} disabled={editing}
+            maxCharacters={160}/>{resizeHandle('title','tiêu đề',true)}
         </h2>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('title')}>+ Thêm tiêu đề</button>:
         !isPublic?<h2 className="pt-ribbon__missing">Chưa có tiêu đề trong hồ sơ</h2>:null}
       {section.body?<p {...editTextProps('body')}>
-          {section.body}{resizeHandle('body','nội dung',true)}
+          <CharacterBurst text={section.body} disabled={editing}
+            maxCharacters={140}/>{resizeHandle('body','nội dung',true)}
         </p>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('body')}>+ Thêm mô tả</button>:

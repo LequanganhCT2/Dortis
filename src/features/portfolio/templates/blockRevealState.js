@@ -19,15 +19,26 @@ export function blockAnimationName(state,direction){
   return state==='hidden-top'?'pt-block-exit-top':'pt-block-exit-bottom'
 }
 
-/** One section entrance schedules its label, title, copy, then real photos.
- * Durations use milliseconds, not scroll percentage. */
+/** Individual elements show as soon as they cross the viewport edge. */
+export function classifyPortfolioPart(rect,viewportTop,viewportBottom){
+  const height=Math.max(0,viewportBottom-viewportTop)
+  if(height<=0)return 'visible'
+  const top=viewportTop+Math.min(26,height*.035)
+  const bottom=viewportBottom-Math.min(30,height*.04)
+  if(rect.bottom<=top)return 'hidden-top'
+  if(rect.top>=bottom)return 'hidden-bottom'
+  return 'visible'
+}
+/** No multi-second section queues. A very short image stagger is optional,
+ * and only matters if photos enter the viewport in the same frame.
+ */
 export function portfolioPartDelays(kind,index=0){
   const order=Math.max(0,Math.min(8,Math.trunc(Number(index)||0)))
   switch(kind){
-    case 'eyebrow':return {enter:0,exit:540}
-    case 'title':return {enter:540,exit:360}
-    case 'body':return {enter:1120+order*240,exit:180}
-    case 'image':return {enter:1780+order*480,exit:order*65}
+    case 'eyebrow':return {enter:0,exit:0}
+    case 'title':return {enter:0,exit:0}
+    case 'body':return {enter:0,exit:0}
+    case 'image':return {enter:Math.min(70,order*12),exit:0}
     default:return {enter:0,exit:0}
   }
 }

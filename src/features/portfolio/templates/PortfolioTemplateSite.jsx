@@ -14,6 +14,7 @@ import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWid
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
 import ScrollTextAtmosphere from './ScrollTextAtmosphere'
+import CharacterBurst from './CharacterBurst'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
@@ -286,12 +287,18 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     {section.title&&<span className="pt-fx__type-echo" aria-hidden="true">{section.title}</span>}
     <div className="pt-site__copy" style={onEditText?{pointerEvents:'auto'}:undefined}>
       {(section.eyebrow||index===0||!isPublic)&&<small {...editTextProps('eyebrow')}>
-        {section.eyebrow||(index===0&&artistRole?artistRole:section.label)}
+        <CharacterBurst text={section.eyebrow||
+          (index===0&&artistRole?artistRole:section.label)}
+          disabled={Boolean(onEditText)} maxCharacters={120}/>
         {textResizeHandle('eyebrow','nhãn phụ')}
       </small>}
-      {section.title?<h2 {...editTextProps('title')}>{section.title}{textResizeHandle('title','tiêu đề')}</h2>:
+      {section.title?<h2 {...editTextProps('title')}>
+        <CharacterBurst text={section.title} disabled={Boolean(onEditText)}
+          maxCharacters={160}/>{textResizeHandle('title','tiêu đề')}</h2>:
         onEditText&&<button type="button" className="pt-copy-add" onClick={()=>onEditText('title')}>Thêm tiêu đề</button>}
-      {section.body?<p {...editTextProps('body')}>{section.body}{textResizeHandle('body','nội dung')}</p>:
+      {section.body?<p {...editTextProps('body')}>
+        <CharacterBurst text={section.body} disabled={Boolean(onEditText)}
+          maxCharacters={140}/>{textResizeHandle('body','nội dung')}</p>:
         onEditText?<button type="button" className="pt-copy-add" onClick={()=>onEditText('body')}>Thêm mô tả</button>:
         !isPublic&&<p className="pt-site__placeholder-text">
           {section.sourceStatus==='missing'

@@ -1,110 +1,153 @@
 /*
- * Dortis sequential reveal: viewport entry triggers one timeline per section.
- * The actual text, description and image are independent, staggered layers.
- * Positioning and custom transforms on artboard/ribbon containers remain saved.
+ * Immediate per-element reveal (2026): title, copy and real image tiles react
+ * to their own viewport intersection, not to a queue for the whole section.
+ * Layout geometry, inline transforms, image crops, and stored text styles are
+ * never changed. CharacterBurst animates only semantic inner glyph spans.
  */
 .pt-site > .pt-scroll-text-canvas,
 .pt-site.pt-site--continuous-silk > .pt-scroll-text-canvas{
-  position:absolute!important;
-  top:0;left:0;
-  display:block;
-  width:100%;height:1px;
-  z-index:3!important;
-  margin:0;border:0;
-  background:transparent;
-  pointer-events:none!important;
-  user-select:none;
-  mix-blend-mode:screen;
-  contain:paint;
+  position:absolute!important;top:0;left:0;display:block;
+  width:100%;height:1px;z-index:3!important;margin:0;border:0;
+  background:transparent;pointer-events:none!important;
+  user-select:none;mix-blend-mode:screen;contain:paint;
 }
-/* Target only the actual content, never an entire copy/media layout group.
-   In Layer Studio the animation runs on the inner text/photo element, not the
-   absolutely positioned .pt-artboard__layer containing the saved transform. */
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state]
+/* An observed element owns its reveal. No parent section is faded out. */
+.pt-site.pt-site--block-reveal-active > section
   :is(.pt-ribbon__copy [data-pt-reveal-part],
       .pt-site__copy [data-pt-reveal-part],
       .pt-ribbon__media .pt-photo-motion[data-pt-reveal-part],
       .pt-site__media .pt-photo-motion[data-pt-reveal-part],
       .pt-artboard__layer .pt-artboard__text[data-pt-reveal-part],
       .pt-artboard__layer .pt-photo-motion[data-pt-reveal-part]){
-  animation-duration:840ms;
-  animation-timing-function:cubic-bezier(.18,.84,.26,1);
-  animation-fill-mode:both;
-  animation-iteration-count:1;
+  animation-duration:330ms!important;
+  animation-timing-function:cubic-bezier(.16,.88,.25,1)!important;
+  animation-fill-mode:both!important;
+  animation-iteration-count:1!important;
   animation-timeline:auto!important;
   animation-range:normal!important;
-  transform-origin:center 55%;
   backface-visibility:hidden;
 }
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state="visible"]
-  [data-pt-reveal-part]{
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-part="image"]{
+  animation-duration:390ms!important;
+}
+/* Before first entry, offscreen parts do not flash through an exit animation. */
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state^="hidden"]:not([data-pt-reveal-seen]){
+  animation:none!important;opacity:0!important;
+}
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state="visible"]{
   animation-delay:var(--pt-reveal-delay,0ms)!important;
 }
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state="visible"][data-pt-block-direction="down"]
-  [data-pt-reveal-part]{animation-name:pt-block-enter-bottom}
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state="visible"][data-pt-block-direction="up"]
-  [data-pt-reveal-part]{animation-name:pt-block-enter-top}
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state="hidden-top"]
-  [data-pt-reveal-part]{
-  animation-name:pt-block-exit-top;
-  animation-duration:460ms;
-  animation-delay:var(--pt-reveal-exit-delay,0ms)!important;
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state="visible"][data-pt-reveal-direction="down"]{
+  animation-name:pt-block-enter-bottom!important;
 }
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-state="hidden-bottom"]
-  [data-pt-reveal-part]{
-  animation-name:pt-block-exit-bottom;
-  animation-duration:460ms;
-  animation-delay:var(--pt-reveal-exit-delay,0ms);
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state="visible"][data-pt-reveal-direction="up"]{
+  animation-name:pt-block-enter-top!important;
 }
-/* Unvisited sections and the initially visible section start transparent;
-   no first-frame flash and no exit animation before they have entered. */
-.pt-site.pt-site--block-reveal-active > section[data-pt-block-prime="true"]
-  [data-pt-reveal-part]{
-  animation:none!important;
-  opacity:0;
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state="hidden-top"][data-pt-reveal-seen]{
+  animation-name:pt-block-exit-top!important;
+  animation-delay:0ms!important;animation-duration:180ms!important;
 }
-/* Entrance from below/above uses only a short-lived inner 3D motion,
-   independent of saved transforms, image scaling and layout coordinates. */
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state="hidden-bottom"][data-pt-reveal-seen]{
+  animation-name:pt-block-exit-bottom!important;
+  animation-delay:0ms!important;animation-duration:180ms!important;
+}
 @keyframes pt-block-enter-bottom{
-  0%{opacity:0;transform:translate3d(0,26px,-24px) rotateX(-5deg);scale:.94}
-  65%{opacity:1;transform:translate3d(0,-4px,5px) rotateX(1deg);scale:1.025}
+  0%{opacity:0;transform:translate3d(0,15px,-8px);scale:.965}
+  68%{opacity:1;transform:translate3d(0,-2px,2px);scale:1.008}
   100%{opacity:1;transform:none;scale:1}
 }
 @keyframes pt-block-enter-top{
-  0%{opacity:0;transform:translate3d(0,-25px,-22px) rotateX(5deg);scale:1.045}
-  65%{opacity:1;transform:translate3d(0,3px,5px) rotateX(-1deg);scale:.99}
+  0%{opacity:0;transform:translate3d(0,-13px,-8px);scale:.965}
+  68%{opacity:1;transform:translate3d(0,2px,2px);scale:1.008}
   100%{opacity:1;transform:none;scale:1}
 }
 @keyframes pt-block-exit-top{
-  0%{opacity:1;transform:none;scale:1}
-  100%{opacity:0;transform:translate3d(0,-20px,-12px) rotateX(4deg);scale:.97}
+  from{opacity:1;transform:none;scale:1}
+  to{opacity:0;transform:translate3d(0,-9px,0);scale:.985}
 }
 @keyframes pt-block-exit-bottom{
-  0%{opacity:1;transform:none;scale:1}
-  100%{opacity:0;transform:translate3d(0,20px,-12px) rotateX(-4deg);scale:.97}
+  from{opacity:1;transform:none;scale:1}
+  to{opacity:0;transform:translate3d(0,9px,0);scale:.985}
 }
-/* Direct editing and accessibility must never hide artist content. */
+/* Accessible letter burst. Text stays selectable via native DOM; screen
+ * readers receive one complete unsplit copy. Glyph spans never affect frames. */
+.pt-burst-text{display:inline;white-space:pre-wrap}
+.pt-burst-sr{
+  position:absolute!important;width:1px;height:1px;
+  padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%);
+}
+.pt-burst-visual{display:inline;white-space:pre-wrap}
+.pt-burst-word{display:inline-block;white-space:nowrap;max-width:100%}
+.pt-burst-letter{
+  display:inline-block;
+  transform:translate3d(0,0,0);opacity:1;
+  backface-visibility:hidden;
+}
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-part="title"][data-pt-reveal-state="visible"]
+  .pt-burst-letter,
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-part="eyebrow"][data-pt-reveal-state="visible"]
+  .pt-burst-letter,
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-part="body"][data-pt-reveal-state="visible"]
+  .pt-burst-letter{
+  animation:pt-letter-pop 330ms cubic-bezier(.14,.9,.27,1.18) both;
+  animation-delay:var(--pt-letter-delay,0ms);
+}
+@keyframes pt-letter-pop{
+  0%{opacity:0;transform:translate3d(0,15px,-12px) rotateX(-24deg) scale(.72)}
+  68%{opacity:1;transform:translate3d(0,-3px,3px) rotateX(2deg) scale(1.035)}
+  100%{opacity:1;transform:none}
+}
+/* Letters vanish quickly on upward/downward exit, without another long queue. */
+.pt-site.pt-site--block-reveal-active > section
+  [data-pt-reveal-state^="hidden"] .pt-burst-letter{
+  animation:none!important;opacity:1;
+}
+/* Live editing must never be blocked by visual timing. */
 .pt-site.pt-site--motion-paused > section [data-pt-reveal-part],
-.pt-site :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing) [data-pt-reveal-part]{
+.pt-site :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing)
+  [data-pt-reveal-part]{
   animation:none!important;
-  opacity:1!important;
-  transform:none!important;
-  scale:1!important;
+  opacity:1!important;transform:none!important;scale:1!important;
 }
-.pt-site.pt-site--motion-paused > .pt-scroll-text-canvas{display:none!important}
+.pt-site.pt-site--motion-paused > section .pt-burst-letter,
+.pt-site :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing)
+  .pt-burst-letter{
+  animation:none!important;opacity:1!important;transform:none!important;
+}
+.pt-site.pt-site--motion-paused > .pt-scroll-text-canvas{
+  display:none!important;
+}
 @media(max-width:680px){
-  .pt-site > .pt-scroll-text-canvas{opacity:.65}
-  .pt-site.pt-site--block-reveal-active > section[data-pt-block-state]
-    [data-pt-reveal-part]{animation-duration:670ms}
-  .pt-site.pt-site--block-reveal-active > section[data-pt-block-state^="hidden"]
-    [data-pt-reveal-part]{animation-duration:360ms}
+  .pt-site > .pt-scroll-text-canvas{display:none!important}
+  .pt-site.pt-site--block-reveal-active > section
+    [data-pt-reveal-state="visible"]{
+    animation-duration:275ms!important;
+  }
+  .pt-site.pt-site--block-reveal-active > section
+    [data-pt-reveal-part="image"][data-pt-reveal-state="visible"]{
+    animation-duration:320ms!important;
+  }
+  .pt-site.pt-site--block-reveal-active > section
+    [data-pt-reveal-state="visible"] .pt-burst-letter{
+    animation-duration:290ms;
+  }
 }
 @media(prefers-reduced-motion:reduce){
   .pt-site > .pt-scroll-text-canvas{display:none!important}
-  .pt-site > section [data-pt-reveal-part]{
-    animation:none!important;
-    opacity:1!important;
-    transform:none!important;
-    scale:1!important;
+  .pt-site > section [data-pt-reveal-part],
+  .pt-site > section .pt-burst-letter{
+    animation:none!important;opacity:1!important;
+    transform:none!important;scale:1!important;
   }
 }

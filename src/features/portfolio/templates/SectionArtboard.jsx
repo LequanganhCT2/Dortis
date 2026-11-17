@@ -6,6 +6,7 @@ import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
+import CharacterBurst from './CharacterBurst'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
@@ -140,7 +141,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
         </div>
       : <div className="pt-artboard__text" style={textStyle}
           data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}>
-          {source||'Chạm để chỉnh '+label}
+          <CharacterBurst text={source||'Chạm để chỉnh '+label}
+            disabled={editable} maxCharacters={layerId==='body'?140:160}/>
         </div>}
     {editable&&selected&&<div className="pt-artboard__selection">
       <span>{label}</span>

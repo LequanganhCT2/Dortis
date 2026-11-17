@@ -1,6 +1,6 @@
-import React,{useEffect,useRef} from 'react'
+import React,{useLayoutEffect,useRef} from 'react'
 import {scrollCanvasBounds} from './scrollTextMotion'
-import {classifyPortfolioBlock,blockTravelDirection,portfolioPartDelays} from './blockRevealState'
+import {classifyPortfolioBlock,classifyPortfolioPart,blockTravelDirection,portfolioPartDelays} from './blockRevealState'
 import './scroll-text-atmosphere.css'
 
 /**
@@ -15,7 +15,7 @@ export default function ScrollTextAtmosphere({
   rootRef,paused=false,sectionsKey='',device='desktop'
 }){
   const canvasRef=useRef(null)
-  useEffect(()=>{
+  useLayoutEffect(()=>{
     const root=rootRef.current
     const canvas=canvasRef.current
     if(!root||paused||!canvas)return undefined
@@ -40,11 +40,13 @@ export default function ScrollTextAtmosphere({
     // Animate visible content on inner layers only. Saved layer transforms,
     // portrait crops, font sizes and user-defined opacity stay on their parents.
     const revealParts=[]
+    const trackedParts=new Set()
     for(const section of sections){
       let bodyIndex=0,photoIndex=0
       const register=(node,kind,index=0)=>{
         const {enter,exit}=portfolioPartDelays(kind,index)
         node.dataset.ptRevealPart=kind
+        trackedParts.add(node)
         node.style.setProperty('--pt-reveal-delay',enter+'ms')
         node.style.setProperty('--pt-reveal-exit-delay',exit+'ms')
         revealParts.push(node)
@@ -90,14 +92,14 @@ export default function ScrollTextAtmosphere({
       if(bounds.height>0){
         for(const [section,start] of bursts){
           const age=now-start
-          if(age>930){bursts.delete(section);continue}
+          if(age>520){bursts.delete(section);continue}
           const target=section.querySelector('.pt-ribbon__copy h2, .pt-site__copy h2, .pt-artboard__layer.is-text')
           const rect=(target||section).getBoundingClientRect()
           if(rect.bottom<bounds.top||rect.top>bounds.bottom)continue
           const x=Math.max(0,Math.min(width,rect.left-rootRect.left+rect.width*.5))
           const y=Math.max(0,Math.min(height,rect.top-bounds.top+Math.min(rect.height*.38,80)))
-          const progress=Math.max(0,Math.min(1,age/930))
-          const alpha=Math.sin(Math.PI*progress)*.3
+          const progress=Math.max(0,Math.min(1,age/520))
+          const alpha=Math.sin(Math.PI*progress)*.16
           const radius=Math.min(145,Math.max(65,rootRect.width*.08))
           ctx.save()
           ctx.globalAlpha=alpha
@@ -119,10 +121,16 @@ export default function ScrollTextAtmosphere({
       delete section.dataset.ptBlockPrime
       section.dataset.ptBlockDirection=entryDirection
       section.dataset.ptBlockState=state
-      if(state==='visible'&&ctx){
+      if(state==='visible'&&ctx&&device!=='mobile'){
         bursts.set(section,performance.now())
         if(!burstFrame)burstFrame=requestAnimationFrame(drawGoldBurst)
       }
+    }
+    function markPart(node,state,entryDirection=direction){
+      if(node.dataset.ptRevealState===state)return
+      node.dataset.ptRevealDirection=entryDirection
+      if(state==='visible')node.dataset.ptRevealSeen='true'
+      node.dataset.ptRevealState=state
     }
     const box=viewport()
     const visibleInitially=[]
@@ -135,6 +143,11 @@ export default function ScrollTextAtmosphere({
       section.dataset.ptBlockDirection='down'
       if(state==='visible')visibleInitially.push(section)
     }
+    // Element states are applied before paint to avoid offscreen flashing.
+    for(const part of revealParts){
+      markPart(part,classifyPortfolioPart(part.getBoundingClientRect(),
+        box.top,box.bottom),'down')
+    }
     const changeDirection=()=>{
       const next=currentScroll()
       direction=blockTravelDirection(lastScroll,next,direction)
@@ -146,14 +159,17 @@ export default function ScrollTextAtmosphere({
         changeDirection()
         const area=viewport()
         for(const entry of entries){
-          // Match both viewport edges to the same discrete reveal thresholds.
-          // In particular, scrolling past the top must exit upwards.
-          mark(entry.target,classifyPortfolioBlock(entry.boundingClientRect,
-            area.top,area.bottom))
+          if(trackedParts.has(entry.target)){
+            markPart(entry.target,entry.isIntersecting?'visible':
+              classifyPortfolioPart(entry.boundingClientRect,area.top,area.bottom))
+          }else{
+            mark(entry.target,classifyPortfolioBlock(entry.boundingClientRect,
+              area.top,area.bottom))
+          }
         }
       },{
         root:scrollingHost,
-        rootMargin:'-10% 0px -15% 0px',
+        rootMargin:'-3% 0px -3% 0px',
         threshold:0
       })
     function scan(){
@@ -162,6 +178,10 @@ export default function ScrollTextAtmosphere({
       const area=viewport()
       for(const section of sections){
         mark(section,classifyPortfolioBlock(section.getBoundingClientRect(),
+          area.top,area.bottom))
+      }
+      for(const part of revealParts){
+        markPart(part,classifyPortfolioPart(part.getBoundingClientRect(),
           area.top,area.bottom))
       }
     }
@@ -176,8 +196,10 @@ export default function ScrollTextAtmosphere({
     initialFrame=requestAnimationFrame(()=>{
       initialFrame=0
       for(const section of visibleInitially)mark(section,'visible','down')
-      if(observer)sections.forEach(section=>observer.observe(section))
-      else scan()
+      if(observer){
+        sections.forEach(section=>observer.observe(section))
+        revealParts.forEach(part=>observer.observe(part))
+      }else scan()
     })
     document.addEventListener('scroll',onScroll,{capture:true,passive:true})
     window.addEventListener('resize',onResize,{passive:true})
@@ -202,6 +224,9 @@ export default function ScrollTextAtmosphere({
       })
       revealParts.forEach(node=>{
         delete node.dataset.ptRevealPart
+        delete node.dataset.ptRevealState
+        delete node.dataset.ptRevealDirection
+        delete node.dataset.ptRevealSeen
         node.style.removeProperty('--pt-reveal-delay')
         node.style.removeProperty('--pt-reveal-exit-delay')
       })

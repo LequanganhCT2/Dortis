@@ -57,7 +57,7 @@ test('One Canvas highlights section-level entrance without per-text opacity upda
   const src=file('ScrollTextAtmosphere.jsx')
   assert.match(src,/getContext\('2d',\{alpha:true\}\)/)
   assert.match(src,/new IntersectionObserver\(/)
-  assert.match(src,/rootMargin:'-10% 0px -15% 0px'/)
+  assert.match(src,/rootMargin:'-3% 0px -3% 0px'/)
   assert.match(src,/requestAnimationFrame\(drawGoldBurst\)/)
   assert.match(src,/root\.querySelectorAll\(':scope > section\[id\^="pt-"\]'\)/)
   assert.match(src,/dataset\.ptBlockState=state/)

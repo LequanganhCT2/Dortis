@@ -63,7 +63,7 @@ test('Whole block fade and scale preserves per-photo motion and editing',()=>{
   assert.match(css,/pt-block-enter-top/)
   assert.match(css,/pt-block-exit-bottom/)
   assert.match(css,/pt-block-exit-top/)
-  assert.match(css,/scale:1\.025/)
+  assert.match(css,/scale:1\.008/)
   assert.match(css,/pt-site--motion-paused/)
   assert.match(css,/\.pt-scene-section\.is-editing/)
   assert.match(css,/prefers-reduced-motion:reduce/)
