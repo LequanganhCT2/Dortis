@@ -1,6 +1,6 @@
 import React,{useLayoutEffect,useRef} from 'react'
 import {scrollCanvasBounds} from './scrollTextMotion'
-import {classifyPortfolioBlock,classifyPortfolioPart,blockTravelDirection,portfolioPartDelays} from './blockRevealState'
+import {classifyPortfolioBlock,classifyPortfolioPart,blockTravelDirection,portfolioPartDelays,normalizeRevealSpeed,scaledRevealMs} from './blockRevealState'
 import './scroll-text-atmosphere.css'
 
 /**
@@ -12,7 +12,7 @@ import './scroll-text-atmosphere.css'
  * behind newly opened sections. Text and photos remain normal DOM layers.
  */
 export default function ScrollTextAtmosphere({
-  rootRef,paused=false,sectionsKey='',device='desktop'
+  rootRef,paused=false,sectionsKey='',device='desktop',speed=.8
 }){
   const canvasRef=useRef(null)
   useLayoutEffect(()=>{
@@ -21,6 +21,8 @@ export default function ScrollTextAtmosphere({
     if(!root||paused||!canvas)return undefined
     const motion=window.matchMedia?.('(prefers-reduced-motion: reduce)')
     if(motion?.matches)return undefined
+    const pace=normalizeRevealSpeed(speed)
+    const ms=value=>scaledRevealMs(value,pace)
     const sections=Array.from(root.querySelectorAll(':scope > section[id^="pt-"]'))
     if(!sections.length)return undefined
 
@@ -77,6 +79,10 @@ export default function ScrollTextAtmosphere({
     let initialFrame=0
     let fallbackFrame=0
     const bursts=new Map()
+    root.style.setProperty('--pt-reveal-duration',ms(330)+'ms')
+    root.style.setProperty('--pt-reveal-image-duration',ms(390)+'ms')
+    root.style.setProperty('--pt-reveal-letter-duration',ms(330)+'ms')
+    root.style.setProperty('--pt-reveal-exit-duration',ms(180)+'ms')
     root.classList.add('pt-site--block-reveal-active')
     // WAAPI is explicit and is not suppressed by legacy CSS animation rules.
     // The CSS-only state animations remain as a fallback for older browsers.
@@ -94,7 +100,11 @@ export default function ScrollTextAtmosphere({
       stopPartAnimations(node)
       const list=[]
       const start=(target,frames,options)=>{
-        const animation=target.animate(frames,{fill:'both',...options})
+        const animation=target.animate(frames,{
+          fill:'both',...options,
+          duration:ms(options.duration),
+          delay:ms(options.delay||0)
+        })
         list.push(animation)
         animation.onfinish=()=>{animation.cancel()}
       }
@@ -281,6 +291,10 @@ export default function ScrollTextAtmosphere({
       if(fallbackFrame)cancelAnimationFrame(fallbackFrame)
       if(burstFrame)cancelAnimationFrame(burstFrame)
       bursts.clear()
+      root.style.removeProperty('--pt-reveal-duration')
+      root.style.removeProperty('--pt-reveal-image-duration')
+      root.style.removeProperty('--pt-reveal-letter-duration')
+      root.style.removeProperty('--pt-reveal-exit-duration')
       root.classList.remove('pt-site--block-reveal-active')
       root.classList.remove('pt-site--waapi-reveal')
       for(const node of activeAnimations.keys())stopPartAnimations(node)
@@ -299,7 +313,7 @@ export default function ScrollTextAtmosphere({
       })
       if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height)
     }
-  },[rootRef,paused,sectionsKey,device])
+  },[rootRef,paused,sectionsKey,device,speed])
   return <canvas ref={canvasRef} className="pt-scroll-text-canvas"
     aria-hidden="true" role="presentation"/>
 }

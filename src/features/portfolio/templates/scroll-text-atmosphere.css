@@ -19,7 +19,7 @@
       .pt-site__media .pt-photo-motion[data-pt-reveal-part],
       .pt-artboard__layer .pt-artboard__text[data-pt-reveal-part],
       .pt-artboard__layer .pt-photo-motion[data-pt-reveal-part]){
-  animation-duration:330ms!important;
+  animation-duration:var(--pt-reveal-duration,410ms)!important;
   animation-timing-function:cubic-bezier(.16,.88,.25,1)!important;
   animation-fill-mode:both!important;
   animation-iteration-count:1!important;
@@ -29,7 +29,7 @@
 }
 .pt-site.pt-site--block-reveal-active > section
   [data-pt-reveal-part="image"]{
-  animation-duration:390ms!important;
+  animation-duration:var(--pt-reveal-image-duration,490ms)!important;
 }
 /* Before first entry, offscreen parts do not flash through an exit animation. */
 .pt-site.pt-site--block-reveal-active > section
@@ -51,12 +51,12 @@
 .pt-site.pt-site--block-reveal-active > section
   [data-pt-reveal-state="hidden-top"][data-pt-reveal-seen]{
   animation-name:pt-block-exit-top!important;
-  animation-delay:0ms!important;animation-duration:180ms!important;
+  animation-delay:0ms!important;animation-duration:var(--pt-reveal-exit-duration,225ms)!important;
 }
 .pt-site.pt-site--block-reveal-active > section
   [data-pt-reveal-state="hidden-bottom"][data-pt-reveal-seen]{
   animation-name:pt-block-exit-bottom!important;
-  animation-delay:0ms!important;animation-duration:180ms!important;
+  animation-delay:0ms!important;animation-duration:var(--pt-reveal-exit-duration,225ms)!important;
 }
 @keyframes pt-block-enter-bottom{
   0%{opacity:0;transform:translate3d(0,15px,-8px);scale:.965}
@@ -100,7 +100,7 @@
 .pt-site.pt-site--block-reveal-active > section
   [data-pt-reveal-part="body"][data-pt-reveal-state="visible"]
   .pt-burst-letter{
-  animation:pt-letter-pop 330ms cubic-bezier(.14,.9,.27,1.18) both;
+  animation:pt-letter-pop var(--pt-reveal-letter-duration,410ms) cubic-bezier(.14,.9,.27,1.18) both;
   animation-delay:var(--pt-letter-delay,0ms);
 }
 @keyframes pt-letter-pop{
@@ -132,15 +132,15 @@
   .pt-site > .pt-scroll-text-canvas{display:none!important}
   .pt-site.pt-site--block-reveal-active > section
     [data-pt-reveal-state="visible"]{
-    animation-duration:275ms!important;
+    animation-duration:var(--pt-reveal-duration,410ms)!important;
   }
   .pt-site.pt-site--block-reveal-active > section
     [data-pt-reveal-part="image"][data-pt-reveal-state="visible"]{
-    animation-duration:320ms!important;
+    animation-duration:var(--pt-reveal-image-duration,490ms)!important;
   }
   .pt-site.pt-site--block-reveal-active > section
     [data-pt-reveal-state="visible"] .pt-burst-letter{
-    animation-duration:290ms;
+    animation-duration:var(--pt-reveal-letter-duration,410ms);
   }
 }
 @media(prefers-reduced-motion:reduce){

@@ -47,7 +47,7 @@ test('There is a user-triggered replay without changing portfolio save data',()=
   const editor=get('PortfolioInstanceEditor.jsx')
   const site=get('PortfolioTemplateSite.jsx')
   assert.match(editor,/↻ Xem hiệu ứng/)
-  assert.match(editor,/scrollBox\?\.scrollTo\(\{top:0,behavior:'auto'\}\)/)
+  assert.match(editor,/Phát lại hiệu ứng chữ và ảnh ngay tại vị trí đang xem/)
   assert.match(editor,/setRevealReplayKey\(value=>value\+1\)/)
   assert.match(editor,/revealReplayKey=\{revealReplayKey\}/)
   assert.match(site,/revealReplayKey=0/)

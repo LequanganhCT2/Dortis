@@ -61,7 +61,7 @@ test('Individual title, copy and photo reveals are immediate',()=>{
   assert.match(css,/\.pt-site__copy/)
   assert.match(css,/\.pt-artboard__layer/)
   assert.match(css,/\.pt-ribbon__media/)
-  assert.match(css,/animation-duration:330ms/)
+  assert.match(css,/animation-duration:var\(--pt-reveal-duration,410ms\)/)
   assert.match(css,/@keyframes pt-block-enter-bottom/)
   assert.match(css,/@keyframes pt-block-enter-top/)
   assert.match(css,/scale:1\.008/)

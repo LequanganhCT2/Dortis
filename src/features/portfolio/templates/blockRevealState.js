@@ -42,3 +42,19 @@ export function portfolioPartDelays(kind,index=0){
     default:return {enter:0,exit:0}
   }
 }
+
+/** Speed multiplier: smaller values mean a more deliberate animation. */
+export const PORTFOLIO_REVEAL_SPEEDS=Object.freeze([
+  {value:.6,label:'Rất chậm · 0,6×'},
+  {value:.8,label:'Chậm · 0,8×'},
+  {value:1,label:'Bình thường · 1×'},
+  {value:1.25,label:'Nhanh · 1,25×'},
+  {value:1.5,label:'Rất nhanh · 1,5×'}
+])
+export function normalizeRevealSpeed(value){
+  const parsed=Number(value)
+  return PORTFOLIO_REVEAL_SPEEDS.some(item=>item.value===parsed)?parsed:.8
+}
+export function scaledRevealMs(ms,speed=.8){
+  return Math.max(1,Math.round(Math.max(0,Number(ms)||0)/normalizeRevealSpeed(speed)))
+}

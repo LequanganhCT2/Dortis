@@ -1,4 +1,5 @@
 import {normalizePortfolioPalette,paletteOptionsForTheme} from './portfolioPalette.js'
+import {normalizeRevealSpeed} from './blockRevealState.js'
 
 /** Reusable layout only. Artist names, claims, images, and booking live on instances.
  * Suggested neutral tokens are PROPOSED, never an artist's approved identity.
@@ -132,6 +133,7 @@ export function resolveInstance(template,instance,profile){
     artistName,artistRole:String(profile?.role||''),
     style:blueprint.style,visualTheme:blueprint.visualTheme,
     colorPalette,
+    revealSpeed:normalizeRevealSpeed(content.revealSpeed),
     ribbonLayout:blueprint.ribbonLayout,ribbonDirection:blueprint.ribbonDirection,
     glowOpacity:blueprint.glowOpacity,profileId:profile?.id,
     sections:portfolioSections(template,content).map(section=>{

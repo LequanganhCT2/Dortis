@@ -1,4 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
+import {PORTFOLIO_REVEAL_SPEEDS,normalizeRevealSpeed} from './blockRevealState.js'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
 import {paletteOptionsForTheme} from './portfolioPalette'
@@ -37,6 +38,15 @@ export default function PortfolioInstanceEditor({
   const [device,setDevice]=useState('desktop')
   const [visualEditing,setVisualEditing]=useState(false)
   const [revealReplayKey,setRevealReplayKey]=useState(0)
+  const revealSpeed=normalizeRevealSpeed(content.revealSpeed)
+  function changeRevealSpeed(next){
+    const speed=normalizeRevealSpeed(next)
+    setContent(previous=>({...previous,revealSpeed:speed}))
+    setDirty(true)
+    setNotice('')
+    // Preview replays visible layers immediately, without jumping scroll.
+    setRevealReplayKey(value=>value+1)
+  }
   const [selectedLayer,setSelectedLayer]=useState('title')
   const [lockImageRatio,setLockImageRatio]=useState(true)
   const [urls,setUrls]=useState({})
@@ -643,15 +653,21 @@ export default function PortfolioInstanceEditor({
             onClick={()=>{if(confirmLeave())onPreviewOther()}}>
             Xem trước {otherTemplateName||'mẫu còn lại'} ↗
           </button>}
+          <label className="pt-editor__speed-control">
+            <span>Tốc độ hiệu ứng</span>
+            <select aria-label="Chỉnh tốc độ hiệu ứng Portfolio"
+              disabled={busy||visualEditing}
+              value={revealSpeed} onChange={event=>changeRevealSpeed(event.target.value)}>
+              {PORTFOLIO_REVEAL_SPEEDS.map(option=>
+                <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
           <button type="button" className="pt-editor__view-button"
             disabled={busy||visualEditing}
             title={visualEditing?'Thoát chế độ chỉnh trực tiếp để xem hiệu ứng':
-              'Cuộn lên đầu và phát lại hiệu ứng chữ cùng ảnh'}
-            onClick={()=>{
-              const scrollBox=previewRef.current?.querySelector('.pt-device')
-              scrollBox?.scrollTo({top:0,behavior:'auto'})
-              setRevealReplayKey(value=>value+1)
-            }}>↻ Xem hiệu ứng</button>
+              'Phát lại hiệu ứng chữ và ảnh ngay tại vị trí đang xem'}
+            onClick={()=>setRevealReplayKey(value=>value+1)}>
+            ↻ Xem hiệu ứng</button>
           <button type="button" className={'pt-editor__view-button'+(visualEditing?' is-active':'')}
             disabled={busy} onClick={()=>visualEditing?setVisualEditing(false):beginVisualEdit()}>
             {visualEditing?'◧ Xem toàn bộ bản hiện tại':'✥ Chỉnh trực tiếp trang này'}

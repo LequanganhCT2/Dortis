@@ -49,7 +49,7 @@ test('Viewport entry is instant, and images do not wait for the previous section
   assert.match(observer,/delete node\.dataset\.ptRevealSeen/)
   assert.match(observer,/useLayoutEffect/)
   const css=code('scroll-text-atmosphere.css')
-  assert.match(css,/animation-duration:330ms/)
+  assert.match(css,/animation-duration:var\(--pt-reveal-duration,410ms\)/)
   assert.match(css,/@keyframes pt-letter-pop/)
   assert.match(css,/animation-delay:var\(--pt-letter-delay,0ms\)/)
   assert.match(css,/data-pt-reveal-state="visible"/)

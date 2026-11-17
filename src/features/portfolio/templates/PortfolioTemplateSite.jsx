@@ -14,6 +14,7 @@ import {isTextFrame,storedTextWidth,measuredTextWidth,resizeTextWidth,textBoxWid
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
 import ScrollTextAtmosphere from './ScrollTextAtmosphere'
+import {normalizeRevealSpeed} from './blockRevealState'
 import CharacterBurst from './CharacterBurst'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
@@ -348,6 +349,7 @@ export default function PortfolioTemplateSite({
   const useClassic=!flowForm&&((publishedView&&!view.visualTheme)||
     view.visualTheme==='classic'||instance?.content?.visualTheme==='classic')
   const useSilkFlow=flowForm||(view.visualTheme==='silk-flow'&&!useClassic)
+  const revealSpeed=normalizeRevealSpeed(view.revealSpeed??instance?.content?.revealSpeed)
   const palette=useSilkFlow&&
     !['ice-blue','seafoam-white','silver-white','navy-white'].includes(view.colorPalette)?
       'ice-blue':view.colorPalette||'red-gold'
@@ -475,7 +477,7 @@ export default function PortfolioTemplateSite({
           direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
           palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
-        sectionsKey={revealKey} device={device}/>
+        sectionsKey={revealKey} device={device} speed={revealSpeed}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}
