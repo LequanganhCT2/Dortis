@@ -5,7 +5,7 @@ import {PRESET_FORMS,blueprintFor,normalizeBlueprint,resolveInstance,
 
 test('Two reusable Silk Forms, no artist data or imported PDF photos',()=>{
   assert.equal(PRESET_FORMS.length,2)
-  assert.equal(new Set(PRESET_FORMS.map(p=>p.slug)).size,1)
+  assert.equal(new Set(PRESET_FORMS.map(p=>p.slug)).size,2)
   assert.ok(PRESET_FORMS.every(p=>p.sections.length===8))
   assert.ok(PRESET_FORMS.every(p=>p.sections.every(s=>Number.isInteger(s.slots))))
   assert.ok(PRESET_FORMS.every(p=>!JSON.stringify(p).includes('Long Nhật')))

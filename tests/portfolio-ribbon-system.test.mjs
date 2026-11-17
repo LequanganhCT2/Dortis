@@ -12,14 +12,14 @@ function overlaps(a,b){
   const vertical=a.y<b.y+b.h-.00001&&b.y<a.y+a.h-.00001
   return horizontal&&vertical
 }
-test('Every shared template inherits the same animated ribbon background by default',()=>{
-  assert.equal(PRESET_FORMS.length,1)
+test('Both templates keep their own visual direction while sharing the ribbon editor',()=>{
+  assert.equal(PRESET_FORMS.length,2)
   for(const form of PRESET_FORMS){
     const b=normalizeBlueprint(blueprintFor(form))
-    assert.equal(b.visualTheme,'ribbon-luxury')
+    assert.equal(b.visualTheme,form.visualTheme||'ribbon-luxury')
     assert.ok(b.sections.length>=5)
     assert.equal(resolveInstance({name:form.name,blueprint:b},{content:{}},
-      {id:'artist',name:'Nghệ sĩ'}).visualTheme,'ribbon-luxury')
+      {id:'artist',name:'Nghệ sĩ'}).visualTheme,form.visualTheme||'ribbon-luxury')
   }
   const legacy=normalizeBlueprint({style:'minimal',visualTheme:'classic'})
   assert.equal(legacy.visualTheme,'classic')
