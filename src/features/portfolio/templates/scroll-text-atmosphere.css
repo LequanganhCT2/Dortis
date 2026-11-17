@@ -235,3 +235,52 @@
     opacity:1!important;transform:none!important;
   }
 }
+
+/* A complete text block animates inside its typography frame. This element,
+   rather than the draggable frame, owns transform/filter changes. */
+.pt-site .pt-burst-text--block>.pt-burst-visual{
+  display:inline-block;
+  max-width:100%;
+  white-space:inherit;
+  transform-origin:center center;
+}
+.pt-site [data-pt-motion-effect]:not([data-pt-motion-effect="auto"])
+  .pt-burst-word,.pt-site [data-pt-motion-effect]:not([data-pt-motion-effect="auto"])
+  .pt-burst-letter{will-change:auto}
+@keyframes pt-custom-fade{
+  from{opacity:0;filter:blur(3px)}
+  to{opacity:1;filter:blur(0)}
+}
+@keyframes pt-custom-zoom{
+  from{opacity:0;scale:.7}
+  to{opacity:1;scale:1}
+}
+@keyframes pt-custom-slide{
+  from{opacity:0;filter:blur(6px)}
+  to{opacity:1;filter:blur(0)}
+}
+/* CSS-only fallback when Web Animations are unavailable; WAAPI owns
+   independent duration, direction and stagger on modern browsers. */
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-motion-effect="fade"][data-pt-reveal-state="visible"]{
+  animation-name:pt-custom-fade!important;
+}
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-motion-effect="zoom"][data-pt-reveal-state="visible"]{
+  animation-name:pt-custom-zoom!important;
+}
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-motion-effect="slide"][data-pt-reveal-state="visible"],
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-motion-effect="blur"][data-pt-reveal-state="visible"]{
+  animation-name:pt-custom-slide!important;
+}
+.pt-site.pt-site--block-reveal-active:not(.pt-site--waapi-reveal) > section
+  [data-pt-motion-effect="none"][data-pt-reveal-state="visible"]{
+  animation:none!important;opacity:1!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site:not(.pt-site--motion-opt-in) [data-pt-motion-effect]{
+    animation:none!important;
+  }
+}

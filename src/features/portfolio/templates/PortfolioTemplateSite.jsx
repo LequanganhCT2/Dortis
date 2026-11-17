@@ -18,6 +18,7 @@ import ScrollTextAtmosphere from './ScrollTextAtmosphere'
 import {normalizeRevealSpeed} from './blockRevealState'
 import {OFFSET_MOVE_LIMIT,hasOverflowPlacement} from './freePlacement'
 import CharacterBurst from './CharacterBurst'
+import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
 import './cutout-stage.css'
@@ -251,6 +252,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     placement['data-portfolio-text-frame']=field
     placement['data-pt-scroll-reveal']=field
     const type=typography?.[field]
+    Object.assign(placement,textMotionAttributes(type?.motion))
     if(type)placement.style={
       ...placement.style,
       textAlign:['left','center','right'].includes(type.align)?type.align:undefined,
@@ -333,16 +335,19 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       {(section.eyebrow||index===0||!isPublic)&&<small {...editTextProps('eyebrow')}>
         <CharacterBurst text={section.eyebrow||
           (index===0&&artistRole?artistRole:section.label)}
-          disabled={Boolean(onEditText)} maxCharacters={120}/>
+          disabled={Boolean(onEditText)}
+          mode={motionUnit(typography?.eyebrow?.motion,'letters')} maxCharacters={120}/>
         {textResizeHandle('eyebrow','nhãn phụ')}
       </small>}
       {section.title?<h2 {...editTextProps('title')}>
         <CharacterBurst text={section.title} disabled={Boolean(onEditText)}
+          mode={motionUnit(typography?.title?.motion,'letters')}
           maxCharacters={160}/>{textResizeHandle('title','tiêu đề')}</h2>:
         onEditText&&<button type="button" className="pt-copy-add" onClick={()=>onEditText('title')}>Thêm tiêu đề</button>}
       {section.body?<p {...editTextProps('body')}>
         <CharacterBurst text={section.body} disabled={Boolean(onEditText)}
-          mode="words" maxCharacters={1600}/>{textResizeHandle('body','nội dung')}</p>:
+          mode={motionUnit(typography?.body?.motion,'words')}
+          maxCharacters={motionUnit(typography?.body?.motion,'words')==='letters'?300:1600}/>{textResizeHandle('body','nội dung')}</p>:
         onEditText?<button type="button" className="pt-copy-add" onClick={()=>onEditText('body')}>Thêm mô tả</button>:
         !isPublic&&<p className="pt-site__placeholder-text">
           {section.sourceStatus==='missing'
@@ -424,6 +429,14 @@ export default function PortfolioTemplateSite({
   const navIds=navSections.map(s=>s.id).join('|')
   const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body,
     ...(s.images||[]).map(asset=>asset?.path||'')].join('::')).join('|')+'|replay:'+revealReplayKey
+  // Only motion edits restart the viewport observer; moving/typing frame
+  // coordinates must not restart text animations on each pointer tick.
+  const motionKey=visibleSections.map(s=>{
+    const board=getScene(instance?.content||{},s,device)
+    const styles=board?board.layers:instance?.content?.typography?.[s.id]?.[device]||{}
+    return s.id+':'+Object.entries(styles||{}).map(([key,value])=>
+      key+'='+JSON.stringify(value?.motion||null)).join(';')
+  }).join('|')
   useEffect(()=>{
     const root=rootRef.current
     if(!root||focusedSectionId)return undefined
@@ -530,7 +543,7 @@ export default function PortfolioTemplateSite({
           direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
           palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
-        sectionsKey={revealKey} device={device} speed={revealSpeed}
+        sectionsKey={revealKey+'|motions:'+motionKey} device={device} speed={revealSpeed}
         publicPage={publicPage} forceMotion={forceMotion}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">

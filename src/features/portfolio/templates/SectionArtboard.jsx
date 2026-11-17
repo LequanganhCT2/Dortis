@@ -9,6 +9,7 @@ import {SCENE_MOVE_LIMIT,hasSceneOverflowPlacement} from './freePlacement'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
+import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
 
@@ -200,10 +201,14 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
             <div className="pt-artboard__empty">+<small>{label}<br/>Tải ảnh ở bảng bên trái</small></div>}
         </div>
       : <div className="pt-artboard__text" style={textStyle}
-          data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}>
+          data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}
+          {...textMotionAttributes(layer.motion)}>
           <CharacterBurst text={source||'Chạm để chỉnh '+label}
-            disabled={editable} mode={layerId==='body'||layerId.startsWith('note:')?'words':'letters'}
-            maxCharacters={layerId==='body'||layerId.startsWith('note:')?1600:160}/>
+            disabled={editable}
+            mode={motionUnit(layer.motion,
+              layerId==='body'||layerId.startsWith('note:')?'words':'letters')}
+            maxCharacters={layerId==='body'||layerId.startsWith('note:')?
+              (motionUnit(layer.motion,'words')==='letters'?300:1600):160}/>
         </div>}
     {((editable&&selected)||publicSelected)&&<div className="pt-artboard__selection">
       <span>{label}</span>

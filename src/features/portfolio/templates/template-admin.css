@@ -762,3 +762,46 @@
   border-color:#edb0b4;
   color:#86283c;
 }
+
+/* Admin-only corner controls: View is a true public preview, Edit enables
+   selection, drag handles and the floating inspector. No extra site navbar. */
+.pt-published__toolbar{
+  position:fixed;top:clamp(10px,1.8vw,22px);right:clamp(10px,2vw,28px);
+  z-index:1150;display:flex;align-items:center;gap:7px;flex-wrap:nowrap;
+  width:max-content;max-width:calc(100vw - 20px);
+  padding:5px;border:1px solid #ffffffa6;border-radius:14px;
+  background:#182933e8;color:#f8fafb;
+  box-shadow:0 10px 32px #07151c3d;
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  font-family:'Be Vietnam Pro',system-ui,sans-serif;
+}
+.pt-published__mode-switch{display:flex;align-items:center;gap:2px;min-width:0}
+.pt-published__mode-switch button{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  min-width:62px;height:34px;padding:6px 10px;
+  border:0;border-radius:9px;background:transparent;color:#e2eef2;
+  font:750 11px 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer;
+  transition:background .15s ease,color .15s ease;
+}
+.pt-published__mode-switch button.is-active{
+  background:#fff;color:#173442;box-shadow:0 2px 8px #0002;
+}
+.pt-published__mode-switch button:not(.is-active):hover{
+  background:#ffffff20;color:#fff;
+}
+.pt-published__replay,.pt-published__open-editor{
+  display:grid;place-items:center;width:34px;height:34px;padding:0;
+  background:#ffffff15;color:#fff;border:1px solid #ffffff28;
+  border-radius:9px;cursor:pointer;font:700 19px/1 system-ui;
+}
+.pt-published__replay:hover,.pt-published__open-editor:hover{
+  background:#ffffff35;
+}
+.pt-published__toolbar button:focus-visible{
+  outline:2px solid #9fd5f2;outline-offset:2px;
+}
+@media(max-width:680px){
+  .pt-published__toolbar{top:9px;right:9px;border-radius:12px;padding:4px;gap:4px}
+  .pt-published__mode-switch button{height:32px;min-width:56px;padding:5px 8px;font-size:10px}
+  .pt-published__replay,.pt-published__open-editor{width:31px;height:32px}
+}

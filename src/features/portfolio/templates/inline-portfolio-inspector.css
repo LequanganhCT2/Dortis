@@ -246,3 +246,17 @@
 .pt-published--admin-edit .pt-site section:has([data-pt-public-selected="true"]){
   position:relative;z-index:50;
 }
+
+/* Fifth (per-text-motion) tab stays usable on narrow touch screens. */
+.pt-inline-inspector__tabs{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none}
+.pt-inline-inspector__tabs::-webkit-scrollbar{display:none}
+.pt-inline-inspector__tabs button{flex:1 0 auto;font-size:10px;padding:7px 5px}
+.pt-inline-inspector__replay{
+  width:100%;min-height:38px;padding:8px 12px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid #b8d7e6;border-radius:9px;
+  background:#e6f3fa;color:#28596e;
+  font:750 11px 'Be Vietnam Pro',system-ui,sans-serif;cursor:pointer;
+}
+.pt-inline-inspector__replay:hover{background:#d5edfa}
+.pt-inline-inspector__replay:focus-visible{outline:2px solid #68b4d8;outline-offset:2px}

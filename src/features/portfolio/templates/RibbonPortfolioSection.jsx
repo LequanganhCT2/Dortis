@@ -6,6 +6,7 @@ import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
+import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
 /**
@@ -209,6 +210,7 @@ export default function RibbonPortfolioSection({
     const base=draggableProps(field)
     return {...base,'data-portfolio-text-frame':field,
       'data-pt-scroll-reveal':field,
+      ...textMotionAttributes(typography?.[field]?.motion),
       ...(onEditText?{
         'data-portfolio-edit-field':field,
         'data-portfolio-edit-selected':selectedLayer===field?'true':undefined,
@@ -260,12 +262,14 @@ export default function RibbonPortfolioSection({
     <div className="pt-ribbon__copy">
       <small {...editTextProps('eyebrow')}>
         <CharacterBurst disabled={editing} maxCharacters={120}
+          mode={motionUnit(typography?.eyebrow?.motion,'letters')}
           text={String(index+1).padStart(2,'0')+' / '+(section.eyebrow||
           (index===0&&artistRole?artistRole:section.label))}/>
         {resizeHandle('eyebrow','nhãn phụ',true)}
       </small>
       {section.title?<h2 {...editTextProps('title')}>
           <CharacterBurst text={section.title} disabled={editing}
+            mode={motionUnit(typography?.title?.motion,'letters')}
             maxCharacters={160}/>{resizeHandle('title','tiêu đề',true)}
         </h2>:
         editing?<button type="button" className="pt-ribbon__add-text"
@@ -273,7 +277,8 @@ export default function RibbonPortfolioSection({
         !isPublic?<h2 className="pt-ribbon__missing">Chưa có tiêu đề trong hồ sơ</h2>:null}
       {section.body?<p {...editTextProps('body')}>
           <CharacterBurst text={section.body} disabled={editing}
-            mode="words" maxCharacters={1600}/>{resizeHandle('body','nội dung',true)}
+            mode={motionUnit(typography?.body?.motion,'words')}
+            maxCharacters={motionUnit(typography?.body?.motion,'words')==='letters'?300:1600}/>{resizeHandle('body','nội dung',true)}
         </p>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('body')}>+ Thêm mô tả</button>:

@@ -57,6 +57,7 @@ export default function PublishedPortfolio(){
   const flushingEditsRef=useRef(false)
   const flushTimerRef=useRef(null)
   const [selection,setSelection]=useState(null)
+  const [editMode,setEditMode]=useState(false)
   const [publishedAt,setPublishedAt]=useState('')
   const [replayKey,setReplayKey]=useState(0)
   const [reducedMotion,setReducedMotion]=useState(()=>
@@ -85,7 +86,9 @@ export default function PublishedPortfolio(){
     if(!supabase)return
     const {data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{
       const user=session?.user
-      setAdmin(canManageContent(user)?user:null)
+      const canEdit=canManageContent(user)
+      setAdmin(canEdit?user:null)
+      if(!canEdit){setSelection(null);setEditMode(false)}
     })
     return ()=>subscription.unsubscribe()
   },[])
@@ -157,7 +160,7 @@ export default function PublishedPortfolio(){
   async function movePublishedTitle(sectionId,position){
     // Admin role is verified again inside publish_artist_portfolio (JWT + RLS).
     // Never allow ordinary visitors to write a public page.
-    if(!admin||!publication||!supabase||savingRef.current)return
+    if(!admin||!editMode||!publication||!supabase||savingRef.current)return
     if(!publication.view?.sections?.some(section=>section.id===sectionId))return
     const device=mobile?'mobile':'desktop'
     const previous=publication
@@ -205,7 +208,7 @@ export default function PublishedPortfolio(){
   }
 
   function selectPublicElement(sectionId,layerId,element){
-    if(!admin||!element||!publication)return
+    if(!admin||!editMode||!element||!publication)return
     setSelection({sectionId,layerId,...measurePublicElement(element)})
   }
 
@@ -239,7 +242,7 @@ export default function PublishedPortfolio(){
   }
 
   function applyPublicEdit(sectionId,layerId,group,patch){
-    if(!admin||!publication||!supabase)return
+    if(!admin||!editMode||!publication||!supabase)return
     const section=publication.view?.sections?.find(item=>item.id===sectionId)
     if(!section)return
     const device=mobile?'mobile':'desktop'
@@ -332,19 +335,30 @@ export default function PublishedPortfolio(){
     typography:publication.typography||{},
     revealSpeed:view?.revealSpeed
   }:null
-  return <div className={'pt-published'+(admin?' pt-published--admin-edit':'')}>
-    {admin&&publication&&<div className="pt-published__toolbar">
-      {reducedMotion&&<span className="pt-published__motion-note">
-        Thiết bị đang bật Giảm chuyển động. Bấm Phát hiệu ứng để xem thử.
-      </span>}
-      <button type="button" className="pt-btn pt-btn--light"
+  const editorActive=Boolean(admin&&editMode)
+  return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')}>
+    {admin&&publication&&<div className="pt-published__toolbar"
+      role="group" aria-label="Chọn chế độ xem hoặc chỉnh sửa portfolio">
+      <div className="pt-published__mode-switch" role="group" aria-label="Chế độ trang">
+        <button type="button" aria-pressed={!editMode}
+          className={!editMode?'is-active':''}
+          onClick={()=>{
+            setEditMode(false)
+            setSelection(null)
+            finishPendingPublicEdits()
+            setReplayKey(value=>value+1)
+          }}><span aria-hidden="true">◉</span> Xem</button>
+        <button type="button" aria-pressed={editMode}
+          className={editMode?'is-active':''}
+          onClick={()=>setEditMode(true)}><span aria-hidden="true">✎</span> Sửa</button>
+      </div>
+      <button type="button" className="pt-published__replay"
         onClick={()=>setReplayKey(value=>value+1)}
-        title="Phát lại chữ và ảnh tại khu vực đang xem">
-        ↻ Phát hiệu ứng
-      </button>
-      <button type="button" className="pt-btn" onClick={editWebsite}>
-        Chỉnh sửa website
-      </button>
+        title={reducedMotion?'Phát hiệu ứng, bỏ qua cài đặt giảm chuyển động':
+          'Phát lại hiệu ứng chữ và ảnh'} aria-label="Phát lại hiệu ứng">↻</button>
+      <button type="button" className="pt-published__open-editor"
+        onClick={editWebsite} title="Mở trình biên tập nội dung portfolio"
+        aria-label="Mở trình biên tập nội dung">⋯</button>
     </div>}
     {saveNotice&&admin&&<div className={'pt-published__inline-save pt-published__inline-save--'+saveState}
       role={saveState==='error'?'alert':'status'} aria-live="polite">
@@ -357,13 +371,13 @@ export default function PublishedPortfolio(){
       publishedView={view} template={publishedTemplate} publicPage
       revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
-      onDirectMoveTitle={admin?movePublishedTitle:undefined}
-      onDirectMoveElement={admin?(section,key,position)=>
+      onDirectMoveTitle={editorActive?movePublishedTitle:undefined}
+      onDirectMoveElement={editorActive?(section,key,position)=>
         applyPublicEdit(section,key,'position',position):undefined}
-      onDirectPatchLayer={admin?(section,key,patch)=>
+      onDirectPatchLayer={editorActive?(section,key,patch)=>
         applyPublicEdit(section,key,'position',patch):undefined}
-      onPublicSelect={admin?selectPublicElement:undefined}
-      publicSelection={admin?selection:undefined}
+      onPublicSelect={editorActive?selectPublicElement:undefined}
+      publicSelection={editorActive?selection:undefined}
       device={mobile?'mobile':'desktop'}/>}
     {admin&&selection&&publication&&<InlinePortfolioInspector
       selection={selection}
@@ -371,6 +385,7 @@ export default function PublishedPortfolio(){
         mobile?'mobile':'desktop',selection.layerId)}
       device={mobile?'mobile':'desktop'}
       onApply={applyPublicEdit}
+      onReplayMotion={()=>setReplayKey(value=>value+1)}
       onClose={()=>{setSelection(null);finishPendingPublicEdits()}}/>}
   </div>
 }

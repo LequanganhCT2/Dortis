@@ -81,7 +81,7 @@ test('Public UI provides a floating submenu only to admins and persists using se
   const ribbon=src('RibbonPortfolioSection.jsx')
   const scene=src('SectionArtboard.jsx')
   assert.match(pub,/admin&&selection&&publication&&<InlinePortfolioInspector/)
-  assert.match(pub,/onPublicSelect=\{admin\?selectPublicElement:undefined\}/)
+  assert.match(pub,/onPublicSelect=\{editorActive\?selectPublicElement:undefined\}/)
   assert.match(pub,/queuedEditsRef\.current\.push\(change\)/)
   assert.match(pub,/while\(queuedEditsRef\.current\.length\)/)
   assert.match(pub,/p_revision:draft\.revision/)

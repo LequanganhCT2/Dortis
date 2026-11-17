@@ -2,6 +2,7 @@ import React,{useLayoutEffect,useRef} from 'react'
 import {scrollCanvasBounds} from './scrollTextMotion'
 import {classifyPortfolioBlock,classifyPortfolioPart,blockTravelDirection,portfolioPartDelays,normalizeRevealSpeed,scaledRevealMs} from './blockRevealState'
 import './scroll-text-atmosphere.css'
+import {normalizeTextMotion,textMotionFrames} from './textLayerMotion'
 
 /**
  * Section-based Portfolio reveal. One IntersectionObserver triggers each
@@ -119,13 +120,48 @@ export default function ScrollTextAtmosphere({
       const start=(target,frames,options)=>{
         const animation=target.animate(frames,{
           fill:'both',...options,
-          duration:ms(options.duration),
-          delay:ms(options.delay||0)
+          duration:options.independentTiming?options.duration:ms(options.duration),
+          delay:options.independentTiming?(options.delay||0):ms(options.delay||0)
         })
         list.push(animation)
         animation.onfinish=()=>{animation.cancel()}
       }
       const kind=node.dataset.ptRevealPart
+      const customEffect=kind!=='image'&&node.dataset.ptMotionEffect
+      // A custom setting belongs to this exact text layer, never its
+      // neighboring heading/description or its draggable outer frame.
+      if(customEffect&&customEffect!=='auto'){
+        const motion=normalizeTextMotion({
+          effect:customEffect,unit:node.dataset.ptMotionUnit,
+          direction:node.dataset.ptMotionDirection,
+          duration:node.dataset.ptMotionDuration,
+          delay:node.dataset.ptMotionDelay,
+          stagger:node.dataset.ptMotionStagger,
+          distance:node.dataset.ptMotionDistance
+        })
+        if(state==='visible'&&motion.effect!=='none'){
+          const letters=Array.from(node.querySelectorAll('.pt-burst-letter'))
+          const words=Array.from(node.querySelectorAll('.pt-burst-word[data-pt-burst-word]'))
+          const unit=motion.unit==='auto'?kind==='body'?'words':'letters':motion.unit
+          const targets=unit==='letters'&&letters.length&&letters.length<=300?letters:
+            unit==='words'&&words.length&&words.length<=190?words:
+            [node.querySelector('.pt-burst-visual')||node]
+          targets.forEach((target,index)=>start(target,
+            textMotionFrames(motion.effect,motion.direction,motion.distance),{
+              duration:motion.duration,
+              delay:motion.delay+(targets.length===1?0:index*motion.stagger),
+              independentTiming:true,
+              easing:'cubic-bezier(.19,.82,.22,1)'
+            }))
+        }else if(state!=='visible'&&motion.effect!=='none'){
+          start(node,[{opacity:1},{opacity:0}],{
+            duration:Math.min(360,Math.max(100,motion.duration*.36)),
+            independentTiming:true,easing:'ease-out'
+          })
+        }
+        activeAnimations.set(node,list)
+        return
+      }
       if(state==='visible'){
         const letters=node.querySelectorAll('.pt-burst-letter')
         const words=node.querySelectorAll('.pt-burst-word[data-pt-burst-word]')

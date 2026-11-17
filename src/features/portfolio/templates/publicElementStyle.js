@@ -1,6 +1,7 @@
 import {getScene,patchSceneLayer} from './sectionDesign.js'
 import {quickSceneTextPlacement,quickRibbonTextPlacement} from './textQuickLayouts.js'
 import {OFFSET_MOVE_LIMIT} from './freePlacement.js'
+import {normalizeTextMotion} from './textLayerMotion.js'
 
 const safe=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0))
 export const TEXT_KEYS=new Set(['eyebrow','title','body'])
@@ -44,6 +45,18 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
         next.position,section),
       sectionId,device,layerId,'typography',next.typography,section)
   }
+  if(group==='motion'&&isTextLayer(layerId)){
+    if(scene){
+      const existing=scene.layers[layerId]
+      return existing?patchSceneLayer(document,section,device,layerId,{
+        motion:normalizeTextMotion({...existing.motion,...patch})
+      }):document
+    }
+    const current=document.typography?.[sectionId]?.[device]?.[layerId]?.motion||{}
+    return patchPublishedElement(document,sectionId,device,layerId,'typography',{
+      motion:normalizeTextMotion({...current,...patch})
+    },section)
+  }
   if(scene){
     const existing=scene.layers[layerId]
     if(!existing)return document
@@ -65,6 +78,7 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
     if(next.spacing!==undefined)next.spacing=safe(next.spacing,-8,20)
     if(next.color!==undefined&&!/^#[a-f0-9]{6}$/i.test(next.color))
       next.color=old.color||'#ffffff'
+    if(next.motion!==undefined)next.motion=normalizeTextMotion(next.motion)
     return {...document,typography:{...typography,[sectionId]:{
       ...layers,[device]:{...deviceValues,[layerId]:next}
     }}}

@@ -7,7 +7,13 @@ import {allowCharacterBurst,splitBurstWords} from './characterBurstText.js'
  */
 export default function CharacterBurst({text,disabled=false,maxCharacters=160,mode='letters'}){
   const value=String(text||'')
-  if(disabled||!allowCharacterBurst(value,maxCharacters))return value
+  if(disabled)return value
+  // Block motion operates on this inner span, leaving the authored outer
+  // frame's position/size/rotation completely untouched.
+  if(mode==='block'||!allowCharacterBurst(value,maxCharacters))
+    return <span className="pt-burst-text pt-burst-text--block">
+      <span className="pt-burst-visual">{value}</span>
+    </span>
   if(mode==='words'){
     const tokens=splitBurstWords(value)
     if(tokens.filter(token=>token.letters).length>170)return value

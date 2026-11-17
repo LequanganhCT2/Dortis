@@ -4,6 +4,8 @@ import {SCENE_LAYER_LABELS} from './sectionDesign'
 import {TEXT_QUICK_LAYOUTS} from './textQuickLayouts'
 import {wheelStepValue} from './inlineInspectorWheel'
 import {SCENE_MOVE_LIMIT,OFFSET_MOVE_LIMIT} from './freePlacement'
+import {TEXT_MOTION_EFFECTS,TEXT_MOTION_UNITS,TEXT_MOTION_DIRECTIONS,
+  normalizeTextMotion} from './textLayerMotion'
 import './inline-portfolio-inspector.css'
 
 const number=(value,fallback=0,precision=1)=>{
@@ -86,7 +88,7 @@ function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}
 }
 
 export default function InlinePortfolioInspector({
-  selection,layer,device='desktop',onApply,onClose,onClearNotice
+  selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion
 }){
   const [tab,setTab]=useState('size')
   useEffect(()=>setTab('size'),[selection?.sectionId,selection?.layerId])
@@ -95,6 +97,7 @@ export default function InlinePortfolioInspector({
   const id=selection.layerId
   const image=isImageLayer(id),scene=layer.scene
   const vals=layer.values||{},measured=selection.metrics||{}
+  const motion=normalizeTextMotion(vals.motion)
   const title=image?'Ảnh '+(Number(id.split(':')[1])+1):
     SCENE_LAYER_LABELS[id]||(id.startsWith('note:')?'Chữ trang trí':'Nội dung')
   const fontId=vals.font||detectCurrentFont(measured.fontFamily)
@@ -145,6 +148,8 @@ export default function InlinePortfolioInspector({
         className={tab==='layout'?'is-active':''} onClick={()=>setTab('layout')}>Bố cục</button>
       {!image&&<button type="button" role="tab" aria-selected={tab==='type'}
         className={tab==='type'?'is-active':''} onClick={()=>setTab('type')}>Font chữ</button>}
+      {!image&&<button type="button" role="tab" aria-selected={tab==='motion'}
+        className={tab==='motion'?'is-active':''} onClick={()=>setTab('motion')}>Hiệu ứng</button>}
       <button type="button" role="tab" aria-selected={tab==='frame'}
         className={tab==='frame'?'is-active':''} onClick={()=>setTab('frame')}>
         {image?'Ảnh / Khung':'Khung'}
@@ -227,6 +232,47 @@ export default function InlinePortfolioInspector({
           </label>
           {colorField('Màu chữ',vals.color||measured.color,'typography','color')}
         </div>
+      </>}
+      {tab==='motion'&&!image&&<>
+        <p className="pt-inline-inspector__actual">
+          Mỗi khối chữ có hiệu ứng riêng. Chọn cách xuất hiện và điều chỉnh
+          thông số trực tiếp; nội dung chữ và vị trí không bị thay đổi.</p>
+        <label className="pt-inline-inspector__field">
+          <span>Kiểu hiệu ứng</span>
+          <select value={motion.effect}
+            onChange={event=>apply('motion',{effect:event.target.value})}>
+            {TEXT_MOTION_EFFECTS.map(item=><option key={item.id} value={item.id}>
+              {item.label}</option>)}
+          </select>
+        </label>
+        <div className="pt-inline-inspector__grid">
+          <label className="pt-inline-inspector__field">
+            <span>Cách chạy</span>
+            <select value={motion.unit}
+              onChange={event=>apply('motion',{unit:event.target.value})}>
+              {TEXT_MOTION_UNITS.map(item=><option key={item.id} value={item.id}>
+                {item.label}</option>)}
+            </select>
+          </label>
+          <label className="pt-inline-inspector__field">
+            <span>Hướng xuất hiện</span>
+            <select value={motion.direction}
+              onChange={event=>apply('motion',{direction:event.target.value})}>
+              {TEXT_MOTION_DIRECTIONS.map(item=><option key={item.id} value={item.id}>
+                {item.label}</option>)}
+            </select>
+          </label>
+        </div>
+        <div className="pt-inline-inspector__grid">
+          {numberField('Thời gian',motion.duration,'motion','duration',120,2400,50,'ms')}
+          {numberField('Độ trễ',motion.delay,'motion','delay',0,1600,50,'ms')}
+          {numberField('Giãn từng chữ',motion.stagger,'motion','stagger',0,150,5,'ms')}
+          {numberField('Quãng di chuyển',motion.distance,'motion','distance',0,180,5,'px')}
+        </div>
+        <button type="button" className="pt-inline-inspector__replay"
+          onClick={onReplayMotion} title="Phát lại hiệu ứng ngay trên trang">
+          ↻ Xem thử hiệu ứng
+        </button>
       </>}
       {tab==='frame'&&<>
         <div className="pt-inline-inspector__grid">

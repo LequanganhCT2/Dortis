@@ -1,4 +1,5 @@
 import {SCENE_MOVE_LIMIT} from './freePlacement.js'
+import {normalizeTextMotion} from './textLayerMotion.js'
 /**
  * Artist instance visual override. Template blueprint remains shared/immutable.
  * Each template section is a separate artboard with desktop/mobile layer layouts.
@@ -112,6 +113,7 @@ export function sanitizeSceneLayer(id,raw={},section={},device='desktop'){
     weight:[400,500,600,700,800,900].includes(Number(v.weight))?Number(v.weight):d.weight,
     spacing:safe(v.spacing,-8,20,d.spacing),
     lineHeight:safe(v.lineHeight,.7,3,d.lineHeight),
+    ...(textId(id)&&v.motion?{motion:normalizeTextMotion(v.motion)}:{}),
     hidden:v.hidden===true
   }
 }

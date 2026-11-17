@@ -11,7 +11,7 @@ test('All three layouts render word-staggered description and separate photo ent
     assert.match(source,/<PhotoReveal order=\{/)
     assert.match(source,/<PhotoMotion/)
     assert.match(source,/<\/PhotoMotion><\/PhotoReveal>/)
-    assert.match(source,/mode="words"|mode=\{layerId==='body'/)
+    assert.match(source,/motionUnit\(.+?'words'\)/)
     assert.match(source,/maxCharacters=\{1600\}|maxCharacters=\{layerId==='body'\|\|layerId\.startsWith/)
   }
   const wrapper=code('PhotoReveal.jsx')
@@ -25,7 +25,7 @@ test('Description word spans preserve real text, accessibility and native edit m
   assert.match(burst,/pt-burst-word/)
   assert.match(burst,/data-pt-burst-word="true"/)
   assert.match(burst,/aria-hidden="true"/)
-  assert.match(burst,/if\(disabled\|\|!allowCharacterBurst\(value,maxCharacters\)\)return value/)
+  assert.match(burst,/if\(disabled\)return value/)
   assert.match(code('RibbonPortfolioSection.jsx'),/disabled=\{editing\}/)
   assert.match(code('SectionArtboard.jsx'),/disabled=\{editable\}/)
 })
@@ -40,7 +40,7 @@ test('Visible description words and photo wrappers get independent WAAPI reveals
   assert.match(motion,/scale\(\.88\)/)
   assert.match(motion,/duration:560/)
   assert.match(motion,/const ms=value=>scaledRevealMs\(value,pace\)/)
-  assert.match(motion,/duration:ms\(options\.duration\)/)
+  assert.match(motion,/duration:options\.independentTiming\?options\.duration:ms\(options\.duration\)/)
 })
 test('CSS fallback and reduced-motion preserve stable authored layer transforms',()=>{
   const css=code('scroll-text-atmosphere.css')
