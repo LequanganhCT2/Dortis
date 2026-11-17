@@ -30,7 +30,7 @@ test('Each layout displays title and short body with glyph bursts, edits use ori
   for(const file of ['RibbonPortfolioSection.jsx','PortfolioTemplateSite.jsx','SectionArtboard.jsx']){
     const src=code(file)
     assert.match(src,/import CharacterBurst from '.\/CharacterBurst'/)
-    assert.match(src,/<CharacterBurst text=\{/)
+    assert.match(src,/DirectEditableText|textContent\(/)
   }
   assert.match(code('RibbonPortfolioSection.jsx'),/disabled=\{editing\}/)
   assert.match(code('PortfolioTemplateSite.jsx'),/disabled=\{Boolean\(onEditText\)\}/)

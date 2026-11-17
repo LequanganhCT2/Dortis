@@ -88,10 +88,12 @@ function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}
 }
 
 export default function InlinePortfolioInspector({
-  selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion
+  selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion,
+  textValue='',onStartInlineEdit
 }){
   const [tab,setTab]=useState('size')
-  useEffect(()=>setTab('size'),[selection?.sectionId,selection?.layerId])
+  useEffect(()=>setTab(isImageLayer(selection?.layerId)?'size':'content'),
+    [selection?.sectionId,selection?.layerId])
   if(!selection||!layer)return null
 
   const id=selection.layerId
@@ -142,6 +144,9 @@ export default function InlinePortfolioInspector({
       <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
     </header>
     <div className="pt-inline-inspector__tabs" role="tablist" aria-label="Thông số phần tử">
+      {!image&&<button type="button" role="tab" aria-selected={tab==='content'}
+        className={tab==='content'?'is-active':''}
+        onClick={()=>setTab('content')}>Nội dung</button>}
       <button type="button" role="tab" aria-selected={tab==='size'}
         className={tab==='size'?'is-active':''} onClick={()=>setTab('size')}>Kích cỡ</button>
       <button type="button" role="tab" aria-selected={tab==='layout'}
@@ -162,6 +167,25 @@ export default function InlinePortfolioInspector({
         {!image&&<small>Chữ thực tế: {size} px ·
           {scene?' cỡ thiết kế '+storedFontSize+' px':' theo khung hiện tại'}</small>}
       </div>
+      {tab==='content'&&!image&&<>
+        <label className="pt-inline-inspector__field">
+          <span>Nội dung {title.toLowerCase()}</span>
+          <textarea className="pt-inline-inspector__textarea"
+            aria-label={'Sửa nội dung '+title}
+            value={textValue} maxLength={id.startsWith('note:')?280:10000}
+            placeholder="Nhập tiêu đề hoặc nội dung…"
+            rows={id==='body'?6:3}
+            onChange={event=>apply('content',{value:event.currentTarget.value})}/>
+        </label>
+        <button type="button" className="pt-inline-inspector__replay"
+          onClick={onStartInlineEdit}>
+          <span aria-hidden="true">✎</span> Sửa trực tiếp trên chữ
+        </button>
+        <p className="pt-inline-inspector__actual">
+          Nhấp đúp lên chữ trong trang để nhập ngay tại vị trí đó. Nội dung
+          cập nhật tức thì và tự lưu. Bản gốc trong hồ sơ nghệ sĩ không bị sửa.
+        </p>
+      </>}
       {tab==='size'&&<>
         <div className="pt-inline-inspector__grid">
           {!image&&numberField('Cỡ chữ hiện tại',size,'typography','size',8,180,1,'px',

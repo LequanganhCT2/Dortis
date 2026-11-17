@@ -9,6 +9,7 @@ import {SCENE_MOVE_LIMIT,hasSceneOverflowPlacement} from './freePlacement'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
+import DirectEditableText from './DirectEditableText'
 import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
@@ -32,7 +33,8 @@ function toPosition(layer,board){
 }
 function LayerElement({section,layerId,layer,scene,urls,device,editable,selected,
   onSelectLayer,onPatchLayer,boardRef,dragRef,lockImageRatio,continuousSilk=false,
-  onDirectPatchLayer,onPublicSelect,publicSelection}){
+  onDirectPatchLayer,onPublicSelect,publicSelection,
+  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish}){
   const type=sceneLayerType(layerId)
   const index=type==='image'?Number(layerId.split(':')[1]):-1
   const image=index>=0?section.images[index]:null
@@ -56,9 +58,12 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     overflowWrap:'anywhere'
   }
   const publicEditing=!editable&&Boolean(onDirectPatchLayer)
+  const inlineEditing=publicEditing&&editingText?.sectionId===section.id&&
+    editingText?.layerId===layerId&&type==='text'
   const canMove=editable||publicEditing
   const startDrag=(event,mode)=>{
-    if(!canMove||event.button!==0||layer.hidden||!event.isPrimary)return
+    if(!canMove||event.button!==0||layer.hidden||!event.isPrimary||
+      event.target.closest('textarea,[data-pt-inline-text-editor]'))return
     event.stopPropagation()
     const bounds=boardRef.current?.getBoundingClientRect()
     if(!bounds?.width||!bounds?.height)return
@@ -162,7 +167,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
   if(layer.hidden&&!editable)return null
   const publicSelected=publicEditing&&
     publicSelection?.sectionId===section.id&&publicSelection?.layerId===layerId
-  const visible=Boolean(source||url||editable)
+  const visible=Boolean(source||url||editable||(publicEditing&&type==='text'))
   if(!visible)return null
   return <div
     data-image-slot={index>=0?index:undefined}
@@ -182,6 +187,12 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     onPointerDown={event=>startDrag(event,'move')}
     onPointerMove={moveDrag}
     onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
+    onDoubleClick={event=>{
+      if(publicEditing&&type==='text'){
+        event.stopPropagation()
+        onDirectStartTextEdit?.(section.id,layerId,event.currentTarget)
+      }
+    }}
     onKeyDown={keyDown}
     onClick={event=>{
       event.stopPropagation()
@@ -203,12 +214,15 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
       : <div className="pt-artboard__text" style={textStyle}
           data-pt-scroll-reveal={layerId==='title'?'title':layerId==='eyebrow'?'eyebrow':'body'}
           {...textMotionAttributes(layer.motion)}>
-          <CharacterBurst text={source||'Chạm để chỉnh '+label}
-            disabled={editable}
+          <DirectEditableText text={source||''}
+            displayText={source||(editable||publicEditing?'Chạm để sửa '+label:'')}
+            active={inlineEditing} disabled={editable} kind={layerId}
             mode={motionUnit(layer.motion,
               layerId==='body'||layerId.startsWith('note:')?'words':'letters')}
             maxCharacters={layerId==='body'||layerId.startsWith('note:')?
-              (motionUnit(layer.motion,'words')==='letters'?300:1600):160}/>
+              (motionUnit(layer.motion,'words')==='letters'?300:1600):160}
+            onChange={value=>onDirectTextChange?.(section.id,layerId,value)}
+            onFinish={onDirectTextFinish}/>
         </div>}
     {((editable&&selected)||publicSelected)&&<div className="pt-artboard__selection">
       <span>{label}</span>
@@ -246,6 +260,7 @@ export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
   index=0,ribbonLayout='vertical',ribbonDirection='right',continuousSilk=false,
   selectedLayer='',onSelectLayer,onDirectPatchLayer,onPublicSelect,publicSelection,
+  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,
   onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
@@ -346,7 +361,10 @@ export default function SectionArtboard({
           editable={editable} selected={selectedLayer===layerId}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
           onDirectPatchLayer={onDirectPatchLayer} onPublicSelect={onPublicSelect}
-          publicSelection={publicSelection}
+          publicSelection={publicSelection} editingText={editingText}
+          onDirectStartTextEdit={onDirectStartTextEdit}
+          onDirectTextChange={onDirectTextChange}
+          onDirectTextFinish={onDirectTextFinish}
           boardRef={boardRef} dragRef={dragRef} lockImageRatio={lockImageRatio}
           continuousSilk={continuousSilk}/>)}
       {editable&&<div className="pt-artboard__edit-hint">

@@ -18,6 +18,7 @@ import ScrollTextAtmosphere from './ScrollTextAtmosphere'
 import {normalizeRevealSpeed} from './blockRevealState'
 import {OFFSET_MOVE_LIMIT,hasOverflowPlacement} from './freePlacement'
 import CharacterBurst from './CharacterBurst'
+import DirectEditableText from './DirectEditableText'
 import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
@@ -31,7 +32,7 @@ import {pickPortfolioActiveSection} from './sectionNavigation'
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
  */
-function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio,onDirectMoveElement,onPublicSelect,publicSelection}){
+function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio,onDirectMoveElement,onPublicSelect,publicSelection,editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish}){
   const frame=useRef(0)
   const sectionRef=useRef(null)
   const drag=useRef(null),suppressClick=useRef(false),fileInput=useRef(null)
@@ -86,6 +87,15 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     const file=event.dataTransfer.files[0]
     if(slot>=0&&file)onUploadImage(slot,file)
   }
+  const isInlineEditing=field=>editingText?.sectionId===section.id&&
+    editingText?.layerId===field
+  const textContent=(field,source,display,fallback,maxCharacters)=>
+    <DirectEditableText text={isInlineEditing(field)?source:display}
+      active={isInlineEditing(field)} disabled={Boolean(onEditText)}
+      kind={field} mode={motionUnit(typography?.[field]?.motion,fallback)}
+      maxCharacters={maxCharacters}
+      onChange={value=>onDirectTextChange?.(section.id,field,value)}
+      onFinish={onDirectTextFinish}/>
   function positionProps(key){
     const initial=positions?.[key]||{x:0,y:0}
     const text=isTextFrame(key)
@@ -125,7 +135,8 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         onFocus:event=>onPublicSelect?.(section.id,key,event.currentTarget)
       }:{}),
       onPointerDown:event=>{
-        if(event.button!==0||!event.isPrimary)return
+        if(event.button!==0||!event.isPrimary||
+          event.target.closest('textarea,[data-pt-inline-text-editor]'))return
         const {width,height}=event.currentTarget.getBoundingClientRect()
         if(!width||!height)return
         suppressClick.current=false
@@ -253,6 +264,12 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     placement['data-pt-scroll-reveal']=field
     const type=typography?.[field]
     Object.assign(placement,textMotionAttributes(type?.motion))
+    if(!onEditText&&onDirectStartTextEdit){
+      placement.onDoubleClick=event=>{
+        event.stopPropagation()
+        onDirectStartTextEdit(section.id,field,event.currentTarget)
+      }
+    }
     if(type)placement.style={
       ...placement.style,
       textAlign:['left','center','right'].includes(type.align)?type.align:undefined,
@@ -331,24 +348,32 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     </div>}
 
     {section.title&&<span className="pt-fx__type-echo" aria-hidden="true">{section.title}</span>}
-    <div className="pt-site__copy" style={onEditText?{pointerEvents:'auto'}:undefined}>
-      {(section.eyebrow||index===0||!isPublic)&&<small {...editTextProps('eyebrow')}>
-        <CharacterBurst text={section.eyebrow||
-          (index===0&&artistRole?artistRole:section.label)}
-          disabled={Boolean(onEditText)}
-          mode={motionUnit(typography?.eyebrow?.motion,'letters')} maxCharacters={120}/>
-        {textResizeHandle('eyebrow','nhãn phụ')}
-      </small>}
-      {section.title?<h2 {...editTextProps('title')}>
-        <CharacterBurst text={section.title} disabled={Boolean(onEditText)}
-          mode={motionUnit(typography?.title?.motion,'letters')}
-          maxCharacters={160}/>{textResizeHandle('title','tiêu đề')}</h2>:
-        onEditText&&<button type="button" className="pt-copy-add" onClick={()=>onEditText('title')}>Thêm tiêu đề</button>}
-      {section.body?<p {...editTextProps('body')}>
-        <CharacterBurst text={section.body} disabled={Boolean(onEditText)}
-          mode={motionUnit(typography?.body?.motion,'words')}
-          maxCharacters={motionUnit(typography?.body?.motion,'words')==='letters'?300:1600}/>{textResizeHandle('body','nội dung')}</p>:
-        onEditText?<button type="button" className="pt-copy-add" onClick={()=>onEditText('body')}>Thêm mô tả</button>:
+    <div className="pt-site__copy"
+      style={onEditText||onDirectStartTextEdit?{pointerEvents:'auto'}:undefined}>
+      {(section.eyebrow||index===0||!isPublic||isInlineEditing('eyebrow'))&&
+        <small {...editTextProps('eyebrow')}>
+          {textContent('eyebrow',section.eyebrow||'',section.eyebrow||
+            (index===0&&artistRole?artistRole:section.label),'letters',120)}
+          {textResizeHandle('eyebrow','nhãn phụ')}
+        </small>}
+      {(section.title||isInlineEditing('title'))?<h2 {...editTextProps('title')}>
+        {textContent('title',section.title||'',section.title||'','letters',160)}
+        {textResizeHandle('title','tiêu đề')}
+      </h2>:
+        onEditText?<button type="button" className="pt-copy-add"
+          onClick={()=>onEditText('title')}>Thêm tiêu đề</button>:
+        onDirectStartTextEdit?<button type="button" className="pt-copy-add"
+          onClick={()=>onDirectStartTextEdit(section.id,'title')}>
+          + Thêm tiêu đề</button>:null}
+      {(section.body||isInlineEditing('body'))?<p {...editTextProps('body')}>
+        {textContent('body',section.body||'',section.body||'','words',
+          motionUnit(typography?.body?.motion,'words')==='letters'?300:1600)}
+        {textResizeHandle('body','nội dung')}
+      </p>:
+        onEditText?<button type="button" className="pt-copy-add"
+          onClick={()=>onEditText('body')}>Thêm mô tả</button>:
+        onDirectStartTextEdit?<button type="button" className="pt-copy-add"
+          onClick={()=>onDirectStartTextEdit(section.id,'body')}>+ Thêm mô tả</button>:
         !isPublic&&<p className="pt-site__placeholder-text">
           {section.sourceStatus==='missing'
             ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'
@@ -394,6 +419,7 @@ export default function PortfolioTemplateSite({
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
   onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,
   onDirectMoveTitle,onDirectMoveElement,onDirectPatchLayer,onPublicSelect,publicSelection,
+  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,
   publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
@@ -569,7 +595,10 @@ export default function PortfolioTemplateSite({
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
           onDirectPatchLayer={onDirectPatchLayer} onPublicSelect={onPublicSelect}
-          publicSelection={publicSelection}
+          publicSelection={publicSelection} editingText={editingText}
+          onDirectStartTextEdit={onDirectStartTextEdit}
+          onDirectTextChange={onDirectTextChange}
+          onDirectTextFinish={onDirectTextFinish}
           onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
           useClassic?
           <MotionSection key={section.id} section={section} index={index}
@@ -580,6 +609,8 @@ export default function PortfolioTemplateSite({
             onMoveElement={editSectionId===section.id?onMoveElement:undefined}
             onDirectMoveElement={onDirectMoveElement}
             onPublicSelect={onPublicSelect} publicSelection={publicSelection}
+            editingText={editingText} onDirectStartTextEdit={onDirectStartTextEdit}
+            onDirectTextChange={onDirectTextChange} onDirectTextFinish={onDirectTextFinish}
             onSelectLayer={onSelectLayer} lockImageRatio={lockImageRatio}
             styleName={view.style} urls={urls} artistRole={view.artistRole} isPublic={Boolean(publishedView)}
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
@@ -594,6 +625,8 @@ export default function PortfolioTemplateSite({
             onDirectMoveTitle={onDirectMoveTitle}
             onDirectMoveElement={onDirectMoveElement}
             onPublicSelect={onPublicSelect} publicSelection={publicSelection}
+            editingText={editingText} onDirectStartTextEdit={onDirectStartTextEdit}
+            onDirectTextChange={onDirectTextChange} onDirectTextFinish={onDirectTextFinish}
             onSelectLayer={editSectionId===section.id?onSelectLayer:undefined}
             onEditText={editSectionId===section.id?onEditText:undefined}
             onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>

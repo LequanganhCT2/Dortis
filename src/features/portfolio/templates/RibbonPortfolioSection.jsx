@@ -6,6 +6,7 @@ import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
+import DirectEditableText from './DirectEditableText'
 import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWidthStyle} from './textFrameSizing'
 
@@ -53,11 +54,21 @@ export default function RibbonPortfolioSection({
   section,index=0,urls={},artistRole='',isPublic=false,
   selectedLayer='',positions={},typography={},onMoveElement,onSelectLayer,
   onEditText,onUploadImage,lockImageRatio=true,onDirectMoveTitle,
-  onDirectMoveElement,onPublicSelect,publicSelection
+  onDirectMoveElement,onPublicSelect,publicSelection,
+  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish
 }){
   const drag=useRef(null),suppressClick=useRef(false)
   const fileInput=useRef(null),pendingSlot=useRef(-1)
   const editing=Boolean(onMoveElement||onEditText||onUploadImage)
+  const isInlineEditing=field=>editingText?.sectionId===section.id&&
+    editingText?.layerId===field
+  const textContent=(field,raw,display,fallback,maxCharacters)=>
+    <DirectEditableText text={isInlineEditing(field)?raw:display}
+      active={isInlineEditing(field)} kind={field} disabled={editing}
+      mode={motionUnit(typography?.[field]?.motion,fallback)}
+      maxCharacters={maxCharacters}
+      onChange={value=>onDirectTextChange?.(section.id,field,value)}
+      onFinish={onDirectTextFinish}/>
   const allTiles=(section.images||[]).map((asset,position)=>({
     asset,position,url:asset?.path?urls[asset.path]:null
   }))
@@ -71,7 +82,7 @@ export default function RibbonPortfolioSection({
   function startDrag(event,key,resizing=false,locked=false){
     const canDirectDrag=Boolean(onDirectMoveElement||(key==='title'&&onDirectMoveTitle))
     if((!onMoveElement&&!canDirectDrag)||event.button!==0||event.isPrimary===false)return
-    if(!resizing&&event.target.closest('button,input'))return
+    if(!resizing&&event.target.closest('button,input,textarea,[contenteditable]'))return
     event.stopPropagation()
     const target=resizing?event.currentTarget.parentElement:event.currentTarget
     const rect=target.getBoundingClientRect()
@@ -211,6 +222,12 @@ export default function RibbonPortfolioSection({
     return {...base,'data-portfolio-text-frame':field,
       'data-pt-scroll-reveal':field,
       ...textMotionAttributes(typography?.[field]?.motion),
+      ...(!onEditText&&onDirectStartTextEdit?{
+        onDoubleClick:event=>{
+          event.stopPropagation()
+          onDirectStartTextEdit(section.id,field,event.currentTarget)
+        }
+      }:{}),
       ...(onEditText?{
         'data-portfolio-edit-field':field,
         'data-portfolio-edit-selected':selectedLayer===field?'true':undefined,
@@ -261,27 +278,29 @@ export default function RibbonPortfolioSection({
       }}/>}
     <div className="pt-ribbon__copy">
       <small {...editTextProps('eyebrow')}>
-        <CharacterBurst disabled={editing} maxCharacters={120}
-          mode={motionUnit(typography?.eyebrow?.motion,'letters')}
-          text={String(index+1).padStart(2,'0')+' / '+(section.eyebrow||
-          (index===0&&artistRole?artistRole:section.label))}/>
+        {textContent('eyebrow',section.eyebrow||'',
+          String(index+1).padStart(2,'0')+' / '+(section.eyebrow||
+          (index===0&&artistRole?artistRole:section.label)),'letters',120)}
         {resizeHandle('eyebrow','nhãn phụ',true)}
       </small>
-      {section.title?<h2 {...editTextProps('title')}>
-          <CharacterBurst text={section.title} disabled={editing}
-            mode={motionUnit(typography?.title?.motion,'letters')}
-            maxCharacters={160}/>{resizeHandle('title','tiêu đề',true)}
-        </h2>:
+      {(section.title||isInlineEditing('title'))?<h2 {...editTextProps('title')}>
+        {textContent('title',section.title||'',section.title||'','letters',160)}
+        {resizeHandle('title','tiêu đề',true)}
+      </h2>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('title')}>+ Thêm tiêu đề</button>:
+        onDirectStartTextEdit?<button type="button" className="pt-ribbon__add-text"
+          onClick={()=>onDirectStartTextEdit(section.id,'title')}>+ Thêm tiêu đề</button>:
         !isPublic?<h2 className="pt-ribbon__missing">Chưa có tiêu đề trong hồ sơ</h2>:null}
-      {section.body?<p {...editTextProps('body')}>
-          <CharacterBurst text={section.body} disabled={editing}
-            mode={motionUnit(typography?.body?.motion,'words')}
-            maxCharacters={motionUnit(typography?.body?.motion,'words')==='letters'?300:1600}/>{resizeHandle('body','nội dung',true)}
-        </p>:
+      {(section.body||isInlineEditing('body'))?<p {...editTextProps('body')}>
+        {textContent('body',section.body||'',section.body||'','words',
+          motionUnit(typography?.body?.motion,'words')==='letters'?300:1600)}
+        {resizeHandle('body','nội dung',true)}
+      </p>:
         editing?<button type="button" className="pt-ribbon__add-text"
           onClick={()=>onEditText?.('body')}>+ Thêm mô tả</button>:
+        onDirectStartTextEdit?<button type="button" className="pt-ribbon__add-text"
+          onClick={()=>onDirectStartTextEdit(section.id,'body')}>+ Thêm mô tả</button>:
         !hasCopy&&!isPublic?<p className="pt-ribbon__missing">
           {section.sourceStatus==='missing'
             ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'

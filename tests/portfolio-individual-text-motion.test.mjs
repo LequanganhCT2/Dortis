@@ -79,7 +79,7 @@ test('All three portfolio renderers expose per-layer motion data and split setti
   assert.match(scene,/textMotionAttributes\(layer\.motion\)/)
   assert.match(scene,/motionUnit\(layer\.motion/)
   assert.match(ribbon,/textMotionAttributes\(typography\?\.\[field\]\?\.motion\)/)
-  assert.match(ribbon,/mode=\{motionUnit\(typography\?\.title\?\.motion/)
+  assert.match(ribbon,/mode=\{motionUnit\(typography\?\.\[field\]\?\.motion/)
   assert.match(site,/Object\.assign\(placement,textMotionAttributes\(type\?\.motion\)\)/)
   assert.match(site,/sectionsKey=\{revealKey\+'\|motions:'\+motionKey\}/)
   assert.match(burst,/mode==='block'/)

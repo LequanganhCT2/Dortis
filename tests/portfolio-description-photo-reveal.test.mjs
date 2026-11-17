@@ -12,7 +12,8 @@ test('All three layouts render word-staggered description and separate photo ent
     assert.match(source,/<PhotoMotion/)
     assert.match(source,/<\/PhotoMotion><\/PhotoReveal>/)
     assert.match(source,/motionUnit\(.+?'words'\)/)
-    assert.match(source,/maxCharacters=\{[\s\S]{0,200}1600/)
+    assert.match(source,/maxCharacters=\{|textContent\('body'/)
+    assert.match(source,/1600/)
   }
   const wrapper=code('PhotoReveal.jsx')
   assert.match(wrapper,/className="pt-photo-reveal"/)

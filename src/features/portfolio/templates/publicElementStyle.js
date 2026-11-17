@@ -2,6 +2,7 @@ import {getScene,patchSceneLayer} from './sectionDesign.js'
 import {quickSceneTextPlacement,quickRibbonTextPlacement} from './textQuickLayouts.js'
 import {OFFSET_MOVE_LIMIT} from './freePlacement.js'
 import {normalizeTextMotion} from './textLayerMotion.js'
+import {patchPublishedText} from './publicTextContent.js'
 
 const safe=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0))
 export const TEXT_KEYS=new Set(['eyebrow','title','body'])
@@ -32,6 +33,9 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
   const section=sectionOverride||document.view?.sections?.find(s=>s.id===sectionId)
   if(!section)return document
   const scene=getScene(document,section,device)
+  if(group==='content'&&isTextLayer(layerId)){
+    return patchPublishedText(document,section,device,layerId,patch?.value)
+  }
   if(group==='layout'&&isTextLayer(layerId)){
     if(scene){
       const layer=scene.layers[layerId]

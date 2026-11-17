@@ -5,6 +5,7 @@ import {clientNavigate} from '../../../app/navigation'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {withPublishedTitlePosition} from './publicTitlePosition'
 import {lookupPublishedLayer,patchPublishedElement} from './publicElementStyle'
+import {getPublishedText,isEditablePortfolioText} from './publicTextContent'
 import InlinePortfolioInspector from './InlinePortfolioInspector'
 import './template-admin.css'
 
@@ -58,6 +59,7 @@ export default function PublishedPortfolio(){
   const flushTimerRef=useRef(null)
   const [selection,setSelection]=useState(null)
   const [editMode,setEditMode]=useState(false)
+  const [editingText,setEditingText]=useState(null)
   const [publishedAt,setPublishedAt]=useState('')
   const [replayKey,setReplayKey]=useState(0)
   const [reducedMotion,setReducedMotion]=useState(()=>
@@ -88,7 +90,7 @@ export default function PublishedPortfolio(){
       const user=session?.user
       const canEdit=canManageContent(user)
       setAdmin(canEdit?user:null)
-      if(!canEdit){setSelection(null);setEditMode(false)}
+      if(!canEdit){setSelection(null);setEditingText(null);setEditMode(false)}
     })
     return ()=>subscription.unsubscribe()
   },[])
@@ -209,7 +211,20 @@ export default function PublishedPortfolio(){
 
   function selectPublicElement(sectionId,layerId,element){
     if(!admin||!editMode||!element||!publication)return
+    setEditingText(current=>current&&
+      (current.sectionId!==sectionId||current.layerId!==layerId)?null:current)
     setSelection({sectionId,layerId,...measurePublicElement(element)})
+  }
+  function beginInlineTextEdit(sectionId,layerId,element){
+    if(!admin||!editMode||!publication||!isEditablePortfolioText(layerId))return
+    if(!publication.view?.sections?.some(item=>item.id===sectionId))return
+    if(element)selectPublicElement(sectionId,layerId,element)
+    else setSelection({sectionId,layerId,rect:{top:120,left:0},metrics:{}})
+    setEditingText({sectionId,layerId})
+  }
+  function finishInlineTextEdit(){
+    setEditingText(null)
+    finishPendingPublicEdits()
   }
 
   useEffect(()=>{
@@ -243,6 +258,8 @@ export default function PublishedPortfolio(){
 
   function applyPublicEdit(sectionId,layerId,group,patch){
     if(!admin||!editMode||!publication||!supabase)return
+    if(group==='content'&&(!isEditablePortfolioText(layerId)||
+      typeof patch?.value!=='string'))return
     const section=publication.view?.sections?.find(item=>item.id===sectionId)
     if(!section)return
     const device=mobile?'mobile':'desktop'
@@ -344,6 +361,7 @@ export default function PublishedPortfolio(){
           className={!editMode?'is-active':''}
           onClick={()=>{
             setEditMode(false)
+            setEditingText(null)
             setSelection(null)
             finishPendingPublicEdits()
             setReplayKey(value=>value+1)
@@ -369,6 +387,7 @@ export default function PublishedPortfolio(){
     {!loading&&publication&&<PortfolioTemplateSite
       key={id+':'+publishedAt}
       publishedView={view} template={publishedTemplate} publicPage
+      motionPaused={Boolean(editingText)}
       revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
       onDirectMoveTitle={editorActive?movePublishedTitle:undefined}
@@ -378,6 +397,11 @@ export default function PublishedPortfolio(){
         applyPublicEdit(section,key,'position',patch):undefined}
       onPublicSelect={editorActive?selectPublicElement:undefined}
       publicSelection={editorActive?selection:undefined}
+      editingText={editorActive?editingText:null}
+      onDirectStartTextEdit={editorActive?beginInlineTextEdit:undefined}
+      onDirectTextChange={editorActive?(section,key,value)=>
+        applyPublicEdit(section,key,'content',{value}):undefined}
+      onDirectTextFinish={finishInlineTextEdit}
       device={mobile?'mobile':'desktop'}/>}
     {admin&&selection&&publication&&<InlinePortfolioInspector
       selection={selection}
@@ -385,7 +409,11 @@ export default function PublishedPortfolio(){
         mobile?'mobile':'desktop',selection.layerId)}
       device={mobile?'mobile':'desktop'}
       onApply={applyPublicEdit}
+      textValue={getPublishedText(publication,selection.sectionId,
+        mobile?'mobile':'desktop',selection.layerId)}
+      onStartInlineEdit={()=>beginInlineTextEdit(selection.sectionId,
+        selection.layerId)}
       onReplayMotion={()=>setReplayKey(value=>value+1)}
-      onClose={()=>{setSelection(null);finishPendingPublicEdits()}}/>}
+      onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/>}
   </div>
 }

@@ -260,3 +260,15 @@
 }
 .pt-inline-inspector__replay:hover{background:#d5edfa}
 .pt-inline-inspector__replay:focus-visible{outline:2px solid #68b4d8;outline-offset:2px}
+
+/* An editable copy field belongs to the selected text layer, not the source PDF. */
+.pt-inline-inspector__textarea{
+  box-sizing:border-box;display:block;width:100%;min-height:72px;
+  padding:10px 11px;resize:vertical;max-height:260px;
+  border:1px solid #ccdfe8;border-radius:9px;background:#fff;
+  color:#203f51;font:500 12px/1.65 'Be Vietnam Pro',system-ui,sans-serif;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+.pt-inline-inspector__textarea:focus{
+  outline:2px solid #64b5dc;outline-offset:1px;
+}
