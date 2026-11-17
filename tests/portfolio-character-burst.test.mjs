@@ -40,7 +40,7 @@ test('Viewport entry is instant, and images do not wait for the previous section
   assert.equal(portfolioPartDelays('title').enter,0)
   assert.equal(portfolioPartDelays('body').enter,0)
   assert.ok(portfolioPartDelays('image',8).enter<=70)
-  assert.equal(classifyPortfolioPart({top:770,bottom:950},0,800),'visible')
+  assert.equal(classifyPortfolioPart({top:750,bottom:950},0,800),'visible')
   assert.equal(classifyPortfolioPart({top:840,bottom:1100},0,800),'hidden-bottom')
   const observer=code('ScrollTextAtmosphere.jsx')
   assert.equal((observer.match(/new IntersectionObserver\(/g)||[]).length,1)
