@@ -33,7 +33,7 @@ test('Silk Atelier resizes the text box and persists widthPct without font scali
   const component=file('RibbonPortfolioSection.jsx')
   const css=file('portfolio-ribbon.css')
   assert.match(component,/isTextFrame\(key\)/)
-  assert.match(component,/scale:!text&&position\.scaleX/)
+  assert.match(component,/scale:!text&&\(position\.scaleX!=null\|\|position\.scaleY!=null\)/)
   assert.match(component,/textBoxWidthStyle\(position\)/)
   assert.match(component,/mode:isTextResize\?'text-width'/)
   assert.match(component,/if\(current\.mode==='text-width'\)/)
