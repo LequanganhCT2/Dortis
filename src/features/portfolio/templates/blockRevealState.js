@@ -45,8 +45,12 @@ export function portfolioPartDelays(kind,index=0){
 
 /** Speed multiplier: smaller values mean a more deliberate animation. */
 export const PORTFOLIO_REVEAL_SPEEDS=Object.freeze([
-  {value:.6,label:'Rất chậm · 0,6×'},
-  {value:.8,label:'Chậm · 0,8×'},
+  {value:.2,label:'Siêu chậm · 0,2×'},
+  {value:.3,label:'Rất chậm · 0,3×'},
+  {value:.4,label:'Chậm sâu · 0,4×'},
+  {value:.5,label:'Chậm nhẹ · 0,5×'},
+  {value:.6,label:'Chậm · 0,6×'},
+  {value:.8,label:'Chậm vừa · 0,8×'},
   {value:1,label:'Bình thường · 1×'},
   {value:1.25,label:'Nhanh · 1,25×'},
   {value:1.5,label:'Rất nhanh · 1,5×'}

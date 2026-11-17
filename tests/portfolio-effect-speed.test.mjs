@@ -9,15 +9,20 @@ import {PRESET_FORMS,blueprintFor,resolveInstance} from
 const src=name=>readFileSync(new URL(
   '../src/features/portfolio/templates/'+name,import.meta.url),'utf8')
 
-test('Slower by default; five distinct adjustable speed presets',()=>{
+test('Slower by default; nine adjustable speed presets including 0.2–0.5x',()=>{
   assert.deepEqual(PORTFOLIO_REVEAL_SPEEDS.map(item=>item.value),
-    [.6,.8,1,1.25,1.5])
+    [.2,.3,.4,.5,.6,.8,1,1.25,1.5])
   assert.equal(normalizeRevealSpeed(undefined),.8)
   assert.equal(normalizeRevealSpeed('0.8'),.8)
   assert.equal(normalizeRevealSpeed('not-a-speed'),.8)
   assert.equal(normalizeRevealSpeed(1.25),1.25)
+  for(const speed of [.2,.3,.4,.5])assert.equal(normalizeRevealSpeed(String(speed)),speed)
   assert.equal(scaledRevealMs(380,.8),475)
   assert.equal(scaledRevealMs(300,.6),500)
+  assert.equal(scaledRevealMs(300,.2),1500)
+  assert.equal(scaledRevealMs(300,.3),1000)
+  assert.equal(scaledRevealMs(300,.4),750)
+  assert.equal(scaledRevealMs(300,.5),600)
   assert.equal(scaledRevealMs(300,1.5),200)
   assert.ok(scaledRevealMs(300,.6)>scaledRevealMs(300,1.5))
 })
