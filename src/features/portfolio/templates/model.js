@@ -3,12 +3,25 @@ import {normalizePortfolioPalette} from './portfolioPalette.js'
 /** Reusable layout only. Artist names, claims, images, and booking live on instances.
  * Suggested neutral tokens are PROPOSED, never an artist's approved identity.
  */
-/** The one new shared Form. Older blueprints are retained in DB as archived
+/** Two independent new Forms. Older blueprints are retained in DB as archived
  * references for existing published artist URLs; not selectable in Admin. */
 export const PRESET_FORMS=Object.freeze([
   {slug:'silk-atelier',name:'Dortis Silk Atelier',
    description:'Portfolio nghệ thuật với một trường lụa đỏ-vàng chuyển động xuyên suốt, các quầng sáng trong suốt ở lớp trên cùng và ảnh theo từng khu vực.',
    style:'editorial',sections:[
+    {id:'hero',label:'01 · Chân dung nghệ sĩ',layout:'cover',slots:1},
+    {id:'story',label:'02 · Câu chuyện nghệ thuật',layout:'split-reverse',slots:1},
+    {id:'journey',label:'03 · Hành trình & dấu ấn',layout:'split',slots:1},
+    {id:'skills',label:'04 · Thế mạnh / Phong cách',layout:'text',slots:0},
+    {id:'achievements',label:'05 · Thành tựu',layout:'grid',slots:3},
+    {id:'performance',label:'06 · Khoảnh khắc biểu diễn',layout:'mosaic',slots:4},
+    {id:'gallery',label:'07 · Thư viện nghệ thuật',layout:'grid',slots:6},
+    {id:'contact',label:'08 · Liên hệ & Booking',layout:'text',slots:0}
+  ]},
+  {slug:'silk-flow',name:'Dortis Silk Flow',
+   description:'Template 02: lụa xanh trong suốt nhiều lớp bay trên nền trắng, kế thừa đầy đủ 8 khu vực và công cụ chỉnh sửa của Silk Atelier.',
+   style:'editorial',visualTheme:'silk-flow',colorPalette:'ice-blue',
+   sections:[
     {id:'hero',label:'01 · Chân dung nghệ sĩ',layout:'cover',slots:1},
     {id:'story',label:'02 · Câu chuyện nghệ thuật',layout:'split-reverse',slots:1},
     {id:'journey',label:'03 · Hành trình & dấu ấn',layout:'split',slots:1},
@@ -44,7 +57,8 @@ export function normalizeRibbonChoice(layout,direction){
 }
 export const FORM_VISUAL_THEMES=[
   {id:'ribbon-luxury',label:'Dải lụa đỏ vàng · Luxury Motion'},
-  {id:'classic',label:'Bố cục hiệu ứng cũ · Classic'}
+  {id:'classic',label:'Bố cục hiệu ứng cũ · Classic'},
+  {id:'silk-flow',label:'Lụa xanh trong suốt · Silk Flow'}
 ]
 export const FORM_EFFECTS=[
   {id:'auto',label:'Tự động theo khu vực'},
@@ -58,7 +72,7 @@ export const FORM_EFFECTS=[
 ]
 export const FORM_EFFECT_IDS=FORM_EFFECTS.map(item=>item.id)
 export function blueprintFor(preset){
-  return {style:preset.style,colorPalette:'red-gold',visualTheme:'ribbon-luxury',ribbonLayout:'diagonal',ribbonDirection:'down-right',glowOpacity:0.28,
+  return {style:preset.style,colorPalette:preset.colorPalette||'red-gold',visualTheme:preset.visualTheme||'ribbon-luxury',ribbonLayout:'diagonal',ribbonDirection:'down-right',glowOpacity:preset.visualTheme==='silk-flow'?0.12:0.28,
     sections:preset.sections.map(s=>({...s})),
     source:'DORTIS_DESIGN_KNOWLEDGE_REFERENCE_v2',approval:'PROPOSED'}
 }

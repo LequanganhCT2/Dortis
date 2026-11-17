@@ -10,8 +10,8 @@ const migration=readFileSync(new URL(
   '../supabase/migrations/20261116074500_silk_atelier_single_form.sql',
   import.meta.url),'utf8')
 
-test('Only Silk Atelier is exposed as a new Form; eight sections are inherited',()=>{
-  assert.equal(PRESET_FORMS.length,1)
+test('Silk Atelier and Silk Flow are separate reusable Forms with inherited sections',()=>{
+  assert.equal(PRESET_FORMS.length,2)
   const item=PRESET_FORMS[0]
   assert.equal(item.slug,'silk-atelier')
   assert.equal(item.sections.length,8)
@@ -113,7 +113,7 @@ test('Color selection is visible before the long artist section list',()=>{
   assert.match(editor,/setContent\(previous=>\(\{\.\.\.previous,colorPalette:palette\}\)\)/)
   assert.match(editor,/setDirty\(true\);setNotice\(''\)/)
   assert.match(manager,/<PortfolioPalettePicker[\s\S]*?Bảng màu mặc định của Form/)
-  assert.match(picker,/FORM_COLOR_PALETTES\.map/)
+  assert.match(picker,/options\.map/)
   assert.match(picker,/aria-pressed=\{active===option\.id\}/)
   assert.match(styles,/\.pt-palette-picker__options/)
 })

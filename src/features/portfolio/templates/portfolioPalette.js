@@ -5,8 +5,17 @@ export const FORM_COLOR_PALETTES=Object.freeze([
  {id:'yellow-white',label:'Vàng – trắng',swatches:['#d2a12a','#fffef4']},
  {id:'black-white',label:'Đen – trắng',swatches:['#101114','#f8f8f8']}
 ])
+export const SILK_FLOW_COLOR_PALETTES=Object.freeze([
+ {id:'ice-blue',label:'Xanh băng – trắng',swatches:['#84c5e9','#fcfeff']},
+ {id:'seafoam-white',label:'Xanh ngọc – trắng',swatches:['#73c9c8','#faffff']},
+ {id:'silver-white',label:'Bạc – trắng',swatches:['#b5c9da','#ffffff']},
+ {id:'navy-white',label:'Xanh đậm – trắng',swatches:['#345c89','#eef6ff']}
+])
+export function paletteOptionsForTheme(theme){
+ return theme==='silk-flow'?SILK_FLOW_COLOR_PALETTES:FORM_COLOR_PALETTES
+}
 export function normalizePortfolioPalette(value){
- return FORM_COLOR_PALETTES.some(p=>p.id===value)?value:'red-gold'
+ return [...FORM_COLOR_PALETTES,...SILK_FLOW_COLOR_PALETTES].some(p=>p.id===value)?value:'red-gold'
 }
 const RAMPS={
  'red-white':['#430009','#ad1124','#e3484c','#ffe2e2','#ffffff'],

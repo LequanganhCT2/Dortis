@@ -1,6 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
+import {paletteOptionsForTheme} from './portfolioPalette'
 import {normalizeBlueprint,portfolioSections,setSectionField,setSlotImage,LUXURY_RIBBON} from './model'
 import {artistSourcePages,copySourceSection,suggestSourceForLayout} from './sourceBinding'
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
@@ -422,6 +423,7 @@ export default function PortfolioInstanceEditor({
     <PortfolioPalettePicker
       heading="Bảng màu Portfolio" value={content.colorPalette||
         normalizeBlueprint(template.blueprint).colorPalette}
+      options={paletteOptionsForTheme(normalizeBlueprint(template.blueprint).visualTheme)}
       hint="Chọn màu để đổi ngay trên bản xem trước. Lưu thay đổi và cập nhật website để xuất bản."
       disabled={busy}
       onChange={palette=>{

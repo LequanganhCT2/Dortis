@@ -3,8 +3,8 @@ import assert from 'node:assert/strict'
 import {PRESET_FORMS,blueprintFor,normalizeBlueprint,resolveInstance,
   setSectionField,setSlotImage,templateAssignments} from '../src/features/portfolio/templates/model.js'
 
-test('One new reusable Silk Atelier form, no artist data or imported PDF photos',()=>{
-  assert.equal(PRESET_FORMS.length,1)
+test('Two reusable Silk Forms, no artist data or imported PDF photos',()=>{
+  assert.equal(PRESET_FORMS.length,2)
   assert.equal(new Set(PRESET_FORMS.map(p=>p.slug)).size,1)
   assert.ok(PRESET_FORMS.every(p=>p.sections.length===8))
   assert.ok(PRESET_FORMS.every(p=>p.sections.every(s=>Number.isInteger(s.slots))))

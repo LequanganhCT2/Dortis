@@ -2,6 +2,7 @@ import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
+import {paletteOptionsForTheme} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
@@ -203,10 +204,9 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   return <main className="pt-manager">
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>
-        <h1>Dortis Silk Atelier<span>.</span></h1>
-        <p>Một Form nghệ thuật duy nhất. Dải lụa đỏ-vàng vắt chéo xuyên suốt Portfolio;
-          quầng sáng bán trong suốt nằm ở lớp trên cùng.
-          Nội dung lấy từ Hồ sơ nghệ sĩ và ảnh được quản lý riêng theo từng khu vực.</p></div>
+        <h1>Dortis Portfolio Studio<span>.</span></h1>
+        <p>Hai Template nghệ thuật độc lập: Silk Atelier đỏ-vàng và Silk Flow xanh-trắng.
+          Cả hai kế thừa hệ thống 8 khu vực, dữ liệu hồ sơ PDF, ảnh và trình chỉnh sửa riêng cho từng nghệ sĩ.</p></div>
       <div><span className="pt-status">{templates.length} FORM · {groups.reduce((sum,group)=>sum+group.people.length,0)} HỒ SƠ ĐƯỢC GÁN</span>
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
@@ -231,6 +231,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           heading="Bảng màu mặc định của Form"
           hint="Màu mới áp dụng cho Portfolio kế thừa Form này sau khi lưu Form và xuất bản website."
           value={blueprint.colorPalette||'red-gold'} disabled={working}
+          options={paletteOptionsForTheme(blueprint.visualTheme)}
           onChange={palette=>setBlueprint(current=>({...current,colorPalette:palette}))}/>
         <div className="pt-blueprint__themes">
           <label className="pt-blueprint__style">Phong cách chữ
@@ -307,15 +308,16 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
       </section>:
     <>
       <section className="pt-catalog">
-        <div className="pt-catalog__heading"><h2>Form Silk Atelier</h2>
-          <p>Một Form chung cho nhiều nghệ sĩ. Bạn có thể thay đổi bố cục và kiểu dải lụa ở Form gốc;
-          ảnh, nội dung và thiết kế riêng của mỗi nghệ sĩ vẫn độc lập.</p></div>
+        <div className="pt-catalog__heading"><h2>Thư viện Template Portfolio</h2>
+          <p>Template 01 – Silk Atelier giữ nguyên. Template 02 – Silk Flow dùng lụa xanh trong suốt;
+          mỗi Template có Form và Portfolio nghệ sĩ riêng, cùng bộ công cụ chỉnh sửa.</p></div>
         <div className="pt-catalog__grid">{groups.map(group=>{
           const chosen=choice[group.id]||''
           const person=group.people.find(item=>item.artist.id===chosen)
           return <article key={group.id} className="pt-template">
             <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')+
-              ' pt-template__visual--palette-'+normalizeBlueprint(group.blueprint).colorPalette}>
+              ' pt-template__visual--palette-'+normalizeBlueprint(group.blueprint).colorPalette+
+              (normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'?' pt-template__visual--flow':'')}>
               <span>{group.name}</span>
               <div className="pt-template__skeleton"><i/><i/><i/></div>
               <small>FORM / {group.slug.toUpperCase()}</small>
@@ -350,6 +352,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                 heading="Bảng màu Form này"
                 hint="Chọn màu tại đây để lưu vào Form. Website nghệ sĩ cần cập nhật để nhận màu mới."
                 value={normalizeBlueprint(group.blueprint).colorPalette}
+                options={paletteOptionsForTheme(normalizeBlueprint(group.blueprint).visualTheme)}
                 disabled={working}
                 onChange={palette=>updateTemplateChoice(group,{colorPalette:palette})}/>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"

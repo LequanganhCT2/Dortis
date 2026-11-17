@@ -4,6 +4,7 @@ import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
 import {getScene,sceneFont,resizeDimensions} from './sectionDesign'
 import SectionArtboard from './SectionArtboard'
 import SilkStageBackdrop from './SilkStageBackdrop'
+import SilkFlowBackdrop from './SilkFlowBackdrop'
 import PortfolioGlowOverlay from './PortfolioGlowOverlay'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
@@ -18,6 +19,7 @@ import './silk-stage-backdrop.css'
 import './cutout-stage.css'
 import './portfolio-sticky-nav.css'
 import './portfolio-color-palettes.css'
+import './silk-flow.css'
 import {pickPortfolioActiveSection} from './sectionNavigation'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -334,6 +336,7 @@ export default function PortfolioTemplateSite({
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   const useClassic=(publishedView&&!view.visualTheme)||view.visualTheme==='classic'||instance?.content?.visualTheme==='classic'
+  const useSilkFlow=view.visualTheme==='silk-flow'&&!useClassic
   const visibleSections=focusedSectionId?
     view.sections.filter(s=>s.id===focusedSectionId):view.sections
   const hasSilk=useClassic&&view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
@@ -443,16 +446,20 @@ export default function PortfolioTemplateSite({
     if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+(view.colorPalette||'red-gold')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+(view.colorPalette||'red-gold')+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
         const id=page.id.slice(3)
         if(id!==editSectionId)onSelectSection(id)
       }:undefined}>
-      {continuousSilk&&<SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
-        direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
-        palette={view.colorPalette||'red-gold'}/>}
+      {continuousSilk&&(useSilkFlow?
+        <SilkFlowBackdrop layout={view.ribbonLayout||'diagonal'}
+          direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
+          palette={view.colorPalette||'ice-blue'}/>:
+        <SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
+          direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
+          palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
         sectionsKey={revealKey} device={device}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
@@ -505,7 +512,7 @@ export default function PortfolioTemplateSite({
         <span>{view.artistName||'PORTFOLIO'}</span>
         {!publishedView&&<small>Bản xem trước nội bộ</small>}
       </footer>}
-      {continuousSilk&&<PortfolioGlowOverlay opacity={view.glowOpacity??.28}/>}
+      {continuousSilk&&!useSilkFlow&&<PortfolioGlowOverlay opacity={view.glowOpacity??.28}/>}
     </main>
   </div>
 }

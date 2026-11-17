@@ -5,7 +5,7 @@ import {FORM_COLOR_PALETTES,normalizePortfolioPalette} from './portfolioPalette'
  * This is presentational only: the parent owns preview, save and publish state.
  */
 export default function PortfolioPalettePicker({
-  value='red-gold',onChange,disabled=false,onReset=null,
+  value='red-gold',onChange,disabled=false,onReset=null,options=FORM_COLOR_PALETTES,
   heading='Bảng màu Portfolio',hint='Chọn màu để xem ngay trên Portfolio.'
 }){
   const active=normalizePortfolioPalette(value)
@@ -19,7 +19,7 @@ export default function PortfolioPalettePicker({
         disabled={disabled} onClick={onReset}>Theo màu Form gốc ↺</button>}
     </div>
     <div className="pt-palette-picker__options" role="group" aria-label="Chọn bảng màu">
-      {FORM_COLOR_PALETTES.map(option=><button
+      {options.map(option=><button
         key={option.id} type="button"
         className={'pt-palette-picker__option'+(active===option.id?' is-selected':'')}
         aria-pressed={active===option.id} disabled={disabled}
