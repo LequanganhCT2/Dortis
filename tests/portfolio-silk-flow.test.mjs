@@ -136,3 +136,25 @@ test('A corrupted persisted Silk Flow blueprint always resolves as blue-white',(
   assert.match(site,/const flowForm=template\?\.slug==='silk-flow'/)
   assert.match(site,/const useSilkFlow=flowForm\|\|/)
 })
+
+
+test('Silk Flow header and footer win over shared crimson styles without touching Atelier',()=>{
+  const css=src('silk-flow.css')
+  const sticky=src('portfolio-sticky-nav.css')
+  const continuous=src('portfolio-continuous-silk.css')
+  assert.match(sticky,/background:linear-gradient\(104deg,#230408ed/)
+  assert.match(continuous,/\.pt-site\.pt-site--continuous-silk \.pt-site__footer/)
+  const root='.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow'
+  assert.ok(css.includes(root),'all overrides must be restricted to Silk Flow')
+  assert.match(css,/header\.pt-site__nav\.pt-site__nav--sticky\{/)
+  assert.match(css,/background:linear-gradient\(106deg,var\(--pt-flow-nav-left\)/)
+  assert.match(css,/nav\.pt-site__nav-links a\.is-active\{/)
+  assert.match(css,/footer\.pt-site__footer\{/)
+  assert.match(css,/background:linear-gradient\(120deg,var\(--pt-flow-footer-left\)/)
+  assert.match(css,/footer\.pt-site__footer :is\(span,small\)/)
+  assert.doesNotMatch(css,/\.pt-site\.pt-site--ribbon\s*>\s*header/)
+  // Greater specificity than the generic red/gold !important styles.
+  const flowSpecificity=(root.match(/\./g)||[]).length+2
+  const sharedSpecificity=('.pt-site.pt-site--continuous-silk > .pt-site__nav.pt-site__nav--sticky'.match(/\./g)||[]).length
+  assert.ok(flowSpecificity>sharedSpecificity)
+})

@@ -203,3 +203,123 @@
 .pt-template__visual.pt-template__visual--flow > span{
   text-shadow:0 2px 16px #ffffffec;
 }
+
+
+/*
+ * Silk Flow chrome: the shared Silk Atelier styles use !important on the
+ * sticky navigation and footer. Scope this higher-specificity surface to 02
+ * alone so no crimson/gold header or mauve footer leaks into the white theme.
+ */
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow{
+  --pt-flow-nav-left:#fbfefff5;
+  --pt-flow-nav-mid:#ecf8ffef;
+  --pt-flow-nav-right:#f8fdffef;
+  --pt-flow-nav-ink:#315e7c;
+  --pt-flow-nav-strong:#1c4c70;
+  --pt-flow-chrome-line:#b9dbe9b8;
+  --pt-flow-chrome-active:#d7effbd6;
+  --pt-flow-footer-left:#ffffffed;
+  --pt-flow-footer-right:#e9f6fdee;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--seafoam-white{
+  --pt-flow-nav-mid:#edfcf9ee;
+  --pt-flow-nav-ink:#366e70;
+  --pt-flow-nav-strong:#24595d;
+  --pt-flow-chrome-line:#b4ded9ba;
+  --pt-flow-chrome-active:#d9f4f0d6;
+  --pt-flow-footer-right:#e7f9f5ef;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--silver-white{
+  --pt-flow-nav-mid:#f3f8fbea;
+  --pt-flow-nav-ink:#526c80;
+  --pt-flow-nav-strong:#344c62;
+  --pt-flow-chrome-line:#bdcdd9b8;
+  --pt-flow-chrome-active:#e4eef5e0;
+  --pt-flow-footer-right:#edf4f8ef;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--navy-white{
+  --pt-flow-nav-mid:#e9f3fdef;
+  --pt-flow-nav-ink:#375b81;
+  --pt-flow-nav-strong:#203e68;
+  --pt-flow-chrome-line:#a9c6e2bd;
+  --pt-flow-chrome-active:#d3e6f9e0;
+  --pt-flow-footer-right:#e5effaef;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky{
+  color:var(--pt-flow-nav-ink)!important;
+  background:linear-gradient(106deg,var(--pt-flow-nav-left) 0%,
+    var(--pt-flow-nav-mid) 48%,var(--pt-flow-nav-right) 100%)!important;
+  border-bottom:1px solid var(--pt-flow-chrome-line)!important;
+  box-shadow:0 11px 32px #5b9cba20,inset 0 1px #ffffffee!important;
+  -webkit-backdrop-filter:blur(20px) saturate(135%);
+  backdrop-filter:blur(20px) saturate(135%);
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky::before{
+  opacity:.36;
+  background:linear-gradient(116deg,transparent 5%,#b2e5fd36 35%,
+    #ffffffa6 50%,transparent 74%)!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a{
+  color:var(--pt-flow-nav-ink)!important;
+  border-color:transparent;
+  background:transparent;
+  text-shadow:none!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a:hover,
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a:focus-visible{
+  color:var(--pt-flow-nav-strong)!important;
+  background:#d9effac4!important;
+  border-color:var(--pt-flow-chrome-line)!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a.is-active{
+  color:var(--pt-flow-nav-strong)!important;
+  background:var(--pt-flow-chrome-active)!important;
+  border-color:var(--pt-flow-chrome-line)!important;
+  box-shadow:0 3px 14px #91bdd035,inset 0 1px #fff!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a.is-active::after{
+  background:linear-gradient(90deg,transparent,#6bafd6,transparent)!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  .pt-site__nav-label,
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky
+  .pt-site__brand{
+  color:inherit!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > header.pt-site__nav.pt-site__nav--sticky .pt-site__nav-progress{
+  background:linear-gradient(90deg,#bddff0,#65a9d1,#d9eff9)!important;
+  box-shadow:0 0 11px #7bc4e69c!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > footer.pt-site__footer{
+  color:var(--pt-flow-nav-strong)!important;
+  background:linear-gradient(120deg,var(--pt-flow-footer-left) 0%,
+    var(--pt-flow-footer-right) 100%)!important;
+  border-top:1px solid var(--pt-flow-chrome-line)!important;
+  box-shadow:0 -10px 35px #8ec5dd19,inset 0 1px #fff!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > footer.pt-site__footer :is(span,small){
+  color:var(--pt-flow-nav-strong)!important;
+  text-shadow:none!important;
+}
+.pt-site.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow
+  > footer.pt-site__footer small{
+  color:var(--pt-flow-nav-ink)!important;
+  letter-spacing:.08em;
+}
