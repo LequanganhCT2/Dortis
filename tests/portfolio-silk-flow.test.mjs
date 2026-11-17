@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
-import {PRESET_FORMS,blueprintFor,normalizeBlueprint,resolveInstance} from '../src/features/portfolio/templates/model.js'
+import {PRESET_FORMS,blueprintFor,normalizeBlueprint,normalizeTemplateBlueprint,resolveInstance} from '../src/features/portfolio/templates/model.js'
 import {paletteOptionsForTheme,normalizePortfolioPalette} from '../src/features/portfolio/templates/portfolioPalette.js'
 import {FLOW_SHEETS,buildChiffonSheets} from '../src/features/portfolio/templates/silkFlowGeometry.js'
 
@@ -110,4 +110,29 @@ test('Reference-style cloth runs horizontally with raised peaks and a deep middl
   assert.match(component,/panel\.threads\.map/)
   assert.match(manager,/<SilkFlowBackdrop[\s\S]*?motionPaused\/>/)
   assert.match(src('silk-flow.css'),/pt-template__visual\.pt-template__visual--flow > \.pt-flow-stage/)
+})
+
+test('A corrupted persisted Silk Flow blueprint always resolves as blue-white',()=>{
+  const template={
+    slug:'silk-flow',
+    blueprint:{...blueprintFor(PRESET_FORMS[1]),visualTheme:'ribbon-luxury',
+      colorPalette:'red-gold'}
+  }
+  const clean=normalizeTemplateBlueprint(template)
+  assert.equal(clean.visualTheme,'silk-flow')
+  assert.equal(clean.colorPalette,'ice-blue')
+  assert.equal(resolveInstance(template,{content:{}},{name:'Artist'}).visualTheme,'silk-flow')
+  assert.equal(resolveInstance(template,{content:{colorPalette:'red-gold'}},{name:'Artist'}).colorPalette,'ice-blue')
+  assert.equal(resolveInstance(template,{content:{colorPalette:'silver-white'}},{name:'Artist'}).colorPalette,'silver-white')
+  assert.equal(normalizeTemplateBlueprint({
+    slug:'silk-atelier',blueprint:blueprintFor(PRESET_FORMS[0])
+  }).visualTheme,'ribbon-luxury')
+  assert.deepEqual(template.blueprint.visualTheme,'ribbon-luxury','do not mutate input')
+  const manager=src('PortfolioTemplateManager.jsx')
+  const site=src('PortfolioTemplateSite.jsx')
+  assert.match(manager,/normalizeTemplateBlueprint\(\{\.\.\.t,blueprint\}\)/)
+  assert.match(manager,/normalizeTemplateBlueprint\(group\)/)
+  assert.match(manager,/Giao diện cố định của Silk Flow/)
+  assert.match(site,/const flowForm=template\?\.slug==='silk-flow'/)
+  assert.match(site,/const useSilkFlow=flowForm\|\|/)
 })

@@ -335,8 +335,15 @@ export default function PortfolioTemplateSite({
   onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
-  const useClassic=(publishedView&&!view.visualTheme)||view.visualTheme==='classic'||instance?.content?.visualTheme==='classic'
-  const useSilkFlow=view.visualTheme==='silk-flow'&&!useClassic
+  // The Form identity is authoritative. Old persisted blueprints or snapshots
+  // may have a red-gold theme even though they belong to Silk Flow.
+  const flowForm=template?.slug==='silk-flow'
+  const useClassic=!flowForm&&((publishedView&&!view.visualTheme)||
+    view.visualTheme==='classic'||instance?.content?.visualTheme==='classic')
+  const useSilkFlow=flowForm||(view.visualTheme==='silk-flow'&&!useClassic)
+  const palette=useSilkFlow&&
+    !['ice-blue','seafoam-white','silver-white','navy-white'].includes(view.colorPalette)?
+      'ice-blue':view.colorPalette||'red-gold'
   const visibleSections=focusedSectionId?
     view.sections.filter(s=>s.id===focusedSectionId):view.sections
   const hasSilk=useClassic&&view.sections.some(section=>section.effect==='ribbon'&&!section.backdrop)
@@ -446,7 +453,7 @@ export default function PortfolioTemplateSite({
     if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+(view.colorPalette||'red-gold')+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+palette+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
@@ -456,7 +463,7 @@ export default function PortfolioTemplateSite({
       {continuousSilk&&(useSilkFlow?
         <SilkFlowBackdrop layout={view.ribbonLayout||'diagonal'}
           direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
-          palette={view.colorPalette||'ice-blue'}/>:
+          palette={palette||'ice-blue'}/>:
         <SilkStageBackdrop layout={view.ribbonLayout||'diagonal'}
           direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
           palette={view.colorPalette||'red-gold'}/>)}

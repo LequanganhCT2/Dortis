@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react'
-import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
+import {normalizeBlueprint,normalizeTemplateBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
 import SilkFlowBackdrop from './SilkFlowBackdrop'
@@ -139,13 +139,13 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
    */
   async function updateTemplateChoice(form,patch){
     if(working)return
-    const current=normalizeBlueprint(form.blueprint)
+    const current=normalizeTemplateBlueprint(form)
     const chosen=normalizeRibbonChoice(
       patch.ribbonLayout||current.ribbonLayout,
       patch.ribbonLayout?undefined:(patch.ribbonDirection||current.ribbonDirection)
     )
-    const next=normalizeBlueprint({...current,...chosen,
-      colorPalette:patch.colorPalette||current.colorPalette})
+    const next=normalizeTemplateBlueprint({...form,blueprint:{...current,...chosen,
+      colorPalette:patch.colorPalette||current.colorPalette}})
     if(current.ribbonLayout===next.ribbonLayout&&
        current.ribbonDirection===next.ribbonDirection&&
        current.colorPalette===next.colorPalette)return
@@ -179,7 +179,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     finally{setWorking(false)}
   }
   function openTemplateEdit(t){
-    setEditingTemplate(t.id);setBlueprint(normalizeBlueprint(t.blueprint))
+    setEditingTemplate(t.id);setBlueprint(normalizeTemplateBlueprint(t))
     setError('');setNotice('')
   }
   function updateSection(index,key,value){
@@ -202,7 +202,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   async function saveTemplate(){
     const t=templates.find(item=>item.id===editingTemplate)
     if(!t||working)return
-    const next=normalizeBlueprint(blueprint)
+    const next=normalizeTemplateBlueprint({...t,blueprint})
     if(!next.sections.length){setError('Form cần ít nhất một khu vực.');return}
     setWorking(true);setError('');setNotice('')
     try{
@@ -309,12 +309,16 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             </select>
           </label>
           <label className="pt-blueprint__style">Chủ đề nền xuyên suốt mọi trang
-            <select value={blueprint.visualTheme||'ribbon-luxury'}
-              onChange={e=>setBlueprint(v=>({...v,visualTheme:e.target.value}))}>
-              {FORM_VISUAL_THEMES.map(item=><option value={item.id} key={item.id}>
-                {item.label}
-              </option>)}
-            </select>
+            {templates.find(t=>t.id===editingTemplate)?.slug==='silk-flow'?
+              <select value="silk-flow" disabled aria-label="Giao diện cố định của Silk Flow">
+                <option value="silk-flow">Lụa xanh trong suốt · Silk Flow (Template 02)</option>
+              </select>:
+              <select value={blueprint.visualTheme||'ribbon-luxury'}
+                onChange={e=>setBlueprint(v=>({...v,visualTheme:e.target.value}))}>
+                {FORM_VISUAL_THEMES.map(item=><option value={item.id} key={item.id}>
+                  {item.label}
+                </option>)}
+              </select>}
           </label>
           <label className="pt-blueprint__style">Kiểu dải lụa
             <select aria-label="Kiểu dải lụa của Form" value={blueprint.ribbonLayout}
@@ -382,13 +386,13 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           const person=group.people.find(item=>item.artist.id===chosen)
           return <article key={group.id} className="pt-template">
             <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')+
-              ' pt-template__visual--palette-'+normalizeBlueprint(group.blueprint).colorPalette+
-              (normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'?' pt-template__visual--flow':'')}>
-              {normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'&&
+              ' pt-template__visual--palette-'+normalizeTemplateBlueprint(group).colorPalette+
+              (normalizeTemplateBlueprint(group).visualTheme==='silk-flow'?' pt-template__visual--flow':'')}>
+              {normalizeTemplateBlueprint(group).visualTheme==='silk-flow'&&
                 <SilkFlowBackdrop
-                  palette={normalizeBlueprint(group.blueprint).colorPalette}
-                  layout={normalizeBlueprint(group.blueprint).ribbonLayout}
-                  direction={normalizeBlueprint(group.blueprint).ribbonDirection}
+                  palette={normalizeTemplateBlueprint(group).colorPalette}
+                  layout={normalizeTemplateBlueprint(group).ribbonLayout}
+                  direction={normalizeTemplateBlueprint(group).ribbonDirection}
                   motionPaused/>}
               <span>{group.name}</span>
               <div className="pt-template__skeleton"><i/><i/><i/></div>
@@ -398,12 +402,12 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <div className="pt-template__title"><h3>{group.name}</h3>
                 <span>v{group.version}</span></div>
               <p>{group.description}</p>
-              <div className="pt-template__stats"><span>{normalizeBlueprint(group.blueprint).sections.length} khu vực</span>
+              <div className="pt-template__stats"><span>{normalizeTemplateBlueprint(group).sections.length} khu vực</span>
                 <span>{group.people.length} nghệ sĩ sử dụng</span><span>3D / layered visuals</span></div>
               <div className="pt-template__ribbon-choice">
                 <label>Kiểu dải lụa
                   <select aria-label={'Kiểu dải lụa '+group.name}
-                    value={normalizeBlueprint(group.blueprint).ribbonLayout}
+                    value={normalizeTemplateBlueprint(group).ribbonLayout}
                     disabled={working}
                     onChange={e=>updateRibbonChoice(group,{ribbonLayout:e.target.value})}>
                     {FORM_RIBBON_LAYOUTS.map(item=>
@@ -412,10 +416,10 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                 </label>
                 <label>Hướng dải lụa
                   <select aria-label={'Hướng dải lụa '+group.name}
-                    value={normalizeBlueprint(group.blueprint).ribbonDirection}
+                    value={normalizeTemplateBlueprint(group).ribbonDirection}
                     disabled={working}
                     onChange={e=>updateRibbonChoice(group,{ribbonDirection:e.target.value})}>
-                    {ribbonDirectionOptions(normalizeBlueprint(group.blueprint).ribbonLayout)
+                    {ribbonDirectionOptions(normalizeTemplateBlueprint(group).ribbonLayout)
                       .map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
                   </select>
                 </label>
@@ -423,13 +427,13 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
               <PortfolioPalettePicker
                 heading="Bảng màu Form này"
                 hint="Chọn màu tại đây để lưu vào Form. Website nghệ sĩ cần cập nhật để nhận màu mới."
-                value={normalizeBlueprint(group.blueprint).colorPalette}
-                options={paletteOptionsForTheme(normalizeBlueprint(group.blueprint).visualTheme)}
+                value={normalizeTemplateBlueprint(group).colorPalette}
+                options={paletteOptionsForTheme(normalizeTemplateBlueprint(group).visualTheme)}
                 disabled={working}
                 onChange={palette=>updateTemplateChoice(group,{colorPalette:palette})}/>
               <button type="button"
                 className={'pt-btn pt-template__preview'+
-                  (normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'?
+                  (normalizeTemplateBlueprint(group).visualTheme==='silk-flow'?
                     ' pt-template__preview--blue':'')}
                 onClick={()=>openReadOnlyPreview(group)}>
                 {group.slug==='silk-flow'?'Xem trước lụa xanh · Template 02':

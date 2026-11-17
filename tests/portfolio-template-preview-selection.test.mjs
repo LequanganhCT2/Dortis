@@ -39,7 +39,7 @@ test('Artist editor explicitly identifies the assigned form and offers safe comp
 })
 test('Two distinct backdrop components remain selected by the resolved form theme',()=>{
   const site=code('PortfolioTemplateSite.jsx')
-  assert.match(site,/const useSilkFlow=view\.visualTheme==='silk-flow'&&!useClassic/)
+  assert.match(site,/const useSilkFlow=flowForm\|\|\(view\.visualTheme==='silk-flow'&&!useClassic\)/)
   assert.match(site,/useSilkFlow\?\s*<SilkFlowBackdrop/)
   assert.match(site,/<SilkStageBackdrop/)
 })
