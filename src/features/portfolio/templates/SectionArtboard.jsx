@@ -27,7 +27,8 @@ function toPosition(layer,board){
     transform:'rotate('+layer.rotation+'deg)'}
 }
 function LayerElement({section,layerId,layer,scene,urls,device,editable,selected,
-  onSelectLayer,onPatchLayer,boardRef,dragRef,lockImageRatio,continuousSilk=false}){
+  onSelectLayer,onPatchLayer,boardRef,dragRef,lockImageRatio,continuousSilk=false,
+  onDirectPatchLayer,onPublicSelect,publicSelection}){
   const type=sceneLayerType(layerId)
   const index=type==='image'?Number(layerId.split(':')[1]):-1
   const image=index>=0?section.images[index]:null
@@ -47,8 +48,10 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     filter:layer.blur?'blur('+layer.blur+'px)':'none',
     overflowWrap:'anywhere'
   }
+  const publicEditing=!editable&&Boolean(onDirectPatchLayer)
+  const canMove=editable||publicEditing
   const startDrag=(event,mode)=>{
-    if(!editable||event.button!==0||layer.hidden||!event.isPrimary)return
+    if(!canMove||event.button!==0||layer.hidden||!event.isPrimary)return
     event.stopPropagation()
     const bounds=boardRef.current?.getBoundingClientRect()
     if(!bounds?.width||!bounds?.height)return
@@ -58,16 +61,26 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
       layer:{...layer},bounds,locked:type==='image'&&lockImageRatio
     }
     onSelectLayer?.(layerId)
+    if(publicEditing)onPublicSelect?.(section.id,layerId,event.currentTarget)
     event.currentTarget.focus({preventScroll:true})
     event.currentTarget.setPointerCapture?.(event.pointerId)
     event.preventDefault()
   }
   const moveDrag=event=>{
     const d=dragRef.current
-    if(!d||d.id!==layerId||d.pointerId!==event.pointerId||!editable)return
+    if(!d||d.id!==layerId||d.pointerId!==event.pointerId||!canMove)return
     event.stopPropagation()
     const dx=(event.clientX-d.startX)/d.bounds.width*100
     const dy=(event.clientY-d.startY)/d.bounds.height*100
+    if(publicEditing){
+      if(Math.hypot(event.clientX-d.startX,event.clientY-d.startY)<3&&!d.next)return
+      const x=snap(clamp(d.layer.x+dx,0,100-d.layer.w))
+      const y=snap(clamp(d.layer.y+dy,0,100-d.layer.h))
+      d.next={x,y}
+      event.currentTarget.style.left=x+'%'
+      event.currentTarget.style.top=y+'%'
+      return
+    }
     if(d.mode==='resize'){
       if(type==='text'){
         // A text frame reflows at a new width, preserving its font and height.
@@ -94,29 +107,44 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
   }
   const endDrag=event=>{
     const drag=dragRef.current
-    if(drag?.id===layerId&&drag.pointerId===event.pointerId)dragRef.current=null
+    if(drag?.id!==layerId||drag.pointerId!==event.pointerId)return
+    dragRef.current=null
+    if(publicEditing){
+      if(event.type!=='pointercancel'&&drag.next){
+        onDirectPatchLayer?.(section.id,layerId,drag.next)
+      }else{
+        event.currentTarget.style.left=drag.layer.x+'%'
+        event.currentTarget.style.top=drag.layer.y+'%'
+      }
+    }
   }
   const keyDown=event=>{
-    if(!editable||layer.hidden||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return
+    if(!canMove||layer.hidden||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return
     event.stopPropagation();event.preventDefault()
     const amount=event.shiftKey?5:.5
     const dx=event.key==='ArrowLeft'?-amount:event.key==='ArrowRight'?amount:0
     const dy=event.key==='ArrowUp'?-amount:event.key==='ArrowDown'?amount:0
     onSelectLayer?.(layerId)
-    onPatchLayer?.(layerId,{
+    const next={
       x:snap(clamp(layer.x+dx,0,100-layer.w)),
       y:snap(clamp(layer.y+dy,0,100-layer.h))
-    })
+    }
+    if(publicEditing)onDirectPatchLayer?.(section.id,layerId,next)
+    else onPatchLayer?.(layerId,next)
   }
   if(layer.hidden&&!editable)return null
   const visible=Boolean(source||url||editable)
   if(!visible)return null
   return <div
     data-image-slot={index>=0?index:undefined}
-    role={editable?'button':undefined}
-    tabIndex={editable?0:undefined}
-    aria-label={editable?'Kéo layer '+label+', dùng phím mũi tên để di chuyển':undefined}
-    aria-pressed={editable?Boolean(selected):undefined}
+    role={canMove?'button':undefined}
+    tabIndex={canMove?0:undefined}
+    aria-label={canMove?'Kéo '+label+', dùng phím mũi tên để di chuyển':undefined}
+    aria-pressed={canMove?Boolean(selected):undefined}
+    data-pt-public-editable={publicEditing?'':undefined}
+    data-pt-public-selected={publicEditing&&
+      publicSelection?.sectionId===section.id&&publicSelection?.layerId===layerId?
+        'true':undefined}
     className={'pt-artboard__layer '+(type==='image'?'is-image':'is-text')+
       (type==='image'&&isCutoutArtwork(image)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(image):'')+
       (selected&&editable?' is-selected':'')+
@@ -127,7 +155,11 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     onPointerMove={moveDrag}
     onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
     onKeyDown={keyDown}
-    onClick={event=>{event.stopPropagation();if(editable)onSelectLayer?.(layerId)}}>
+    onClick={event=>{
+      event.stopPropagation()
+      if(editable)onSelectLayer?.(layerId)
+      if(publicEditing)onPublicSelect?.(section.id,layerId,event.currentTarget)
+    }}>
     {type==='image'
       ? <div className="pt-artboard__photo" style={{
           borderRadius:layer.radius+'px',
@@ -166,7 +198,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
 export default function SectionArtboard({
   section,scene,device='desktop',urls={},editable=false,
   index=0,ribbonLayout='vertical',ribbonDirection='right',continuousSilk=false,
-  selectedLayer='',onSelectLayer,
+  selectedLayer='',onSelectLayer,onDirectPatchLayer,onPublicSelect,publicSelection,
   onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
@@ -265,6 +297,8 @@ export default function SectionArtboard({
           layer={scene.layers[layerId]} urls={urls} device={device}
           editable={editable} selected={selectedLayer===layerId}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
+          onDirectPatchLayer={onDirectPatchLayer} onPublicSelect={onPublicSelect}
+          publicSelection={publicSelection}
           boardRef={boardRef} dragRef={dragRef} lockImageRatio={lockImageRatio}
           continuousSilk={continuousSilk}/>)}
       {editable&&<div className="pt-artboard__edit-hint">

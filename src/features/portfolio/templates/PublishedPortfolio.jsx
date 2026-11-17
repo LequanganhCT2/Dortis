@@ -4,6 +4,8 @@ import {canManageContent} from '../../../core/auth/roles'
 import {clientNavigate} from '../../../app/navigation'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {withPublishedTitlePosition} from './publicTitlePosition'
+import {lookupPublishedLayer,patchPublishedElement} from './publicElementStyle'
+import InlinePortfolioInspector from './InlinePortfolioInspector'
 import './template-admin.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -19,6 +21,9 @@ export default function PublishedPortfolio(){
   const [saveState,setSaveState]=useState('')
   const [saveNotice,setSaveNotice]=useState('')
   const savingRef=useRef(false)
+  const queuedEditsRef=useRef([])
+  const flushingEditsRef=useRef(false)
+  const [selection,setSelection]=useState(null)
   const [publishedAt,setPublishedAt]=useState('')
   const [replayKey,setReplayKey]=useState(0)
   const [reducedMotion,setReducedMotion]=useState(()=>
@@ -166,6 +171,88 @@ export default function PublishedPortfolio(){
     }
   }
 
+  function selectPublicElement(sectionId,layerId,element){
+    if(!admin||!element||!publication)return
+    const rect=element.getBoundingClientRect()
+    const actual=element.querySelector('.pt-artboard__text')||element
+    const computed=window.getComputedStyle(actual)
+    const parentWidth=element.parentElement?.getBoundingClientRect().width||rect.width||1
+    const fontSize=Number.parseFloat(computed.fontSize)||16
+    const lineHeightPx=Number.parseFloat(computed.lineHeight)
+    setSelection({
+      sectionId,layerId,rect:{top:rect.top,left:rect.left},
+      metrics:{
+        fontSize,
+        fontFamily:computed.fontFamily,
+        lineHeight:Number.isFinite(lineHeightPx)?lineHeightPx/fontSize:1.3,
+        align:computed.textAlign||'left',
+        widthPct:Math.min(100,Math.max(15,rect.width/parentWidth*100)),
+        radius:Number.parseFloat(computed.borderRadius)||0
+      }
+    })
+  }
+
+  function applyPublicEdit(sectionId,layerId,group,patch){
+    if(!admin||!publication||!supabase)return
+    const section=publication.view?.sections?.find(item=>item.id===sectionId)
+    if(!section)return
+    const device=mobile?'mobile':'desktop'
+    const change={sectionId,layerId,device,group,patch,section}
+    setPublication(current=>patchPublishedElement(current,
+      sectionId,device,layerId,group,patch,section))
+    queuedEditsRef.current.push(change)
+    void flushPublicEdits()
+  }
+
+  async function flushPublicEdits(){
+    if(flushingEditsRef.current)return
+    flushingEditsRef.current=true
+    savingRef.current=true
+    setSaveState('saving')
+    setSaveNotice('Đang lưu thay đổi trực tiếp…')
+    try{
+      while(queuedEditsRef.current.length){
+        const pending=queuedEditsRef.current.splice(0)
+        const [draftResult,publicResult]=await Promise.all([
+          supabase.from('artist_website_instances')
+            .select('id,revision,content').eq('id',id).single(),
+          supabase.from('artist_portfolio_publications')
+            .select('snapshot,image_paths').eq('instance_id',id).single()
+        ])
+        if(draftResult.error)throw draftResult.error
+        if(publicResult.error)throw publicResult.error
+        const draft=draftResult.data,live=publicResult.data
+        if(!draft||!live?.snapshot)throw new Error('Không tìm thấy bản xuất bản.')
+        const apply=(data,change)=>patchPublishedElement(data,change.sectionId,
+          change.device,change.layerId,change.group,change.patch,change.section)
+        const nextDraft=pending.reduce(apply,draft.content||{})
+        const nextSnapshot=pending.reduce(apply,live.snapshot)
+        const {error:publishError}=await supabase.rpc('publish_artist_portfolio',{
+          p_instance_id:id,p_revision:draft.revision,
+          p_content:nextDraft,p_snapshot:nextSnapshot,
+          p_image_paths:Array.isArray(live.image_paths)?live.image_paths:[]
+        }).single()
+        if(publishError)throw publishError
+        // Keep optimistic state if the user already queued newer adjustments.
+        if(queuedEditsRef.current.length===0)setPublication(nextSnapshot)
+      }
+      setSaveState('saved')
+      setSaveNotice('Đã tự động lưu và cập nhật website.')
+    }catch(e){
+      queuedEditsRef.current=[]
+      setSaveState('error')
+      setSaveNotice('Không lưu được: '+(e?.message||String(e))+
+        ' · Vui lòng tải lại nếu trang có bản sửa mới từ nơi khác.')
+      // The displayed layout must never claim an unsaved edit succeeded.
+      const {data}=await supabase.from('artist_portfolio_publications')
+        .select('snapshot').eq('instance_id',id).maybeSingle()
+      if(data?.snapshot)setPublication(data.snapshot)
+    }finally{
+      savingRef.current=false
+      flushingEditsRef.current=false
+    }
+  }
+
   // The published snapshot is authoritative: preserve its theme, speed,
   // positions and photo paths without needing private draft access.
   const view=publication?.view
@@ -204,6 +291,20 @@ export default function PublishedPortfolio(){
       revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
       onDirectMoveTitle={admin?movePublishedTitle:undefined}
+      onDirectMoveElement={admin?(section,key,position)=>
+        applyPublicEdit(section,key,'position',position):undefined}
+      onDirectPatchLayer={admin?(section,key,patch)=>
+        applyPublicEdit(section,key,'position',patch):undefined}
+      onPublicSelect={admin?selectPublicElement:undefined}
+      publicSelection={admin?selection:undefined}
       device={mobile?'mobile':'desktop'}/>}
+    {admin&&selection&&publication&&<InlinePortfolioInspector
+      selection={selection}
+      layer={lookupPublishedLayer(publication,selection.sectionId,
+        mobile?'mobile':'desktop',selection.layerId)}
+      device={mobile?'mobile':'desktop'}
+      onApply={applyPublicEdit}
+      onClearNotice={()=>setSaveNotice('')}
+      onClose={()=>setSelection(null)}/>}
   </div>
 }

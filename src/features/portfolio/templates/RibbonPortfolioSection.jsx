@@ -19,6 +19,11 @@ function positionStyle(position={},type={},key=''){
   const align=['left','center','right'].includes(type?.align)?type.align:'left'
   const angle=Number(position?.rotation)
   return {
+    ...(key.startsWith('image:')?{
+      borderRadius:Number.isFinite(Number(position.radius))?Number(position.radius)+'px':undefined,
+      opacity:position.opacity==null?undefined:Number(position.opacity)/100,
+      '--pt-direct-image-fit':position.fit||undefined
+    }:{}),
     translate:position.x||position.y?(Number(position.x)||0)+'% '+(Number(position.y)||0)+'%':undefined,
     // Legacy scale fields are ignored on text: wrapping never changes the font.
     scale:!text&&position.scaleX&&position.scaleY?
@@ -30,6 +35,7 @@ function positionStyle(position={},type={},key=''){
       rotate:Number.isFinite(angle)?clamp(angle,-15,15)+'deg':undefined
     }:{}),
     fontFamily:type.font?sceneFont(type.font):undefined,
+    '--pt-direct-font-size':Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     fontSize:Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     lineHeight:Number.isFinite(type.lineHeight)?clamp(type.lineHeight,.7,3):undefined
   }
@@ -37,7 +43,8 @@ function positionStyle(position={},type={},key=''){
 export default function RibbonPortfolioSection({
   section,index=0,urls={},artistRole='',isPublic=false,
   selectedLayer='',positions={},typography={},onMoveElement,onSelectLayer,
-  onEditText,onUploadImage,lockImageRatio=true,onDirectMoveTitle
+  onEditText,onUploadImage,lockImageRatio=true,onDirectMoveTitle,
+  onDirectMoveElement,onPublicSelect,publicSelection
 }){
   const drag=useRef(null),suppressClick=useRef(false)
   const fileInput=useRef(null),pendingSlot=useRef(-1)
@@ -53,7 +60,7 @@ export default function RibbonPortfolioSection({
   const layout=tiles.length?'pt-ribbon-layout--'+section.layout:'pt-ribbon-layout--text'
 
   function startDrag(event,key,resizing=false,locked=false){
-    const canDirectDrag=key==='title'&&Boolean(onDirectMoveTitle)
+    const canDirectDrag=Boolean(onDirectMoveElement||(key==='title'&&onDirectMoveTitle))
     if((!onMoveElement&&!canDirectDrag)||event.button!==0||event.isPrimary===false)return
     if(!resizing&&event.target.closest('button,input'))return
     event.stopPropagation()
@@ -104,11 +111,11 @@ export default function RibbonPortfolioSection({
     drag.current=null
     if(commit&&current.preview){
       suppressClick.current=true
-      if(current.key==='title'&&!onMoveElement&&onDirectMoveTitle){
+      if(!onMoveElement&&onDirectMoveElement){
+        onDirectMoveElement(section.id,current.key,current.preview)
+      }else if(current.key==='title'&&!onMoveElement&&onDirectMoveTitle){
         onDirectMoveTitle(section.id,current.preview)
-      }else{
-        onMoveElement?.(current.key,current.preview)
-      }
+      }else onMoveElement?.(current.key,current.preview)
     }else if(current.mode==='text-width'){
       current.element.style.width=current.originalStyleWidth
     }else{
@@ -120,7 +127,7 @@ export default function RibbonPortfolioSection({
   }
   function moveKey(event,key){
     const d={ArrowUp:[0,-.5],ArrowDown:[0,.5],ArrowLeft:[-.5,0],ArrowRight:[.5,0]}[event.key]
-    if(!d||(!onMoveElement&&!(key==='title'&&onDirectMoveTitle)))return false
+    if(!d||(!onMoveElement&&!onDirectMoveElement&&!(key==='title'&&onDirectMoveTitle)))return false
     event.preventDefault();event.stopPropagation()
     const original=positions?.[key]||{x:0,y:0}
     const multiplier=event.shiftKey?10:1
@@ -128,18 +135,26 @@ export default function RibbonPortfolioSection({
     const next={...original,
       x:clampPosition((Number(original.x)||0)+d[0]*multiplier),
       y:clampPosition((Number(original.y)||0)+d[1]*multiplier)}
-    if(key==='title'&&!onMoveElement&&onDirectMoveTitle){
+    if(!onMoveElement&&onDirectMoveElement){
+      onDirectMoveElement(section.id,key,next)
+    }else if(key==='title'&&!onMoveElement&&onDirectMoveTitle){
       onDirectMoveTitle(section.id,next)
-    }else onMoveElement(key,next)
+    }else onMoveElement?.(key,next)
     return true
   }
   const draggableProps=key=>({
     style:positionStyle(positions?.[key],typography?.[key],key),
-    ...(onMoveElement||(key==='title'&&onDirectMoveTitle)?{
-      ...(key==='title'&&onDirectMoveTitle&&!onMoveElement?{
-        'data-pt-direct-title':'',
-        'aria-label':'Kéo để thay đổi vị trí tiêu đề; dùng phím mũi tên để di chuyển',
-        title:'Kéo tiêu đề để đổi vị trí · Mũi tên để tinh chỉnh'
+    'data-pt-authored-font-size':Number.isFinite(typography?.[key]?.size)?'true':undefined,
+    ...(onMoveElement||onDirectMoveElement||(key==='title'&&onDirectMoveTitle)?{
+      ...(!onMoveElement&&(onDirectMoveElement||onDirectMoveTitle)?{
+        'data-pt-public-editable':'',
+        'data-pt-public-selected':
+          publicSelection?.sectionId===section.id&&publicSelection?.layerId===key?'true':undefined,
+        ...(key==='title'?{'data-pt-direct-title':''}:{}),
+        'aria-label':'Kéo để đổi vị trí; nhấp để mở menu thông số',
+        title:'Nhấp để xem kích thước · Kéo để di chuyển',
+        onClick:event=>{event.stopPropagation();onPublicSelect?.(section.id,key,event.currentTarget)},
+        onFocus:event=>onPublicSelect?.(section.id,key,event.currentTarget)
       }:{}),
       'data-portfolio-movable':'',tabIndex:0,
       onPointerDown:event=>startDrag(event,key),

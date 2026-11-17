@@ -1,0 +1,109 @@
+/* Floating child menu, only for authenticated Admin on published pages.
+ * No new navbar, no page layout shift. The site is unchanged for visitors. */
+.pt-inline-inspector{
+  position:fixed;top:var(--pt-inspector-top,110px);right:clamp(12px,2vw,26px);
+  z-index:1200;width:min(326px,calc(100vw - 24px));
+  max-height:min(570px,calc(100dvh - 26px));
+  display:flex;flex-direction:column;overflow:hidden;
+  color:#243c4c;background:#fcfefdF5;
+  border:1px solid #d1e2ea;border-radius:14px;
+  box-shadow:0 20px 70px #0e223738,0 3px 15px #0b314322;
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  font-family:'Be Vietnam Pro',system-ui,sans-serif;
+  font-size:11px;line-height:1.5;
+}
+.pt-inline-inspector__header{
+  display:flex;align-items:start;justify-content:space-between;gap:12px;
+  padding:14px 14px 11px;border-bottom:1px solid #e0ebf0;
+}
+.pt-inline-inspector__header>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.pt-inline-inspector__header strong{font-size:13px;color:#1d4053}
+.pt-inline-inspector__header span{font-size:10px;color:#7890a0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-inline-inspector__header button{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;
+  padding:0;border:1px solid #d4e3eb;border-radius:8px;background:#fff;
+  font:400 20px/1 system-ui;cursor:pointer;color:#526b7a;
+}
+.pt-inline-inspector__tabs{
+  display:flex;gap:4px;padding:8px 11px;border-bottom:1px solid #ecf2f5;
+}
+.pt-inline-inspector__tabs button{
+  flex:1;white-space:nowrap;padding:7px 3px;background:transparent;
+  border:1px solid transparent;border-radius:7px;
+  color:#698496;font:700 11px/1.3 'Be Vietnam Pro',system-ui;
+  cursor:pointer;
+}
+.pt-inline-inspector__tabs button.is-active{
+  color:#24546d;background:#e6f3f9;border-color:#c6e3f0;
+}
+.pt-inline-inspector__body{
+  display:flex;flex-direction:column;gap:12px;overflow:auto;
+  min-height:0;padding:12px 13px 16px;
+  scrollbar-width:thin;
+}
+.pt-inline-inspector__grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;
+}
+.pt-inline-inspector__field{
+  display:flex;flex-direction:column;gap:5px;min-width:0;
+}
+.pt-inline-inspector__field>span,.pt-inline-inspector__hint{
+  font:650 10px/1.45 'Be Vietnam Pro',system-ui;color:#5b7686;
+}
+.pt-inline-inspector__field>select,
+.pt-inline-inspector__input{
+  display:flex;align-items:center;width:100%;min-width:0;min-height:36px;
+  border:1px solid #ccdee7;border-radius:8px;background:#fff;
+  color:#203f51;
+}
+.pt-inline-inspector__field>select{
+  padding:6px 7px;font:650 11px 'Be Vietnam Pro',system-ui;
+}
+.pt-inline-inspector__input input{
+  width:100%;min-width:0;padding:7px 5px 7px 9px;
+  border:none!important;outline:none!important;background:transparent!important;
+  color:#203f51!important;font:650 12px 'Be Vietnam Pro',system-ui!important;
+}
+.pt-inline-inspector__input small{
+  padding:0 7px 0 2px;font:650 10px 'Be Vietnam Pro',system-ui;
+  color:#7b93a3;
+}
+.pt-inline-inspector__actual{
+  margin:0;color:#8196a4;font-size:10px;line-height:1.55;
+}
+.pt-inline-inspector__actual b{color:#37596c}
+.pt-inline-inspector__presets{
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+}
+.pt-inline-inspector__presets button{
+  display:flex;align-items:center;justify-content:center;gap:4px;
+  min-height:35px;padding:5px 4px;border-radius:8px;
+  background:#f3f8fa;border:1px solid #d8e6ec;
+  color:#355b6c;font:600 10px 'Be Vietnam Pro',system-ui;cursor:pointer;
+}
+.pt-inline-inspector__presets button:hover{background:#e5f1f7}
+.pt-inline-inspector__footer{
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  padding:9px 13px;border-top:1px solid #e1edf2;background:#f7fafb;
+}
+.pt-inline-inspector__footer small{max-width:215px;color:#7a94a3;font-size:9px}
+.pt-inline-inspector__footer button{
+  flex:none;padding:6px 11px;border:1px solid #b4d4e2;border-radius:8px;
+  background:#e8f5fa;color:#24546b;font:750 11px 'Be Vietnam Pro',system-ui;cursor:pointer;
+}
+.pt-published--admin-edit .pt-site [data-pt-public-editable]{
+  cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
+}
+.pt-published--admin-edit .pt-site [data-pt-public-editable]:active{cursor:grabbing}
+.pt-published--admin-edit .pt-site [data-pt-public-selected="true"]{
+  outline:2px dashed currentColor;outline-offset:6px;
+}
+@media(max-width:680px){
+  .pt-inline-inspector{
+    top:auto!important;bottom:10px;left:10px;right:10px;
+    width:auto;max-height:min(55dvh,510px);border-radius:14px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-inline-inspector{transition:none!important}
+}

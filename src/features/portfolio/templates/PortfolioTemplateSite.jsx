@@ -342,7 +342,9 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
-  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,onDirectMoveTitle,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,
+  onDirectMoveTitle,onDirectMoveElement,onDirectPatchLayer,onPublicSelect,publicSelection,
+  publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -508,6 +510,8 @@ export default function PortfolioTemplateSite({
           editable={editSectionId===section.id}
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={onSelectLayer} onPatchLayer={onPatchLayer}
+          onDirectPatchLayer={onDirectPatchLayer} onPublicSelect={onPublicSelect}
+          publicSelection={publicSelection}
           onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
           useClassic?
           <MotionSection key={section.id} section={section} index={index}
@@ -528,6 +532,8 @@ export default function PortfolioTemplateSite({
             selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
             onMoveElement={editSectionId===section.id?onMoveElement:undefined}
             onDirectMoveTitle={onDirectMoveTitle}
+            onDirectMoveElement={onDirectMoveElement}
+            onPublicSelect={onPublicSelect} publicSelection={publicSelection}
             onSelectLayer={editSectionId===section.id?onSelectLayer:undefined}
             onEditText={editSectionId===section.id?onEditText:undefined}
             onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>
