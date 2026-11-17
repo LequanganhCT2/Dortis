@@ -3,6 +3,7 @@ import {FONT_OPTIONS,detectCurrentFont,isImageLayer} from './publicElementStyle'
 import {SCENE_LAYER_LABELS} from './sectionDesign'
 import {TEXT_QUICK_LAYOUTS} from './textQuickLayouts'
 import {wheelStepValue} from './inlineInspectorWheel'
+import {SCENE_MOVE_LIMIT,OFFSET_MOVE_LIMIT} from './freePlacement'
 import './inline-portfolio-inspector.css'
 
 const number=(value,fallback=0,precision=1)=>{
@@ -191,14 +192,18 @@ export default function InlinePortfolioInspector({
           </label>
         </>}
         <div className="pt-inline-inspector__grid">
-          {numberField('Ngang X',number(vals.x,0),'position','x',scene?0:-95,scene?100:95,.5,'%')}
-          {numberField('Dọc Y',number(vals.y,0),'position','y',scene?0:-95,scene?100:95,.5,'%')}
+          {numberField('Ngang X',number(vals.x,0),'position','x',
+            scene?-SCENE_MOVE_LIMIT:-OFFSET_MOVE_LIMIT,
+            scene?SCENE_MOVE_LIMIT:OFFSET_MOVE_LIMIT,.5,'%')}
+          {numberField('Dọc Y',number(vals.y,0),'position','y',
+            scene?-SCENE_MOVE_LIMIT:-OFFSET_MOVE_LIMIT,
+            scene?SCENE_MOVE_LIMIT:OFFSET_MOVE_LIMIT,.5,'%')}
           {numberField('Xoay',number(vals.rotation,0),'position','rotation',
             scene?-45:-15,scene?45:15,1,'°')}
           {scene&&numberField('Thứ tự lớp',number(vals.z,10),'position','z',0,99,1)}
         </div>
         <p className="pt-inline-inspector__actual">
-          Kéo trực tiếp hoặc lăn chuột trên ô số để điều chỉnh ngay (Shift ×10, Alt ×0.2).</p>
+          Kéo chữ hoặc ảnh đến vị trí bất kỳ, kể cả ngoài cột và ô mặc định. Giữ Shift + cuộn để đi nhanh.</p>
       </>}
       {tab==='type'&&!image&&<>
         <label className="pt-inline-inspector__field">

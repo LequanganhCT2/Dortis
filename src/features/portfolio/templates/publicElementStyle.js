@@ -1,5 +1,6 @@
 import {getScene,patchSceneLayer} from './sectionDesign.js'
 import {quickSceneTextPlacement,quickRibbonTextPlacement} from './textQuickLayouts.js'
+import {OFFSET_MOVE_LIMIT} from './freePlacement.js'
 
 const safe=(value,min,max)=>Math.max(min,Math.min(max,Number(value)||0))
 export const TEXT_KEYS=new Set(['eyebrow','title','body'])
@@ -74,8 +75,8 @@ export function patchPublishedElement(document,sectionId,device,layerId,group,pa
   const deviceValues=layers[device]||{}
   const old=deviceValues[layerId]||{}
   const next={...old,...patch}
-  if(next.x!==undefined)next.x=safe(next.x,-95,95)
-  if(next.y!==undefined)next.y=safe(next.y,-95,95)
+  if(next.x!==undefined)next.x=safe(next.x,-OFFSET_MOVE_LIMIT,OFFSET_MOVE_LIMIT)
+  if(next.y!==undefined)next.y=safe(next.y,-OFFSET_MOVE_LIMIT,OFFSET_MOVE_LIMIT)
   if(next.rotation!==undefined)next.rotation=safe(next.rotation,-15,15)
   if(next.widthPct!==undefined&&next.widthPct!==null)next.widthPct=safe(next.widthPct,15,100)
   if(next.radius!==undefined)next.radius=safe(next.radius,0,80)

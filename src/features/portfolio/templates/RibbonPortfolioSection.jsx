@@ -1,6 +1,7 @@
 import React,{useRef} from 'react'
 import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
+import {OFFSET_MOVE_LIMIT,hasOverflowPlacement} from './freePlacement'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
@@ -13,7 +14,7 @@ import {isTextFrame,measuredTextWidth,resizeTextWidth,storedTextWidth,textBoxWid
  * to legacy MotionSection when "Chỉnh trực tiếp" is pressed.
  */
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value))
-const clampPosition=value=>Math.round(clamp(value,-95,95)*10)/10
+const clampPosition=value=>Math.round(clamp(value,-OFFSET_MOVE_LIMIT,OFFSET_MOVE_LIMIT)*10)/10
 function positionStyle(position={},type={},key=''){
   const text=isTextFrame(key)
   const align=['left','center','right'].includes(type?.align)?type.align:'left'
@@ -87,6 +88,7 @@ export default function RibbonPortfolioSection({
       originalStyleWidth:target.style.width}
     event.currentTarget.setPointerCapture?.(event.pointerId)
     onSelectLayer?.(key)
+    if(!onMoveElement&&canDirectDrag)onPublicSelect?.(section.id,key,target)
     event.preventDefault()
   }
   function dragMove(event){
@@ -174,12 +176,16 @@ export default function RibbonPortfolioSection({
     }:{})
   })
   function resizeHandle(key,label,locked){
-    if(!onMoveElement||selectedLayer!==key)return null
+    const directSelected=!onMoveElement&&Boolean(onDirectMoveElement)&&
+      publicSelection?.sectionId===section.id&&publicSelection?.layerId===key
+    if(!(onMoveElement&&selectedLayer===key)&&!directSelected)return null
     const text=isTextFrame(key)
     return <button type="button"
       className={'pt-ribbon__resize'+(text?' pt-ribbon__resize--text':'')}
-      aria-label={text?'Điều chỉnh độ rộng khung '+label:'Đổi kích thước '+label}
-      title={text?'Kéo ngang để đổi độ rộng khung, giữ nguyên cỡ chữ':'Đổi kích thước ảnh'}
+      aria-label={directSelected?'Kéo góc để đổi kích thước khung '+label:
+        text?'Điều chỉnh độ rộng khung '+label:'Đổi kích thước '+label}
+      title={text?'Kéo góc để đổi độ rộng khung mà không đổi cỡ chữ':
+        'Kéo góc để đổi kích thước ảnh'}
       onClick={event=>event.stopPropagation()}
       onPointerDown={event=>startDrag(event,key,true,locked)}
       onPointerMove={dragMove}
@@ -194,7 +200,9 @@ export default function RibbonPortfolioSection({
         const parentWidth=target?.parentElement?.getBoundingClientRect().width||0
         const start=storedTextWidth(saved)??measuredTextWidth(target?.offsetWidth||0,parentWidth)
         const delta=(event.key==='ArrowRight'?1:-1)*(event.shiftKey?10:2)
-        onMoveElement(key,{...saved,widthPct:resizeTextWidth(start,parentWidth*delta/100,parentWidth)})
+        const next={...saved,widthPct:resizeTextWidth(start,parentWidth*delta/100,parentWidth)}
+        if(onMoveElement)onMoveElement(key,next)
+        else onDirectMoveElement?.(section.id,key,next)
       }:undefined}>{text?'↔':'↘'}</button>
   }
   function editTextProps(field){
@@ -228,6 +236,7 @@ export default function RibbonPortfolioSection({
     className={'pt-ribbon-section '+layout+
       ' pt-ribbon-effect--'+(section.effect||'auto')+
       (editing?' pt-ribbon-section--editing':'')+
+      (hasOverflowPlacement(positions)?' pt-ribbon-section--free-position':'')+
       (index===0?' is-first':'')}
     onDragOver={editing?event=>{
       if(event.dataTransfer?.types?.includes('Files')){

@@ -5,6 +5,7 @@ import {
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
 import {isCutoutArtwork,cutoutStageStyle} from './imagePresentation'
+import {SCENE_MOVE_LIMIT,hasSceneOverflowPlacement} from './freePlacement'
 import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import CharacterBurst from './CharacterBurst'
@@ -60,13 +61,14 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     event.stopPropagation()
     const bounds=boardRef.current?.getBoundingClientRect()
     if(!bounds?.width||!bounds?.height)return
+    const element=event.currentTarget.closest('.pt-artboard__layer')||event.currentTarget
     dragRef.current={
-      id:layerId,mode,pointerId:event.pointerId,
+      id:layerId,mode,pointerId:event.pointerId,element,
       startX:event.clientX,startY:event.clientY,
       layer:{...layer},bounds,locked:type==='image'&&lockImageRatio
     }
     onSelectLayer?.(layerId)
-    if(publicEditing)onPublicSelect?.(section.id,layerId,event.currentTarget)
+    if(publicEditing)onPublicSelect?.(section.id,layerId,element)
     event.currentTarget.focus({preventScroll:true})
     event.currentTarget.setPointerCapture?.(event.pointerId)
     event.preventDefault()
@@ -79,11 +81,27 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     const dy=(event.clientY-d.startY)/d.bounds.height*100
     if(publicEditing){
       if(Math.hypot(event.clientX-d.startX,event.clientY-d.startY)<3&&!d.next)return
-      const x=snap(clamp(d.layer.x+dx,0,100-d.layer.w))
-      const y=snap(clamp(d.layer.y+dy,0,100-d.layer.h))
-      d.next={x,y}
-      event.currentTarget.style.left=x+'%'
-      event.currentTarget.style.top=y+'%'
+      if(d.mode==='resize'){
+        const size=type==='text'?{
+          w:snap(clamp(d.layer.w+dx,8,100-d.layer.x)),
+          h:snap(clamp(d.layer.h+dy,3,100-d.layer.y))
+        }:resizeDimensions(d.layer.w,d.layer.h,dx,dy,{
+          locked:d.locked,minWidth:8,minHeight:3,
+          maxWidth:100-d.layer.x,maxHeight:100-d.layer.y
+        })
+        const w=type==='text'||!d.locked?snap(size.w):size.w
+        const h=type==='text'||!d.locked?snap(size.h):size.h
+        d.next={w,h}
+        // Paint directly during pointermove; publish once when the handle is released.
+        d.element.style.width=w+'%'
+        d.element.style.height=h+'%'
+      }else{
+        const x=snap(clamp(d.layer.x+dx,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT))
+        const y=snap(clamp(d.layer.y+dy,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT))
+        d.next={x,y}
+        d.element.style.left=x+'%'
+        d.element.style.top=y+'%'
+      }
       return
     }
     if(d.mode==='resize'){
@@ -103,8 +121,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
         onPatchLayer?.(layerId,{w,h})
       }
     }else{
-      const x=snap(clamp(d.layer.x+dx,0,100-d.layer.w))
-      const y=snap(clamp(d.layer.y+dy,0,100-d.layer.h))
+      const x=snap(clamp(d.layer.x+dx,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT))
+      const y=snap(clamp(d.layer.y+dy,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT))
       if(x===d.lastX&&y===d.lastY)return
       d.lastX=x;d.lastY=y
       onPatchLayer?.(layerId,{x,y})
@@ -117,9 +135,12 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     if(publicEditing){
       if(event.type!=='pointercancel'&&drag.next){
         onDirectPatchLayer?.(section.id,layerId,drag.next)
+      }else if(drag.mode==='resize'){
+        drag.element.style.width=drag.layer.w+'%'
+        drag.element.style.height=drag.layer.h+'%'
       }else{
-        event.currentTarget.style.left=drag.layer.x+'%'
-        event.currentTarget.style.top=drag.layer.y+'%'
+        drag.element.style.left=drag.layer.x+'%'
+        drag.element.style.top=drag.layer.y+'%'
       }
     }
   }
@@ -131,13 +152,15 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     const dy=event.key==='ArrowUp'?-amount:event.key==='ArrowDown'?amount:0
     onSelectLayer?.(layerId)
     const next={
-      x:snap(clamp(layer.x+dx,0,100-layer.w)),
-      y:snap(clamp(layer.y+dy,0,100-layer.h))
+      x:snap(clamp(layer.x+dx,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT)),
+      y:snap(clamp(layer.y+dy,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT))
     }
     if(publicEditing)onDirectPatchLayer?.(section.id,layerId,next)
     else onPatchLayer?.(layerId,next)
   }
   if(layer.hidden&&!editable)return null
+  const publicSelected=publicEditing&&
+    publicSelection?.sectionId===section.id&&publicSelection?.layerId===layerId
   const visible=Boolean(source||url||editable)
   if(!visible)return null
   return <div
@@ -148,9 +171,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     aria-pressed={canMove?Boolean(selected):undefined}
     data-pt-public-editable={publicEditing?'':undefined}
     data-pt-authored-color={authoredColor?'true':undefined}
-    data-pt-public-selected={publicEditing&&
-      publicSelection?.sectionId===section.id&&publicSelection?.layerId===layerId?
-        'true':undefined}
+    data-pt-public-selected={publicSelected?'true':undefined}
     className={'pt-artboard__layer '+(type==='image'?'is-image':'is-text')+
       (type==='image'&&isCutoutArtwork(image)?' is-cutout pt-cutout-stage pt-cutout-stage--'+cutoutStageStyle(image):'')+
       (selected&&editable?' is-selected':'')+
@@ -184,16 +205,31 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
             disabled={editable} mode={layerId==='body'||layerId.startsWith('note:')?'words':'letters'}
             maxCharacters={layerId==='body'||layerId.startsWith('note:')?1600:160}/>
         </div>}
-    {editable&&selected&&<div className="pt-artboard__selection">
+    {((editable&&selected)||publicSelected)&&<div className="pt-artboard__selection">
       <span>{label}</span>
       <button type="button"
-        className={'pt-artboard__handle'+(type==='text'?' pt-artboard__handle--width':'')}
-        aria-label={type==='text'?'Kéo để đổi độ rộng khung '+label:
-          'Kéo để thay đổi kích thước '+label}
-        title={type==='text'?'Chỉ thay đổi độ rộng khung, không đổi cỡ chữ':undefined}
+        className={'pt-artboard__handle'+(type==='text'&&!publicEditing?' pt-artboard__handle--width':'')}
+        aria-label={'Kéo góc để thay đổi kích thước khung '+label}
+        title={publicEditing?'Kéo góc để thay đổi rộng và cao; giữ tỷ lệ ảnh nếu đang khóa':
+          type==='text'?'Kéo để đổi độ rộng khung, không đổi cỡ chữ':undefined}
+        onClick={event=>event.stopPropagation()}
         onPointerDown={event=>startDrag(event,'resize')}
-        onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag}
-      >{type==='text'?'↔':'↘'}</button>
+        onPointerMove={moveDrag} onPointerUp={endDrag}
+        onPointerCancel={endDrag} onLostPointerCapture={endDrag}
+        onKeyDown={event=>{
+          const horizontal=event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0
+          const vertical=event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0
+          if(!horizontal&&!vertical)return
+          event.preventDefault();event.stopPropagation()
+          const amount=event.shiftKey?5:1
+          const next=publicEditing?{
+            w:snap(clamp(layer.w+horizontal*amount,8,100-layer.x)),
+            h:snap(clamp(layer.h+vertical*amount,3,100-layer.y))
+          }:{w:snap(clamp(layer.w+horizontal*amount,8,100-layer.x))}
+          if(publicEditing)onDirectPatchLayer?.(section.id,layerId,next)
+          else onPatchLayer?.(layerId,next)
+        }}
+      >{publicEditing?'↘':type==='text'?'↔':'↘'}</button>
     </div>}
   </div>
 }
@@ -245,7 +281,8 @@ export default function SectionArtboard({
     ['grid','mosaic','wide'].includes(section.layout)?'gallery':'standard'
   return <section id={'pt-'+section.id}
     className={'pt-scene-section pt-scene-section--'+device+
-      (editable?' is-editing':'')} aria-label={section.label}>
+      (editable?' is-editing':'')+
+      (hasSceneOverflowPlacement(scene)?' pt-scene-section--free-position':'')} aria-label={section.label}>
     {editable&&<div className="pt-artboard__tools" onKeyDown={event=>{
       if(event.key==='Escape')setMenu(null)
     }}>

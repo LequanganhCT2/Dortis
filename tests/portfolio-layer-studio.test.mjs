@@ -54,8 +54,9 @@ test('Layer input is clamped and protected against unsafe CSS values',()=>{
     x:500,y:-200,w:95,h:90,size:99999,z:999,color:'url(javascript:evil)',
     font:'unknown',align:'center',hidden:true,opacity:-3
   },hero,'desktop')
-  assert.equal(result.x,5)
-  assert.equal(result.y,0)
+  // Positioning is free across the canvas but still bounded against runaway values.
+  assert.equal(result.x,300)
+  assert.equal(result.y,-200)
   assert.equal(result.size,240)
   assert.equal(result.z,99)
   assert.match(result.color,/^#[0-9a-f]{6}$/i)

@@ -16,6 +16,7 @@ import PhotoMotion from './PhotoMotion'
 import PhotoReveal from './PhotoReveal'
 import ScrollTextAtmosphere from './ScrollTextAtmosphere'
 import {normalizeRevealSpeed} from './blockRevealState'
+import {OFFSET_MOVE_LIMIT,hasOverflowPlacement} from './freePlacement'
 import CharacterBurst from './CharacterBurst'
 import './portfolio-effects.css'
 import './silk-stage-backdrop.css'
@@ -138,7 +139,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         if(current?.pointer!==event.pointerId||current.element!==event.currentTarget)return
         const dx=event.clientX-current.startX,dy=event.clientY-current.startY
         if(!current.next&&Math.hypot(dx,dy)<5)return
-        const clamp=value=>Math.max(-95,Math.min(95,Math.round(value*10)/10))
+        const clamp=value=>Math.max(-OFFSET_MOVE_LIMIT,Math.min(OFFSET_MOVE_LIMIT,Math.round(value*10)/10))
         current.next={...current.initial,x:clamp((Number(current.initial.x)||0)+dx/current.width*100),
           y:clamp((Number(current.initial.y)||0)+dy/current.height*100)}
         current.element.style.translate=current.next.x+'% '+current.next.y+'%'
@@ -162,6 +163,10 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
   }
   function elementResizeProps(key,locked){
     const isText=isTextFrame(key)
+    const commitResize=next=>{
+      if(onMoveElement)onMoveElement(key,next)
+      else onDirectMoveElement?.(section.id,key,next)
+    }
     function setElementScale(element,x,y){
       element.style.scale=x+' '+y
       element.style.setProperty('--pt-inverse-resize-x',1/x)
@@ -195,6 +200,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         startWidthPct:storedTextWidth(initial)??measuredTextWidth(element.offsetWidth,parentWidth),
         originalStyleWidth:element.style.width}
       event.currentTarget.setPointerCapture(event.pointerId)
+      if(!onMoveElement&&onDirectMoveElement)onPublicSelect?.(section.id,key,element)
       event.preventDefault()
     }
     function move(event){
@@ -208,7 +214,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       if(current?.pointer!==event.pointerId)return
       event.stopPropagation()
       drag.current=null
-      if(save&&current.next)onMoveElement(key,current.next)
+      if(save&&current.next)commitResize(current.next)
       else if(current.isText)current.element.style.width=current.originalStyleWidth
       else setElementScale(current.element,current.scaleX,current.scaleY)
     }
@@ -227,14 +233,16 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
         const parentWidth=element.parentElement?.getBoundingClientRect().width||element.offsetWidth
         if(isText){
           const start=storedTextWidth(initial)??measuredTextWidth(element.offsetWidth,parentWidth)
-          onMoveElement(key,{...initial,widthPct:resizeTextWidth(start,
+          if(onMoveElement)onMoveElement(key,{...initial,widthPct:resizeTextWidth(start,
+            parentWidth*horizontal*(event.shiftKey?10:2)/100,parentWidth)})
+          else onDirectMoveElement?.(section.id,key,{...initial,widthPct:resizeTextWidth(start,
             parentWidth*horizontal*(event.shiftKey?10:2)/100,parentWidth)})
           return
         }
         const current={element,initial,width:element.offsetWidth,height:element.offsetHeight,
           scaleX:initial.scaleX||1,scaleY:initial.scaleY||1,locked,isText:false}
         resize(current,horizontal*.05*current.width/2,vertical*.05*current.height/2)
-        onMoveElement(key,current.next)
+        commitResize(current.next)
       }
     }
   }
@@ -275,12 +283,14 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     }
   }
   function textResizeHandle(field,label){
-    if(!onMoveElement||selectedLayer!==field)return null
+    const directSelected=!onMoveElement&&Boolean(onDirectMoveElement)&&
+      publicSelection?.sectionId===section.id&&publicSelection?.layerId===field
+    if(!(onMoveElement&&selectedLayer===field)&&!directSelected)return null
     return <button type="button" className="pt-artboard__handle pt-element-resize-handle"
-      aria-label={'Điều chỉnh độ rộng khung '+label}
-      title="Kéo ngang để đổi độ rộng khung, giữ nguyên cỡ chữ"
+      aria-label={'Kéo góc để đổi độ rộng khung '+label}
+      title="Kéo góc để đổi độ rộng khung, giữ nguyên cỡ chữ"
       onClick={event=>event.stopPropagation()}
-      {...elementResizeProps(field,true)}>↔</button>
+      {...elementResizeProps(field,true)}>↘</button>
   }
   const textPresent=Boolean(section.title||section.body||section.eyebrow)
   const luxuryRibbon=section.backdrop===LUXURY_RIBBON
@@ -290,6 +300,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       (hasImage?' pt-fx--has-photo':' pt-fx--waiting-photo')+
       (effect==='ribbon'&&section.slots===1?' pt-ribbon--portrait':'')+
       (luxuryRibbon?' pt-section--luxury-ribbon':'')+
+      (hasOverflowPlacement(positions)?' pt-fx-section--free-position':'')+
       (index===0?' is-first':'')}
     onPointerMove={handleMove} onPointerLeave={event=>resetMotion(event.currentTarget)}
     onDragOver={onUploadImage?allowImageDrop:undefined}
@@ -360,9 +371,12 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
               <small>ẢNH {String(i+1).padStart(2,'0')}</small>
               <em>{onUploadImage?'Thả ảnh từ máy vào đây':'Tải ảnh riêng trong Admin'}</em>
             </div>}
-          {url&&onMoveElement&&selectedLayer==='image:'+i&&<button type="button"
+          {url&&((onMoveElement&&selectedLayer==='image:'+i)||
+            (!onMoveElement&&onDirectMoveElement&&
+             publicSelection?.sectionId===section.id&&publicSelection?.layerId==='image:'+i))&&
+            <button type="button"
             className="pt-artboard__handle pt-element-resize-handle"
-            aria-label={'Đổi kích thước ảnh '+(i+1)}
+            aria-label={'Kéo góc để đổi kích thước ảnh '+(i+1)}
             {...elementResizeProps('image:'+i,lockImageRatio)}>↘</button>}
         </div>
       })}

@@ -1,3 +1,4 @@
+import {SCENE_MOVE_LIMIT} from './freePlacement.js'
 /**
  * Artist instance visual override. Template blueprint remains shared/immutable.
  * Each template section is a separate artboard with desktop/mobile layer layouts.
@@ -92,7 +93,9 @@ export function sanitizeSceneLayer(id,raw={},section={},device='desktop'){
   const d=sceneLayerDefault(id,section,device),v=raw&&typeof raw==='object'?raw:{}
   const w=safe(v.w,8,100,d.w),h=safe(v.h,3,100,d.h)
   return {
-    x:safe(v.x,0,100-w,d.x),y:safe(v.y,0,100-h,d.y),
+    // Position is free across the entire canvas, not limited by current frame size.
+    x:safe(v.x,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT,d.x),
+    y:safe(v.y,-SCENE_MOVE_LIMIT,SCENE_MOVE_LIMIT,d.y),
     w,h,z:Math.round(safe(v.z,0,99,d.z)),
     opacity:Math.round(safe(v.opacity,0,100,d.opacity)),
     rotation:safe(v.rotation,-45,45,d.rotation),

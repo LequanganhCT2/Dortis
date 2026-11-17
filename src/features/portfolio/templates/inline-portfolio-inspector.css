@@ -162,3 +162,87 @@
 }
 .pt-inline-inspector__input input{font-variant-numeric:tabular-nums;cursor:ns-resize}
 .pt-inline-inspector__input input:focus{cursor:text}
+
+/* Published-page direct resizing: corner controls exist only for the signed-in
+   content editor, never on the ordinary public site. Keep handles *inside*
+   clipped photo frames so their hit targets are always visible. */
+.pt-published--admin-edit .pt-site [data-pt-public-selected="true"]{
+  outline:2px dashed currentColor;
+  outline-offset:5px;
+}
+.pt-published--admin-edit .pt-ribbon-section [data-pt-public-editable],
+.pt-published--admin-edit .pt-fx-section [data-pt-public-editable]{
+  position:relative;
+}
+.pt-published--admin-edit .pt-site .pt-artboard__selection{
+  pointer-events:none;
+}
+.pt-published--admin-edit .pt-site .pt-artboard__selection .pt-artboard__handle,
+.pt-published--admin-edit .pt-site .pt-ribbon__resize,
+.pt-published--admin-edit .pt-site .pt-element-resize-handle{
+  width:32px;height:32px;min-width:32px;min-height:32px;
+  right:4px;bottom:4px;top:auto;transform:none;
+  border-radius:8px;z-index:60;
+  cursor:nwse-resize!important;
+  touch-action:none;pointer-events:auto;
+  user-select:none;-webkit-user-select:none;
+}
+.pt-published--admin-edit .pt-site .pt-artboard__selection .pt-artboard__handle,
+.pt-published--admin-edit .pt-site .pt-element-resize-handle{
+  background:#132e3f;color:#fff;border:2px solid #fff;
+}
+.pt-published--admin-edit .pt-site .pt-ribbon__resize{
+  background:#3c161a;color:#fff;border:2px solid #ffecd4;
+}
+/* The resize cursor overrides the surrounding grab cursor. */
+.pt-published--admin-edit .pt-site .pt-artboard__handle:active,
+.pt-published--admin-edit .pt-site .pt-ribbon__resize:active,
+.pt-published--admin-edit .pt-site .pt-element-resize-handle:active{
+  cursor:nwse-resize!important;
+}
+.pt-published--admin-edit .pt-site .pt-ribbon__resize:focus-visible,
+.pt-published--admin-edit .pt-site .pt-artboard__handle:focus-visible,
+.pt-published--admin-edit .pt-site .pt-element-resize-handle:focus-visible{
+  outline:3px solid #76c7f4;outline-offset:2px;
+}
+
+/* Free placement: position is no longer restricted to each default text
+   column/image grid slot. Ordinary portfolios retain their original clipping
+   until a saved layer genuinely crosses the stage edge. */
+.pt-published--admin-edit .pt-site .pt-ribbon-section,
+.pt-published--admin-edit .pt-site .pt-fx-section,
+.pt-published--admin-edit .pt-site .pt-scene-section,
+.pt-published--admin-edit .pt-site .pt-artboard,
+.pt-published .pt-site .pt-ribbon-section--free-position,
+.pt-published .pt-site .pt-fx-section--free-position,
+.pt-published .pt-site .pt-scene-section--free-position,
+.pt-published .pt-site .pt-scene-section--free-position .pt-artboard{
+  overflow:visible!important;
+}
+.pt-published .pt-site:has(.pt-ribbon-section--free-position,
+  .pt-fx-section--free-position,.pt-scene-section--free-position){
+  overflow:visible!important;
+}
+/* Selected layers stay above neighboring sections while being dragged. */
+.pt-published--admin-edit .pt-site [data-pt-public-selected="true"]{
+  z-index:30!important;
+}
+.pt-published--admin-edit .pt-site .pt-artboard__selection>.pt-artboard__handle,
+.pt-published--admin-edit .pt-site .pt-element-resize-handle,
+.pt-published--admin-edit .pt-site .pt-ribbon__resize{
+  pointer-events:auto!important;
+}
+/* Selected text and photo frames should never snap to their original
+   2-column/row geometry because of max-width defaults. */
+.pt-published--admin-edit .pt-site [data-pt-public-editable][data-portfolio-text-frame]{
+  max-width:none;
+}
+
+/* Let the active layer visually cross section boundaries during an edit. */
+.pt-published .pt-site :is(.pt-scene-section--free-position,
+  .pt-ribbon-section--free-position,.pt-fx-section--free-position){
+  position:relative;z-index:5;
+}
+.pt-published--admin-edit .pt-site section:has([data-pt-public-selected="true"]){
+  position:relative;z-index:50;
+}
