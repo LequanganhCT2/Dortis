@@ -19,7 +19,7 @@ test('Browser-native animation bypasses conflicting stylesheet animation rules',
   const css=get('scroll-text-atmosphere.css')
   assert.match(motion,/typeof Element\.prototype\.animate==='function'/)
   assert.match(motion,/root\.classList\.add\('pt-site--waapi-reveal'\)/)
-  assert.match(motion,/target\.animate\(frames,\{fill:'both',\.\.\.options\}\)/)
+  assert.match(motion,/target\.animate\(frames,\{[\s\S]*duration:ms\(options\.duration\),[\s\S]*delay:ms\(options\.delay\|\|0\)/)
   assert.match(motion,/animation\.onfinish=\(\)=>\{animation\.cancel\(\)\}/)
   assert.match(motion,/function animatePart\(node,state\)/)
   assert.match(motion,/if\(state==='visible'\|\|wasSeen\)animatePart\(node,state\)/)
