@@ -36,7 +36,7 @@ test('Published website always observes the browser window; editor observes the 
   assert.match(motion,/window\.removeEventListener\('scroll',onScroll\)/)
   assert.match(motion,/window\.addEventListener\('pageshow',onResize\)/)
   assert.match(motion,/document\.addEventListener\('visibilitychange',onResize\)/)
-  assert.match(motion,/\[rootRef,paused,sectionsKey,device,speed,publicPage\]/)
+  assert.match(motion,/\[rootRef,paused,sectionsKey,device,speed,publicPage,forceMotion\]/)
   assert.match(motion,/revealParts\.forEach\(part=>observer\.observe\(part\)\)/)
 })
 test('Publicly available content shows only uploaded images; no fake photo data is generated',()=>{

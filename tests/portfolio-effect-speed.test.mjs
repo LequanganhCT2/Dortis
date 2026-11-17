@@ -52,7 +52,7 @@ test('Web Animations and fallback CSS use the same speed multiplier',()=>{
   assert.match(motion,/const ms=value=>scaledRevealMs\(value,pace\)/)
   assert.match(motion,/duration:ms\(options\.duration\)/)
   assert.match(motion,/delay:ms\(options\.delay\|\|0\)/)
-  assert.match(motion,/\[rootRef,paused,sectionsKey,device,speed,publicPage\]/)
+  assert.match(motion,/\[rootRef,paused,sectionsKey,device,speed,publicPage,forceMotion\]/)
   assert.match(css,/--pt-reveal-duration/)
   assert.match(css,/--pt-reveal-image-duration/)
   assert.match(css,/--pt-reveal-letter-duration/)

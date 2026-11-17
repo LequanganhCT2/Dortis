@@ -59,3 +59,26 @@ test('Published route opts into window scrolling while Admin library preview ret
   assert.match(manager,/publishedView=\{demoView\}/)
   assert.match(motion,/const scrollingHost=!publicPage&&host&&/)
 })
+
+test('Template palettes outrank shared default CSS variables in the cascade',()=>{
+  const css=src('portfolio-shared-ui.css')
+  const root='.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk'
+  assert.match(css,new RegExp(root.replaceAll('.','\\.')+'\\{'))
+  // A 3-class flow selector previously LOST to the 4-class Atelier default.
+  const baseSpecificity=(root.match(/\\./g)||[]).length
+  const palettes=[
+    root+'.pt-site--silk-flow',
+    root+'.pt-site--silk-flow.pt-palette--silver-white',
+    root+'.pt-site--silk-flow.pt-palette--seafoam-white',
+    root+'.pt-site--silk-flow.pt-palette--navy-white',
+    root+'.pt-palette--yellow-white',
+    root+'.pt-palette--red-white',
+    root+'.pt-palette--black-white'
+  ]
+  for(const selector of palettes){
+    assert.ok((selector.match(/\\./g)||[]).length>baseSpecificity,
+      selector+' must outrank the shared red-gold variables')
+    assert.ok(css.includes(selector+'{'),
+      'Explicit palette selector missing: '+selector)
+  }
+})

@@ -736,6 +736,7 @@ export default function PortfolioInstanceEditor({
         </fieldset>}
         <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
           urls={urls} device={device} revealReplayKey={revealReplayKey}
+          forceMotion={revealReplayKey>0}
           editSectionId={visualEditing&&!busy?current.id:''} motionPaused={visualEditing}
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={setSelectedLayer}

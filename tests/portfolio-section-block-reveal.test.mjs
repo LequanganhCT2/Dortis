@@ -81,7 +81,7 @@ test('Edit mode and reduced-motion show complete content without animations',()=
   const css=source('scroll-text-atmosphere.css')
   const observer=source('ScrollTextAtmosphere.jsx')
   assert.match(observer,/if\(!root\|\|paused\|\|!canvas\)return undefined/)
-  assert.match(observer,/if\(motion\?\.matches\)return undefined/)
+  assert.match(observer,/if\(motion\?\.matches&&!forceMotion\)return undefined/)
   assert.match(observer,/delete section\.dataset\.ptBlockState/)
   assert.match(observer,/delete section\.dataset\.ptBlockPrime/)
   assert.match(observer,/delete node\.dataset\.ptRevealPart/)

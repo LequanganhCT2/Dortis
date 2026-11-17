@@ -16,11 +16,21 @@ export default function PublishedPortfolio(){
   const id=window.location.pathname.split('/')[2]
   const [publication,setPublication]=useState(null)
   const [publishedAt,setPublishedAt]=useState('')
+  const [replayKey,setReplayKey]=useState(0)
+  const [reducedMotion,setReducedMotion]=useState(()=>
+    window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false)
   const [urls,setUrls]=useState({})
   const [admin,setAdmin]=useState(null)
   const [loading,setLoading]=useState(true)
   const [error,setError]=useState('')
   const [mobile,setMobile]=useState(()=>window.matchMedia('(max-width: 680px)').matches)
+
+  useEffect(()=>{
+    const preference=window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update=event=>setReducedMotion(event.matches)
+    preference.addEventListener?.('change',update)
+    return ()=>preference.removeEventListener?.('change',update)
+  },[])
 
   useEffect(()=>{
     const media=window.matchMedia('(max-width: 680px)')
@@ -116,6 +126,14 @@ export default function PublishedPortfolio(){
   }:null
   return <div className="pt-published">
     {admin&&publication&&<div className="pt-published__toolbar">
+      {reducedMotion&&<span className="pt-published__motion-note">
+        Thiết bị đang bật Giảm chuyển động. Bấm Phát hiệu ứng để xem thử.
+      </span>}
+      <button type="button" className="pt-btn pt-btn--light"
+        onClick={()=>setReplayKey(value=>value+1)}
+        title="Phát lại chữ và ảnh tại khu vực đang xem">
+        ↻ Phát hiệu ứng
+      </button>
       <button type="button" className="pt-btn" onClick={editWebsite}>
         Chỉnh sửa website
       </button>
@@ -125,6 +143,7 @@ export default function PublishedPortfolio(){
     {!loading&&publication&&<PortfolioTemplateSite
       key={id+':'+publishedAt}
       publishedView={view} template={publishedTemplate} publicPage
+      revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
       device={mobile?'mobile':'desktop'}/>}
   </div>

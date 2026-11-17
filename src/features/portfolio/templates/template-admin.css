@@ -720,3 +720,8 @@
   .pt-editor__speed-control{min-width:0;max-width:100%;white-space:normal}
   .pt-editor__speed-control>select{min-width:105px;max-width:140px}
 }
+
+/* A small admin-only replay control on public Portfolio, separate from
+   publicly presented artist content. Replays at the current scroll location. */
+.pt-published__toolbar{gap:10px;align-items:center;flex-wrap:wrap}
+.pt-published__motion-note{margin-right:auto;font:600 11px/1.5 'Be Vietnam Pro',system-ui,sans-serif;color:#5a7383}

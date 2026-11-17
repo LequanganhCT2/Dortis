@@ -342,7 +342,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
-  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -467,7 +467,8 @@ export default function PortfolioTemplateSite({
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
     <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+
-      (sharedPortfolioUI?' pt-site--shared-ui':'')+' pt-palette--'+palette+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+      (sharedPortfolioUI?' pt-site--shared-ui':'')+
+      (forceMotion?' pt-site--motion-opt-in':'')+' pt-palette--'+palette+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
@@ -483,7 +484,7 @@ export default function PortfolioTemplateSite({
           palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
         sectionsKey={revealKey} device={device} speed={revealSpeed}
-        publicPage={publicPage}/>
+        publicPage={publicPage} forceMotion={forceMotion}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}

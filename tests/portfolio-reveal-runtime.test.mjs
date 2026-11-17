@@ -41,7 +41,7 @@ test('Title letters pop independently and each real or empty photo tile is revea
   const css=get('scroll-text-atmosphere.css')
   assert.match(css,/pt-site--motion-paused/)
   assert.match(css,/prefers-reduced-motion:reduce/)
-  assert.match(motion,/if\(motion\?\.matches\)return undefined/)
+  assert.match(motion,/if\(motion\?\.matches&&!forceMotion\)return undefined/)
 })
 test('There is a user-triggered replay without changing portfolio save data',()=>{
   const editor=get('PortfolioInstanceEditor.jsx')

@@ -20,7 +20,7 @@
   --pt-ui-footer-to:#421322dc;
   --pt-ui-shadow:#17040848;
 }
-.pt-site.pt-site--shared-ui.pt-palette--red-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-palette--red-white{
   --pt-ui-nav-from:#580613f0;
   --pt-ui-nav-mid:#971128e8;
   --pt-ui-nav-to:#650b20f0;
@@ -35,7 +35,7 @@
   --pt-ui-footer-to:#930c22c2;
   --pt-ui-shadow:#2600084b;
 }
-.pt-site.pt-site--shared-ui.pt-palette--yellow-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-palette--yellow-white{
   --pt-ui-nav-from:#fffef5ee;
   --pt-ui-nav-mid:#fff5d9ed;
   --pt-ui-nav-to:#fffdf2ee;
@@ -50,7 +50,7 @@
   --pt-ui-footer-to:#fff3d7e5;
   --pt-ui-shadow:#9f7b1624;
 }
-.pt-site.pt-site--shared-ui.pt-palette--black-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-palette--black-white{
   --pt-ui-nav-from:#0b0b0ded;
   --pt-ui-nav-mid:#292a30e8;
   --pt-ui-nav-to:#111114ed;
@@ -65,7 +65,7 @@
   --pt-ui-footer-to:#292a31e5;
   --pt-ui-shadow:#02020466;
 }
-.pt-site.pt-site--shared-ui.pt-site--silk-flow{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow{
   --pt-ui-nav-from:#fbfefff5;
   --pt-ui-nav-mid:#ecf8ffef;
   --pt-ui-nav-to:#f8fdffef;
@@ -80,7 +80,7 @@
   --pt-ui-footer-to:#e9f6fdee;
   --pt-ui-shadow:#5b9cba20;
 }
-.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--seafoam-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--seafoam-white{
   --pt-ui-nav-mid:#edfcf9ee;
   --pt-ui-text:#366e70;
   --pt-ui-strong:#24595d;
@@ -90,7 +90,7 @@
   --pt-ui-progress:#6ac4c0;
   --pt-ui-footer-to:#e7f9f5ef;
 }
-.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--silver-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--silver-white{
   --pt-ui-nav-mid:#f3f8fbea;
   --pt-ui-text:#526c80;
   --pt-ui-strong:#344c62;
@@ -100,7 +100,7 @@
   --pt-ui-progress:#91adc1;
   --pt-ui-footer-to:#edf4f8ef;
 }
-.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--navy-white{
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk.pt-site--silk-flow.pt-palette--navy-white{
   --pt-ui-nav-mid:#e9f3fdef;
   --pt-ui-text:#375b81;
   --pt-ui-strong:#203e68;
@@ -110,6 +110,10 @@
   --pt-ui-progress:#628dbb;
   --pt-ui-footer-to:#e5effaef;
 }
+/* Palette overrides intentionally have HIGHER specificity than the
+ * 4-class shared base declaration. Previously the 3-class Silk Flow rules
+ * lost the cascade, tinting 02's header/footer in Atelier crimson.
+ */
 /* Same header structure/animation for both templates; palette via variables. */
 .pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
   > header.pt-site__nav.pt-site__nav--sticky{

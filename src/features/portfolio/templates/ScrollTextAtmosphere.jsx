@@ -12,7 +12,8 @@ import './scroll-text-atmosphere.css'
  * behind newly opened sections. Text and photos remain normal DOM layers.
  */
 export default function ScrollTextAtmosphere({
-  rootRef,paused=false,sectionsKey='',device='desktop',speed=.8,publicPage=false
+  rootRef,paused=false,sectionsKey='',device='desktop',speed=.8,publicPage=false,
+  forceMotion=false
 }){
   const canvasRef=useRef(null)
   useLayoutEffect(()=>{
@@ -20,7 +21,8 @@ export default function ScrollTextAtmosphere({
     const canvas=canvasRef.current
     if(!root||paused||!canvas)return undefined
     const motion=window.matchMedia?.('(prefers-reduced-motion: reduce)')
-    if(motion?.matches)return undefined
+    // Respect reduced-motion by default. An explicit Play action can opt in.
+    if(motion?.matches&&!forceMotion)return undefined
     const pace=normalizeRevealSpeed(speed)
     const ms=value=>scaledRevealMs(value,pace)
     const sections=Array.from(root.querySelectorAll(':scope > section[id^="pt-"]'))
@@ -351,7 +353,7 @@ export default function ScrollTextAtmosphere({
       })
       if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height)
     }
-  },[rootRef,paused,sectionsKey,device,speed,publicPage])
+  },[rootRef,paused,sectionsKey,device,speed,publicPage,forceMotion])
   return <canvas ref={canvasRef} className="pt-scroll-text-canvas"
     aria-hidden="true" role="presentation"/>
 }
