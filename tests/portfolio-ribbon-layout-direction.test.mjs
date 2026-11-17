@@ -76,7 +76,7 @@ test('Selected layout and direction reach all renderer variants including publis
   assert.match(primary,/selectedLayout==='curtain'/)
   assert.match(legacy,/pt-luxury-ribbon--direction-/)
   assert.match(silk,/pt-ribbon__silk--direction-/)
-  assert.match(published,/publishedView=\{publication\.view\}/)
+  assert.match(published,/publishedView=\{view\} template=\{publishedTemplate\}/)
 })
 
 test('CSS supports all directional compositions without touching image geometry',()=>{

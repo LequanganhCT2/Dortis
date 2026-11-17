@@ -23,6 +23,7 @@ import './cutout-stage.css'
 import './portfolio-sticky-nav.css'
 import './portfolio-color-palettes.css'
 import './silk-flow.css'
+import './portfolio-shared-ui.css'
 import {pickPortfolioActiveSection} from './sectionNavigation'
 
 /** Preview and future renderer share exactly the same source-bound markup.
@@ -341,7 +342,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
-  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -363,6 +364,8 @@ export default function PortfolioTemplateSite({
   })
   const continuousSilk=!useClassic||hasSilk||hasArtboardSilk||
     view.sections.some(section=>section.backdrop===LUXURY_RIBBON)
+  // Both templates share UI and motion; only palette and silk geometry differ.
+  const sharedPortfolioUI=continuousSilk&&!useClassic
   // The header navigates to Form section labels (01 ·, 02 ·, ...), NOT
   // the artist's editable heading. Include every section, even empty ones.
   const navSections=view.sections
@@ -463,7 +466,8 @@ export default function PortfolioTemplateSite({
     if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
-    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+' pt-palette--'+palette+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
+    <main ref={rootRef} className={'pt-site pt-site--'+view.style+(useClassic?'':' pt-site--ribbon')+(continuousSilk?' pt-site--silk pt-site--continuous-silk':'')+
+      (sharedPortfolioUI?' pt-site--shared-ui':'')+' pt-palette--'+palette+(useSilkFlow?' pt-site--silk-flow':'')+(motionPaused?' pt-site--motion-paused':'')} aria-label={publishedView?view.artistName:'Xem trước '+view.templateName}
       onClickCapture={onSelectSection?event=>{
         const page=event.target.closest('section[id^="pt-"]')
         if(!page)return
@@ -479,7 +483,7 @@ export default function PortfolioTemplateSite({
           palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
         sectionsKey={revealKey} device={device} speed={revealSpeed}
-        publicPage={Boolean(publishedView)}/>
+        publicPage={publicPage}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}

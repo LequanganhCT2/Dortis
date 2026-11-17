@@ -1,0 +1,202 @@
+/*
+ * DORTIS / SHARED PORTFOLIO UI
+ * One chrome / typography / image UI across Silk Atelier 01 and Silk Flow 02.
+ * Each template owns its palette and fabric geometry only. No duplicated
+ * headers, footers or animation timing; scrolling is handled by the same
+ * ScrollTextAtmosphere component and shared PhotoReveal.
+ */
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk{
+  --pt-ui-nav-from:#230408ed;
+  --pt-ui-nav-mid:#45101ee8;
+  --pt-ui-nav-to:#26050ce8;
+  --pt-ui-text:#fff1df;
+  --pt-ui-strong:#fff8e7;
+  --pt-ui-line:#f4bf795c;
+  --pt-ui-tab:#f5c98132;
+  --pt-ui-tab-hover:#ffce8824;
+  --pt-ui-progress:#f3bf75;
+  --pt-ui-shimmer:#ffdcb34a;
+  --pt-ui-footer-from:#230408d8;
+  --pt-ui-footer-to:#421322dc;
+  --pt-ui-shadow:#17040848;
+}
+.pt-site.pt-site--shared-ui.pt-palette--red-white{
+  --pt-ui-nav-from:#580613f0;
+  --pt-ui-nav-mid:#971128e8;
+  --pt-ui-nav-to:#650b20f0;
+  --pt-ui-text:#fff4f5;
+  --pt-ui-strong:#fff;
+  --pt-ui-line:#ffe1e76c;
+  --pt-ui-tab:#ffe8ee29;
+  --pt-ui-tab-hover:#ffe6ed21;
+  --pt-ui-progress:#ffd4dc;
+  --pt-ui-shimmer:#ffe6ef55;
+  --pt-ui-footer-from:#5c0c1ac0;
+  --pt-ui-footer-to:#930c22c2;
+  --pt-ui-shadow:#2600084b;
+}
+.pt-site.pt-site--shared-ui.pt-palette--yellow-white{
+  --pt-ui-nav-from:#fffef5ee;
+  --pt-ui-nav-mid:#fff5d9ed;
+  --pt-ui-nav-to:#fffdf2ee;
+  --pt-ui-text:#5d4318;
+  --pt-ui-strong:#44300e;
+  --pt-ui-line:#bc963765;
+  --pt-ui-tab:#eed3979c;
+  --pt-ui-tab-hover:#f8e9c5b8;
+  --pt-ui-progress:#b48828;
+  --pt-ui-shimmer:#ffeab783;
+  --pt-ui-footer-from:#fffef5ec;
+  --pt-ui-footer-to:#fff3d7e5;
+  --pt-ui-shadow:#9f7b1624;
+}
+.pt-site.pt-site--shared-ui.pt-palette--black-white{
+  --pt-ui-nav-from:#0b0b0ded;
+  --pt-ui-nav-mid:#292a30e8;
+  --pt-ui-nav-to:#111114ed;
+  --pt-ui-text:#f1f2f4;
+  --pt-ui-strong:#fff;
+  --pt-ui-line:#e6e8ee61;
+  --pt-ui-tab:#ffffff28;
+  --pt-ui-tab-hover:#ffffff1b;
+  --pt-ui-progress:#e7e9f1;
+  --pt-ui-shimmer:#fff5;
+  --pt-ui-footer-from:#111114e9;
+  --pt-ui-footer-to:#292a31e5;
+  --pt-ui-shadow:#02020466;
+}
+.pt-site.pt-site--shared-ui.pt-site--silk-flow{
+  --pt-ui-nav-from:#fbfefff5;
+  --pt-ui-nav-mid:#ecf8ffef;
+  --pt-ui-nav-to:#f8fdffef;
+  --pt-ui-text:#315e7c;
+  --pt-ui-strong:#1c4c70;
+  --pt-ui-line:#b9dbe9b8;
+  --pt-ui-tab:#d7effbd6;
+  --pt-ui-tab-hover:#d9effac4;
+  --pt-ui-progress:#69abd3;
+  --pt-ui-shimmer:#b2e5fd76;
+  --pt-ui-footer-from:#ffffffed;
+  --pt-ui-footer-to:#e9f6fdee;
+  --pt-ui-shadow:#5b9cba20;
+}
+.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--seafoam-white{
+  --pt-ui-nav-mid:#edfcf9ee;
+  --pt-ui-text:#366e70;
+  --pt-ui-strong:#24595d;
+  --pt-ui-line:#b4ded9ba;
+  --pt-ui-tab:#d9f4f0d6;
+  --pt-ui-tab-hover:#d9f4f0e9;
+  --pt-ui-progress:#6ac4c0;
+  --pt-ui-footer-to:#e7f9f5ef;
+}
+.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--silver-white{
+  --pt-ui-nav-mid:#f3f8fbea;
+  --pt-ui-text:#526c80;
+  --pt-ui-strong:#344c62;
+  --pt-ui-line:#bdcdd9b8;
+  --pt-ui-tab:#e4eef5e0;
+  --pt-ui-tab-hover:#e9f3f9e7;
+  --pt-ui-progress:#91adc1;
+  --pt-ui-footer-to:#edf4f8ef;
+}
+.pt-site.pt-site--shared-ui.pt-site--silk-flow.pt-palette--navy-white{
+  --pt-ui-nav-mid:#e9f3fdef;
+  --pt-ui-text:#375b81;
+  --pt-ui-strong:#203e68;
+  --pt-ui-line:#a9c6e2bd;
+  --pt-ui-tab:#d3e6f9e0;
+  --pt-ui-tab-hover:#d9ebfce5;
+  --pt-ui-progress:#628dbb;
+  --pt-ui-footer-to:#e5effaef;
+}
+/* Same header structure/animation for both templates; palette via variables. */
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky{
+  color:var(--pt-ui-text)!important;
+  background:linear-gradient(106deg,var(--pt-ui-nav-from) 0%,
+    var(--pt-ui-nav-mid) 48%,var(--pt-ui-nav-to) 100%)!important;
+  border-bottom:1px solid var(--pt-ui-line)!important;
+  box-shadow:0 11px 32px var(--pt-ui-shadow),inset 0 1px #ffffff35!important;
+  -webkit-backdrop-filter:blur(20px) saturate(135%);
+  backdrop-filter:blur(20px) saturate(135%);
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky::before{
+  opacity:.36;
+  background:linear-gradient(116deg,transparent 5%,
+    var(--pt-ui-shimmer) 38%,#ffffff32 51%,transparent 75%)!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky
+  :is(.pt-site__brand,.pt-site__nav-label,.pt-site__nav-meta,
+    .pt-site__nav-number,nav.pt-site__nav-links a){
+  color:var(--pt-ui-text)!important;
+  text-shadow:none!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a{
+  border-color:transparent;
+  background:transparent;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a:is(:hover,:focus-visible){
+  color:var(--pt-ui-strong)!important;
+  background:var(--pt-ui-tab-hover)!important;
+  border-color:var(--pt-ui-line)!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a.is-active{
+  color:var(--pt-ui-strong)!important;
+  background:var(--pt-ui-tab)!important;
+  border-color:var(--pt-ui-line)!important;
+  box-shadow:0 3px 14px var(--pt-ui-shadow),inset 0 1px #ffffff48!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky
+  nav.pt-site__nav-links a.is-active::after{
+  background:linear-gradient(90deg,transparent,var(--pt-ui-progress),transparent)!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > header.pt-site__nav.pt-site__nav--sticky .pt-site__nav-progress{
+  background:linear-gradient(90deg,transparent,var(--pt-ui-progress),transparent)!important;
+  box-shadow:0 0 11px var(--pt-ui-progress)!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > footer.pt-site__footer{
+  color:var(--pt-ui-strong)!important;
+  background:linear-gradient(120deg,var(--pt-ui-footer-from) 0%,
+    var(--pt-ui-footer-to) 100%)!important;
+  border-top:1px solid var(--pt-ui-line)!important;
+  box-shadow:0 -10px 35px var(--pt-ui-shadow),inset 0 1px #ffffff28!important;
+}
+.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk
+  > footer.pt-site__footer :is(span,small){
+  color:var(--pt-ui-strong)!important;
+  text-shadow:none!important;
+}
+/* Shared readability, layout and photo controls. Artwork stays independent. */
+.pt-site.pt-site--shared-ui :is(.pt-ribbon__copy,.pt-site__copy){
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.pt-site.pt-site--shared-ui :is(.pt-ribbon__copy h2,.pt-site__copy h2){
+  text-wrap:balance;
+}
+.pt-site.pt-site--shared-ui :is(.pt-ribbon__copy p,.pt-site__copy p){
+  text-wrap:pretty;
+  overflow-wrap:break-word;
+}
+.pt-site.pt-site--shared-ui .pt-photo-reveal{
+  transform-origin:center;
+  isolation:isolate;
+}
+@media(prefers-reduced-motion:reduce){
+  .pt-site.pt-site--shared-ui .pt-site__nav--sticky,
+  .pt-site.pt-site--shared-ui .pt-site__nav--sticky::before{
+    animation:none!important;
+  }
+}

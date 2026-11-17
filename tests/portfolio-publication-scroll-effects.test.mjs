@@ -21,7 +21,7 @@ test('Public renderer uses published snapshot identity, content and reveal speed
   const editor=code('PortfolioInstanceEditor.jsx')
   assert.match(pub,/const publishedTemplate=templateSlug\?\{slug:templateSlug\}:undefined/)
   assert.match(pub,/revealSpeed:view\?\.revealSpeed/)
-  assert.match(pub,/publishedView=\{view\} template=\{publishedTemplate\}/)
+  assert.match(pub,/publishedView=\{view\} template=\{publishedTemplate\} publicPage/)
   assert.match(editor,/templateSlug:template\.slug/)
   assert.match(editor,/view:\{\.\.\.view,revealSpeed:normalizeRevealSpeed\(content\.revealSpeed\)/)
   assert.equal(normalizeRevealSpeed(.3),.3)
@@ -29,7 +29,7 @@ test('Public renderer uses published snapshot identity, content and reveal speed
 test('Published website always observes the browser window; editor observes the preview pane',()=>{
   const site=code('PortfolioTemplateSite.jsx')
   const motion=code('ScrollTextAtmosphere.jsx')
-  assert.match(site,/publicPage=\{Boolean\(publishedView\)\}/)
+  assert.match(site,/publicPage=\{publicPage\}/)
   assert.match(motion,/rootRef,paused=false,sectionsKey='',device='desktop',speed=\.8,publicPage=false/)
   assert.match(motion,/const scrollingHost=!publicPage&&host&&/)
   assert.match(motion,/window\.addEventListener\('scroll',onScroll,\{passive:true\}\)/)

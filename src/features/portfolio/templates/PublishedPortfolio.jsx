@@ -124,7 +124,7 @@ export default function PublishedPortfolio(){
     {loading&&<p role="status">Đang tải portfolio…</p>}
     {!loading&&publication&&<PortfolioTemplateSite
       key={id+':'+publishedAt}
-      publishedView={view} template={publishedTemplate}
+      publishedView={view} template={publishedTemplate} publicPage
       instance={{content}} urls={urls}
       device={mobile?'mobile':'desktop'}/>}
   </div>
