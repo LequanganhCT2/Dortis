@@ -96,3 +96,15 @@ test('Free movement is consistently clamped and represented in menu and overflow
   assert.match(css,/pt-ribbon-section--free-position/)
   assert.match(css,/pt-fx-section--free-position/)
 })
+
+test('Resizing a freely positioned scene frame does not clamp to its old x/y',()=>{
+  const scene=source('SectionArtboard.jsx')
+  assert.doesNotMatch(scene,/100-d\.layer\.(?:x|y)/)
+  assert.match(scene,/maxWidth:100,maxHeight:100/)
+  const content=enableSectionScene(initial,section)
+  const moved=patchSceneLayer(content,section,'desktop','image:0',{x:185,y:-100})
+  const resized=patchSceneLayer(moved,section,'desktop','image:0',{w:84,h:63})
+  assert.equal(getScene(resized,section,'desktop').layers['image:0'].x,185)
+  assert.equal(getScene(resized,section,'desktop').layers['image:0'].w,84)
+  assert.equal(getScene(resized,section,'desktop').layers['image:0'].h,63)
+})

@@ -83,11 +83,11 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
       if(Math.hypot(event.clientX-d.startX,event.clientY-d.startY)<3&&!d.next)return
       if(d.mode==='resize'){
         const size=type==='text'?{
-          w:snap(clamp(d.layer.w+dx,8,100-d.layer.x)),
-          h:snap(clamp(d.layer.h+dy,3,100-d.layer.y))
+          w:snap(clamp(d.layer.w+dx,8,100)),
+          h:snap(clamp(d.layer.h+dy,3,100))
         }:resizeDimensions(d.layer.w,d.layer.h,dx,dy,{
           locked:d.locked,minWidth:8,minHeight:3,
-          maxWidth:100-d.layer.x,maxHeight:100-d.layer.y
+          maxWidth:100,maxHeight:100
         })
         const w=type==='text'||!d.locked?snap(size.w):size.w
         const h=type==='text'||!d.locked?snap(size.h):size.h
@@ -107,13 +107,13 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     if(d.mode==='resize'){
       if(type==='text'){
         // A text frame reflows at a new width, preserving its font and height.
-        const w=snap(clamp(d.layer.w+dx,8,100-d.layer.x))
+        const w=snap(clamp(d.layer.w+dx,8,100))
         if(w===d.lastW)return
         d.lastW=w
         onPatchLayer?.(layerId,{w})
       }else{
         const size=resizeDimensions(d.layer.w,d.layer.h,dx,dy,{
-          locked:d.locked,minWidth:8,minHeight:3,maxWidth:100-d.layer.x,maxHeight:100-d.layer.y
+          locked:d.locked,minWidth:8,minHeight:3,maxWidth:100,maxHeight:100
         })
         const w=d.locked?size.w:snap(size.w),h=d.locked?size.h:snap(size.h)
         if(w===d.lastW&&h===d.lastH)return
@@ -223,9 +223,9 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
           event.preventDefault();event.stopPropagation()
           const amount=event.shiftKey?5:1
           const next=publicEditing?{
-            w:snap(clamp(layer.w+horizontal*amount,8,100-layer.x)),
-            h:snap(clamp(layer.h+vertical*amount,3,100-layer.y))
-          }:{w:snap(clamp(layer.w+horizontal*amount,8,100-layer.x))}
+            w:snap(clamp(layer.w+horizontal*amount,8,100)),
+            h:snap(clamp(layer.h+vertical*amount,3,100))
+          }:{w:snap(clamp(layer.w+horizontal*amount,8,100))}
           if(publicEditing)onDirectPatchLayer?.(section.id,layerId,next)
           else onPatchLayer?.(layerId,next)
         }}
