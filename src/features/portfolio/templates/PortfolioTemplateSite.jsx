@@ -478,7 +478,8 @@ export default function PortfolioTemplateSite({
           direction={view.ribbonDirection||'down-right'} motionPaused={motionPaused}
           palette={view.colorPalette||'red-gold'}/>)}
       <ScrollTextAtmosphere rootRef={rootRef} paused={motionPaused}
-        sectionsKey={revealKey} device={device} speed={revealSpeed}/>
+        sectionsKey={revealKey} device={device} speed={revealSpeed}
+        publicPage={Boolean(publishedView)}/>
     {!focusedSectionId&&<header ref={navRef} className="pt-site__nav pt-site__nav--sticky">
         <nav ref={navScrollRef} className="pt-site__nav-links" aria-label="Các khu vực Portfolio">
           {navSections.map(s=><a key={s.id} data-pt-section={s.id}

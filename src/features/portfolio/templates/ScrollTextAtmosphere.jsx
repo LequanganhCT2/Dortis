@@ -12,7 +12,7 @@ import './scroll-text-atmosphere.css'
  * behind newly opened sections. Text and photos remain normal DOM layers.
  */
 export default function ScrollTextAtmosphere({
-  rootRef,paused=false,sectionsKey='',device='desktop',speed=.8
+  rootRef,paused=false,sectionsKey='',device='desktop',speed=.8,publicPage=false
 }){
   const canvasRef=useRef(null)
   useLayoutEffect(()=>{
@@ -28,7 +28,9 @@ export default function ScrollTextAtmosphere({
 
     const host=root.closest('.pt-device')
     const hostStyle=host?window.getComputedStyle(host):null
-    const scrollingHost=host&&/auto|scroll/.test(hostStyle?.overflowY||'')&&
+    // Published websites scroll the window; Admin previews scroll .pt-device.
+    // Explicitly select the public viewport instead of guessing from CSS.
+    const scrollingHost=!publicPage&&host&&/auto|scroll/.test(hostStyle?.overflowY||'')&&
       host.scrollHeight>host.clientHeight+8?host:null
     const currentScroll=()=>scrollingHost?scrollingHost.scrollTop:
       window.scrollY||document.documentElement.scrollTop||0
@@ -304,6 +306,11 @@ export default function ScrollTextAtmosphere({
     })
     document.addEventListener('scroll',onScroll,{capture:true,passive:true})
     scrollingHost?.addEventListener('scroll',onScroll,{passive:true})
+    // Browsers differ in whether document captures window scroll events.
+    // Explicit window scroll is mandatory on the published route.
+    window.addEventListener('scroll',onScroll,{passive:true})
+    window.addEventListener('pageshow',onResize)
+    document.addEventListener('visibilitychange',onResize)
     window.addEventListener('resize',onResize,{passive:true})
     const resizeObserver=typeof ResizeObserver==='undefined'?null:
       new ResizeObserver(onResize)
@@ -314,6 +321,9 @@ export default function ScrollTextAtmosphere({
       resizeObserver?.disconnect()
       document.removeEventListener('scroll',onScroll,true)
       scrollingHost?.removeEventListener('scroll',onScroll)
+      window.removeEventListener('scroll',onScroll)
+      window.removeEventListener('pageshow',onResize)
+      document.removeEventListener('visibilitychange',onResize)
       window.removeEventListener('resize',onResize)
       if(initialFrame)cancelAnimationFrame(initialFrame)
       if(fallbackFrame)cancelAnimationFrame(fallbackFrame)
@@ -341,7 +351,7 @@ export default function ScrollTextAtmosphere({
       })
       if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height)
     }
-  },[rootRef,paused,sectionsKey,device,speed])
+  },[rootRef,paused,sectionsKey,device,speed,publicPage])
   return <canvas ref={canvasRef} className="pt-scroll-text-canvas"
     aria-hidden="true" role="presentation"/>
 }

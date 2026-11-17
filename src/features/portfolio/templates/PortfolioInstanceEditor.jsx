@@ -160,7 +160,14 @@ export default function PortfolioInstanceEditor({
       })
       const imagePaths=[...new Set(publicSections.flatMap(section=>
         section.images.map(image=>image?.path).filter(Boolean)))]
-      const snapshot={view:{...view,visualTheme:content.visualTheme==='classic'?'classic':view.visualTheme,sections:publicSections},scenes:content.scenes||{},positions:content.positions||{},typography:content.typography||{}}
+      const snapshot={
+        templateSlug:template.slug,
+        view:{...view,revealSpeed:normalizeRevealSpeed(content.revealSpeed),
+          visualTheme:content.visualTheme==='classic'?'classic':view.visualTheme,
+          sections:publicSections},
+        scenes:content.scenes||{},positions:content.positions||{},
+        typography:content.typography||{}
+      }
       const {data,error:publishError}=await supabase.rpc('publish_artist_portfolio',{
         p_instance_id:instance.id,p_revision:instance.revision||1,
         p_content:content,p_snapshot:snapshot,p_image_paths:imagePaths
