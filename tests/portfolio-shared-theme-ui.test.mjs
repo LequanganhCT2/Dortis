@@ -65,7 +65,7 @@ test('Template palettes outrank shared default CSS variables in the cascade',()=
   const root='.pt-site.pt-site--shared-ui.pt-site--ribbon.pt-site--continuous-silk'
   assert.match(css,new RegExp(root.replaceAll('.','\\.')+'\\{'))
   // A 3-class flow selector previously LOST to the 4-class Atelier default.
-  const baseSpecificity=(root.match(/\\./g)||[]).length
+  const baseSpecificity=(root.match(/\./g)||[]).length
   const palettes=[
     root+'.pt-site--silk-flow',
     root+'.pt-site--silk-flow.pt-palette--silver-white',
@@ -76,7 +76,7 @@ test('Template palettes outrank shared default CSS variables in the cascade',()=
     root+'.pt-palette--black-white'
   ]
   for(const selector of palettes){
-    assert.ok((selector.match(/\\./g)||[]).length>baseSpecificity,
+    assert.ok((selector.match(/\./g)||[]).length>baseSpecificity,
       selector+' must outrank the shared red-gold variables')
     assert.ok(css.includes(selector+'{'),
       'Explicit palette selector missing: '+selector)

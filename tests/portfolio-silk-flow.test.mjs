@@ -144,7 +144,7 @@ test('Shared chrome now styles both template themes with palette variables',()=>
   const sticky=src('portfolio-sticky-nav.css')
   assert.match(sticky,/background:linear-gradient\(104deg,#230408ed/)
   assert.match(css,/\.pt-site\.pt-site--shared-ui\.pt-site--ribbon\.pt-site--continuous-silk/)
-  assert.match(css,/\.pt-site\.pt-site--shared-ui\.pt-site--silk-flow/)
+  assert.match(css,/\.pt-site\.pt-site--shared-ui\.pt-site--ribbon\.pt-site--continuous-silk\.pt-site--silk-flow/)
   for(const name of ['red-white','yellow-white','black-white',
     'seafoam-white','silver-white','navy-white']){
     assert.match(css,new RegExp('pt-palette--'+name))
