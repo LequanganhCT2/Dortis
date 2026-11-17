@@ -91,12 +91,14 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
     const angle=Number(initial.rotation)
     const position={
       translate:initial.x||initial.y?initial.x+'% '+initial.y+'%':undefined,
-      scale:!text&&(initial.scaleX!=null||initial.scaleY!=null)?
-        (initial.scaleX??1)+' '+(initial.scaleY??1):undefined,
+      scale:!text&&initial.scaleX!=null?
+        initial.scaleX+' '+(initial.scaleY??1):
+        !text&&initial.scaleY!=null?'1 '+initial.scaleY:undefined,
       ...(text?textBoxWidthStyle(initial):{}),
-      rotate:Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':undefined,
+      rotate:text&&Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':
+        !text&&Number.isFinite(angle)?Math.max(-15,Math.min(15,angle))+'deg':undefined,
       borderRadius:initial.radius!=null?initial.radius+'px':undefined,
-      border:Number(initial.borderWidth)>0?
+      border:initial.borderWidth!=null?
         Number(initial.borderWidth)+'px solid '+(initial.borderColor||'#ffffff'):undefined,
       opacity:initial.opacity==null?undefined:Number(initial.opacity)/100,
       '--pt-direct-image-fit':!text?initial.fit||undefined:undefined,
@@ -249,8 +251,11 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       lineHeight:Number.isFinite(type.lineHeight)?Math.max(.7,Math.min(3,type.lineHeight)):undefined,
       fontWeight:Number.isFinite(Number(type.weight))?Number(type.weight):undefined,
       letterSpacing:Number.isFinite(Number(type.spacing))?type.spacing+'px':undefined,
-      color:/^#[a-f0-9]{6}$/i.test(type.color||'')?type.color:undefined
+      color:/^#[a-f0-9]{6}$/i.test(type.color||'')?type.color:undefined,
+      '--pt-direct-text-color':/^#[a-f0-9]{6}$/i.test(type.color||'')?type.color:undefined
     }
+    if(type)placement['data-pt-authored-color']=
+      /^#[a-f0-9]{6}$/i.test(type.color||'')?'true':undefined
     if(!onEditText)return placement
     return {
       ...placement,

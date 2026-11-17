@@ -21,7 +21,7 @@ function positionStyle(position={},type={},key=''){
   return {
     borderRadius:position.radius!=null?Number(position.radius)+'px':undefined,
     opacity:position.opacity==null?undefined:Number(position.opacity)/100,
-    border:Number(position.borderWidth)>0?
+    border:position.borderWidth!=null?
       Number(position.borderWidth)+'px solid '+(position.borderColor||'#ffffff'):undefined,
     ...(key.startsWith('image:')?{
       '--pt-direct-image-fit':position.fit||undefined
@@ -41,6 +41,7 @@ function positionStyle(position={},type={},key=''){
     fontWeight:Number.isFinite(Number(type.weight))?Number(type.weight):undefined,
     letterSpacing:Number.isFinite(Number(type.spacing))?Number(type.spacing)+'px':undefined,
     color:/^#[0-9a-f]{6}$/i.test(type.color||'')?type.color:undefined,
+    '--pt-direct-text-color':/^#[0-9a-f]{6}$/i.test(type.color||'')?type.color:undefined,
     '--pt-direct-font-size':Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     fontSize:Number.isFinite(type.size)?clamp(type.size,8,180)+'px':undefined,
     lineHeight:Number.isFinite(type.lineHeight)?clamp(type.lineHeight,.7,3):undefined
@@ -151,6 +152,7 @@ export default function RibbonPortfolioSection({
   const draggableProps=key=>({
     style:positionStyle(positions?.[key],typography?.[key],key),
     'data-pt-authored-font-size':Number.isFinite(typography?.[key]?.size)?'true':undefined,
+    'data-pt-authored-color':/^#[0-9a-f]{6}$/i.test(typography?.[key]?.color||'')?'true':undefined,
     ...(onMoveElement||onDirectMoveElement||(key==='title'&&onDirectMoveTitle)?{
       ...(!onMoveElement&&(onDirectMoveElement||onDirectMoveTitle)?{
         'data-pt-public-editable':'',

@@ -102,3 +102,20 @@
 .pt-editor__palette-swatches{display:flex;gap:5px;align-items:center;margin-top:6px}
 .pt-editor__palette-swatches i{display:block;width:20px;height:20px;
  border:1px solid #a1a2a36c;border-radius:50%}
+
+/* An explicitly authored element color must override the palette contrast
+   rule without changing any default title, menu, or template color. */
+.pt-site.pt-site--continuous-silk.pt-site--shared-ui .pt-ribbon__copy
+  [data-pt-authored-color="true"],
+.pt-site.pt-site--continuous-silk.pt-site--shared-ui .pt-site__copy
+  [data-pt-authored-color="true"],
+.pt-site.pt-site--continuous-silk:is(.pt-palette--yellow-white,.pt-palette--red-white,.pt-palette--black-white)
+  .pt-fx-section .pt-site__copy [data-pt-authored-color="true"]{
+  color:var(--pt-direct-text-color)!important;
+}
+.pt-site.pt-site--continuous-silk .pt-artboard__layer.is-text
+  [data-pt-authored-color="true"] .pt-artboard__text,
+.pt-site.pt-site--continuous-silk .pt-artboard__layer.is-text[data-pt-authored-color="true"]
+  .pt-artboard__text{
+  color:var(--pt-direct-text-color)!important;
+}

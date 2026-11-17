@@ -1,6 +1,6 @@
 import React,{useRef,useState} from 'react'
 import {
-  sceneGradient,sceneFont,sceneLayerIds,sceneLayerTitle,sceneLayerType,resizeDimensions
+  sceneGradient,sceneFont,sceneLayerDefault,sceneLayerIds,sceneLayerTitle,sceneLayerType,resizeDimensions
 } from './sectionDesign.js'
 import RibbonLuxuryBackground from './RibbonLuxuryBackground'
 import {LUXURY_RIBBON} from './model'
@@ -40,6 +40,8 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     layerId==='eyebrow'?section.eyebrow:
     layerId==='body'?section.body:note?.text||''
   const label=sceneLayerTitle(layerId)
+  const authoredColor=type==='text'&&
+    layer.color!==sceneLayerDefault(layerId,section,device).color
   const ratio=device==='mobile'?390:1200
   const textStyle={
     color:section.backdrop===LUXURY_RIBBON||continuousSilk?ribbonTextColor(layer.color):layer.color,textAlign:layer.align,fontFamily:sceneFont(layer.font),
@@ -47,6 +49,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     letterSpacing:layer.spacing+'px',whiteSpace:'pre-line',
     fontSize:'clamp(9px,'+(layer.size*100/ratio).toFixed(3)+'cqw,180px)',
     textShadow:layerId==='title'?'0 7px 22px #0a132837':'none',
+    '--pt-direct-text-color':authoredColor?layer.color:undefined,
     filter:layer.blur?'blur('+layer.blur+'px)':'none',
     overflowWrap:'anywhere'
   }
@@ -144,6 +147,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
     aria-label={canMove?'Kéo '+label+', dùng phím mũi tên để di chuyển':undefined}
     aria-pressed={canMove?Boolean(selected):undefined}
     data-pt-public-editable={publicEditing?'':undefined}
+    data-pt-authored-color={authoredColor?'true':undefined}
     data-pt-public-selected={publicEditing&&
       publicSelection?.sectionId===section.id&&publicSelection?.layerId===layerId?
         'true':undefined}
