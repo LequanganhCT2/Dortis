@@ -45,7 +45,7 @@ test('Viewport entry is instant, and images do not wait for the previous section
   const observer=code('ScrollTextAtmosphere.jsx')
   assert.equal((observer.match(/new IntersectionObserver\(/g)||[]).length,1)
   assert.match(observer,/revealParts\.forEach\(part=>observer\.observe\(part\)\)/)
-  assert.match(observer,/markPart\(entry\.target,entry\.isIntersecting\?'visible'/)
+  assert.match(observer,/markPart\(entry\.target,classifyPortfolioPart\(entry\.target\.getBoundingClientRect\(\),/)
   assert.match(observer,/delete node\.dataset\.ptRevealSeen/)
   assert.match(observer,/useLayoutEffect/)
   const css=code('scroll-text-atmosphere.css')

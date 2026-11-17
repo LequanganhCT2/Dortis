@@ -36,6 +36,7 @@ export default function PortfolioInstanceEditor({
   const pendingSectionScroll=useRef(null)
   const [device,setDevice]=useState('desktop')
   const [visualEditing,setVisualEditing]=useState(false)
+  const [revealReplayKey,setRevealReplayKey]=useState(0)
   const [selectedLayer,setSelectedLayer]=useState('title')
   const [lockImageRatio,setLockImageRatio]=useState(true)
   const [urls,setUrls]=useState({})
@@ -642,6 +643,15 @@ export default function PortfolioInstanceEditor({
             onClick={()=>{if(confirmLeave())onPreviewOther()}}>
             Xem trước {otherTemplateName||'mẫu còn lại'} ↗
           </button>}
+          <button type="button" className="pt-editor__view-button"
+            disabled={busy||visualEditing}
+            title={visualEditing?'Thoát chế độ chỉnh trực tiếp để xem hiệu ứng':
+              'Cuộn lên đầu và phát lại hiệu ứng chữ cùng ảnh'}
+            onClick={()=>{
+              const scrollBox=previewRef.current?.querySelector('.pt-device')
+              scrollBox?.scrollTo({top:0,behavior:'auto'})
+              setRevealReplayKey(value=>value+1)
+            }}>↻ Xem hiệu ứng</button>
           <button type="button" className={'pt-editor__view-button'+(visualEditing?' is-active':'')}
             disabled={busy} onClick={()=>visualEditing?setVisualEditing(false):beginVisualEdit()}>
             {visualEditing?'◧ Xem toàn bộ bản hiện tại':'✥ Chỉnh trực tiếp trang này'}
@@ -702,7 +712,7 @@ export default function PortfolioInstanceEditor({
           </div>
         </fieldset>}
         <PortfolioTemplateSite template={template} instance={{...instance,content}} profile={sourceProfile}
-          urls={urls} device={device}
+          urls={urls} device={device} revealReplayKey={revealReplayKey}
           editSectionId={visualEditing&&!busy?current.id:''} motionPaused={visualEditing}
           selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
           onSelectLayer={setSelectedLayer}

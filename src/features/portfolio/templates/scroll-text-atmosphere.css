@@ -151,3 +151,30 @@
     transform:none!important;scale:1!important;
   }
 }
+
+
+/*
+ * Browser-native Web Animations are authoritative when supported. The old
+ * CSS animation shorthand and its !important delays previously masked or
+ * restarted reveal effects in the nested 16:9 Admin scroll viewport.
+ * These selectors only affect active reveal nodes; saved frame geometry,
+ * colours, text positioning, and PhotoMotion hover transforms stay intact.
+ */
+.pt-site.pt-site--block-reveal-active.pt-site--waapi-reveal > section
+  [data-pt-reveal-part]{
+  animation:none!important;
+  animation-timeline:auto!important;
+}
+.pt-site.pt-site--block-reveal-active.pt-site--waapi-reveal > section
+  [data-pt-reveal-state^="hidden"]{
+  opacity:0;
+}
+.pt-site.pt-site--block-reveal-active.pt-site--waapi-reveal > section
+  [data-pt-reveal-state="visible"]{
+  opacity:1;
+}
+.pt-site.pt-site--block-reveal-active.pt-site--waapi-reveal > section
+  .pt-burst-letter{
+  animation:none!important;
+  opacity:1;
+}

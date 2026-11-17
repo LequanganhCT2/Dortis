@@ -339,7 +339,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
-  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -370,7 +370,7 @@ export default function PortfolioTemplateSite({
   const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
   const navIds=navSections.map(s=>s.id).join('|')
   const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body,
-    ...(s.images||[]).map(asset=>asset?.path||'')].join('::')).join('|')
+    ...(s.images||[]).map(asset=>asset?.path||'')].join('::')).join('|')+'|replay:'+revealReplayKey
   useEffect(()=>{
     const root=rootRef.current
     if(!root||focusedSectionId)return undefined

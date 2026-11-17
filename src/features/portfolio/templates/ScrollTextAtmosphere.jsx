@@ -60,6 +60,14 @@ export default function ScrollTextAtmosphere({
       section.querySelectorAll('.pt-photo-motion').forEach(node=>{
         register(node,'image',photoIndex++)
       })
+      // Empty image tiles also reveal; do not animate a saved drag/scale frame
+      // when an actual PhotoMotion child already handles the image.
+      section.querySelectorAll(
+        '.pt-ribbon__tile--empty,.pt-site__media-tile.is-empty,.pt-artboard__layer.is-image'
+      ).forEach(node=>{
+        if(node.querySelector('.pt-photo-motion'))return
+        register(node,'image',photoIndex++)
+      })
     }
     const ctx=canvas.getContext('2d',{alpha:true})
     let lastScroll=currentScroll()
@@ -70,6 +78,57 @@ export default function ScrollTextAtmosphere({
     let fallbackFrame=0
     const bursts=new Map()
     root.classList.add('pt-site--block-reveal-active')
+    // WAAPI is explicit and is not suppressed by legacy CSS animation rules.
+    // The CSS-only state animations remain as a fallback for older browsers.
+    const hasWebAnimations=typeof Element!=='undefined'&&
+      typeof Element.prototype.animate==='function'
+    if(hasWebAnimations)root.classList.add('pt-site--waapi-reveal')
+    const activeAnimations=new Map()
+    function stopPartAnimations(node){
+      const current=activeAnimations.get(node)||[]
+      current.forEach(animation=>animation.cancel())
+      activeAnimations.delete(node)
+    }
+    function animatePart(node,state){
+      if(!hasWebAnimations)return
+      stopPartAnimations(node)
+      const list=[]
+      const start=(target,frames,options)=>{
+        const animation=target.animate(frames,{fill:'both',...options})
+        list.push(animation)
+        animation.onfinish=()=>{animation.cancel()}
+      }
+      const kind=node.dataset.ptRevealPart
+      if(state==='visible'){
+        const letters=node.querySelectorAll('.pt-burst-letter')
+        if(letters.length){
+          letters.forEach((letter,index)=>{
+            start(letter,[
+              {opacity:0,transform:'translate3d(0,15px,-12px) rotateX(-28deg) scale(.72)'},
+              {opacity:1,transform:'translate3d(0,-2px,2px) rotateX(2deg) scale(1.04)',offset:.74},
+              {opacity:1,transform:'none'}
+            ],{duration:300,delay:Math.min(240,index*11),
+              easing:'cubic-bezier(.18,.85,.27,1)'})
+          })
+        }else if(kind==='image'&&node.classList.contains('pt-photo-motion')){
+          start(node,[
+            {opacity:0,transform:'translate3d(0,17px,0) scale(.94)'},
+            {opacity:1,transform:'translate3d(0,-2px,0) scale(1.01)',offset:.73},
+            {opacity:1,transform:'none'}
+          ],{duration:380,delay:Number.parseFloat(
+            node.style.getPropertyValue('--pt-reveal-delay'))||0,
+            easing:'cubic-bezier(.18,.85,.25,1)'})
+        }else{
+          // Never override user-authored layer transforms/scale/position.
+          start(node,[{opacity:0},{opacity:1}],{
+            duration:kind==='body'?300:340,easing:'ease-out'})
+        }
+      }else{
+        start(node,[{opacity:1},{opacity:0}],{
+          duration:165,easing:'ease-out'})
+      }
+      activeAnimations.set(node,list)
+    }
 
     function drawGoldBurst(now){
       burstFrame=0
@@ -128,9 +187,11 @@ export default function ScrollTextAtmosphere({
     }
     function markPart(node,state,entryDirection=direction){
       if(node.dataset.ptRevealState===state)return
+      const wasSeen=node.dataset.ptRevealSeen==='true'
       node.dataset.ptRevealDirection=entryDirection
       if(state==='visible')node.dataset.ptRevealSeen='true'
       node.dataset.ptRevealState=state
+      if(state==='visible'||wasSeen)animatePart(node,state)
     }
     const box=viewport()
     const visibleInitially=[]
@@ -160,8 +221,8 @@ export default function ScrollTextAtmosphere({
         const area=viewport()
         for(const entry of entries){
           if(trackedParts.has(entry.target)){
-            markPart(entry.target,entry.isIntersecting?'visible':
-              classifyPortfolioPart(entry.boundingClientRect,area.top,area.bottom))
+            markPart(entry.target,classifyPortfolioPart(entry.target.getBoundingClientRect(),
+              area.top,area.bottom))
           }else{
             mark(entry.target,classifyPortfolioBlock(entry.boundingClientRect,
               area.top,area.bottom))
@@ -187,8 +248,9 @@ export default function ScrollTextAtmosphere({
     }
     function onScroll(){
       changeDirection()
-      // Resize/scroll fallback for browsers without IntersectionObserver.
-      if(!observer&&!fallbackFrame)fallbackFrame=requestAnimationFrame(scan)
+      // Explicitly scan the embedded editor scroll container every frame of
+      // movement, even when IntersectionObserver does not deliver callbacks.
+      if(!fallbackFrame)fallbackFrame=requestAnimationFrame(scan)
     }
     function onResize(){
       if(!fallbackFrame)fallbackFrame=requestAnimationFrame(scan)
@@ -199,9 +261,11 @@ export default function ScrollTextAtmosphere({
       if(observer){
         sections.forEach(section=>observer.observe(section))
         revealParts.forEach(part=>observer.observe(part))
-      }else scan()
+      }
+      scan()
     })
     document.addEventListener('scroll',onScroll,{capture:true,passive:true})
+    scrollingHost?.addEventListener('scroll',onScroll,{passive:true})
     window.addEventListener('resize',onResize,{passive:true})
     const resizeObserver=typeof ResizeObserver==='undefined'?null:
       new ResizeObserver(onResize)
@@ -211,12 +275,15 @@ export default function ScrollTextAtmosphere({
       observer?.disconnect()
       resizeObserver?.disconnect()
       document.removeEventListener('scroll',onScroll,true)
+      scrollingHost?.removeEventListener('scroll',onScroll)
       window.removeEventListener('resize',onResize)
       if(initialFrame)cancelAnimationFrame(initialFrame)
       if(fallbackFrame)cancelAnimationFrame(fallbackFrame)
       if(burstFrame)cancelAnimationFrame(burstFrame)
       bursts.clear()
       root.classList.remove('pt-site--block-reveal-active')
+      root.classList.remove('pt-site--waapi-reveal')
+      for(const node of activeAnimations.keys())stopPartAnimations(node)
       sections.forEach(section=>{
         delete section.dataset.ptBlockState
         delete section.dataset.ptBlockDirection
