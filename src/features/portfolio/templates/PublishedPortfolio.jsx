@@ -55,6 +55,7 @@ export default function PublishedPortfolio(){
   const savingRef=useRef(false)
   const queuedEditsRef=useRef([])
   const flushingEditsRef=useRef(false)
+  const flushTimerRef=useRef(null)
   const [selection,setSelection]=useState(null)
   const [publishedAt,setPublishedAt]=useState('')
   const [replayKey,setReplayKey]=useState(0)
@@ -227,6 +228,16 @@ export default function PublishedPortfolio(){
     return ()=>document.removeEventListener('keydown',close)
   },[selection?.sectionId,selection?.layerId])
 
+  useEffect(()=>()=>{if(flushTimerRef.current)clearTimeout(flushTimerRef.current)},[])
+
+  function finishPendingPublicEdits(){
+    if(flushTimerRef.current){
+      clearTimeout(flushTimerRef.current)
+      flushTimerRef.current=null
+      void flushPublicEdits()
+    }
+  }
+
   function applyPublicEdit(sectionId,layerId,group,patch){
     if(!admin||!publication||!supabase)return
     const section=publication.view?.sections?.find(item=>item.id===sectionId)
@@ -235,8 +246,21 @@ export default function PublishedPortfolio(){
     const change={sectionId,layerId,device,group,patch,section}
     setPublication(current=>patchPublishedElement(current,
       sectionId,device,layerId,group,patch,section))
-    queuedEditsRef.current.push(change)
-    void flushPublicEdits()
+    // Update React immediately, but batch rapid wheel/input events into one
+    // secured RPC. Do not submit a write for every scroll tick.
+    const last=queuedEditsRef.current.at(-1)
+    if(last&&last.sectionId===change.sectionId&&last.layerId===change.layerId&&
+       last.device===change.device&&last.group===change.group&&group!=='layout'){
+      last.patch={...last.patch,...patch}
+    }else queuedEditsRef.current.push(change)
+    savingRef.current=true
+    setSaveState('saving')
+    setSaveNotice('Đang đồng bộ thay đổi…')
+    if(flushTimerRef.current)clearTimeout(flushTimerRef.current)
+    flushTimerRef.current=setTimeout(()=>{
+      flushTimerRef.current=null
+      void flushPublicEdits()
+    },320)
   }
 
   async function flushPublicEdits(){
@@ -285,6 +309,14 @@ export default function PublishedPortfolio(){
     }finally{
       savingRef.current=false
       flushingEditsRef.current=false
+      // A rapid edit can arrive as the active save is finishing. Flush it
+      // even if its debounce timer already fired while the save was busy.
+      if(queuedEditsRef.current.length&&!flushTimerRef.current){
+        flushTimerRef.current=setTimeout(()=>{
+          flushTimerRef.current=null
+          void flushPublicEdits()
+        },320)
+      }
     }
   }
 
@@ -339,7 +371,6 @@ export default function PublishedPortfolio(){
         mobile?'mobile':'desktop',selection.layerId)}
       device={mobile?'mobile':'desktop'}
       onApply={applyPublicEdit}
-      onClearNotice={()=>setSaveNotice('')}
-      onClose={()=>setSelection(null)}/>}
+      onClose={()=>{setSelection(null);finishPendingPublicEdits()}}/>}
   </div>
 }

@@ -1,7 +1,8 @@
-import React,{useEffect,useState} from 'react'
+import React,{useEffect,useRef,useState} from 'react'
 import {FONT_OPTIONS,detectCurrentFont,isImageLayer} from './publicElementStyle'
 import {SCENE_LAYER_LABELS} from './sectionDesign'
 import {TEXT_QUICK_LAYOUTS} from './textQuickLayouts'
+import {wheelStepValue} from './inlineInspectorWheel'
 import './inline-portfolio-inspector.css'
 
 const number=(value,fallback=0,precision=1)=>{
@@ -16,6 +17,73 @@ function hex(value,fallback='#ffffff'){
   const rgb=raw.match(/^rgba?\((\d+)[,\s]+(\d+)[,\s]+(\d+)/i)
   return rgb?'#'+rgb.slice(1,4).map(v=>Number(v).toString(16).padStart(2,'0')).join(''):fallback
 }
+/** Editing updates the on-page element immediately. Wheel events are non-passive
+ * so hovering a numeric field adjusts it rather than scrolling the page. */
+function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}){
+  const [draft,setDraft]=useState(String(value))
+  const inputRef=useRef(null),boxRef=useRef(null)
+  const latestRef=useRef(value),applyRef=useRef(onApply)
+  applyRef.current=onApply
+  useEffect(()=>{
+    if(document.activeElement!==inputRef.current){
+      latestRef.current=value
+      setDraft(String(value))
+    }
+  },[value,identity])
+  useEffect(()=>{
+    latestRef.current=value
+    setDraft(String(value))
+  },[identity])
+  useEffect(()=>{
+    const box=boxRef.current
+    if(!box)return undefined
+    const wheel=event=>{
+      if(event.ctrlKey)return
+      event.preventDefault()
+      event.stopPropagation()
+      const next=wheelStepValue(latestRef.current,event.deltaY,{
+        step,min,max,shiftKey:event.shiftKey,altKey:event.altKey
+      })
+      if(!Number.isFinite(next)||next===latestRef.current)return
+      latestRef.current=next
+      setDraft(String(next))
+      inputRef.current?.focus({preventScroll:true})
+      applyRef.current(next)
+    }
+    box.addEventListener('wheel',wheel,{passive:false})
+    return ()=>box.removeEventListener('wheel',wheel)
+  },[step,min,max,identity])
+  function change(raw){
+    setDraft(raw)
+    if(raw.trim()==='')return
+    const next=Number(raw)
+    if(!Number.isFinite(next)||next<min||next>max)return
+    if(next===latestRef.current)return
+    latestRef.current=next
+    applyRef.current(next)
+  }
+  function finish(){
+    const next=Number(draft)
+    if(draft.trim()===''||!Number.isFinite(next)||next<min||next>max){
+      setDraft(String(latestRef.current))
+    }else{
+      setDraft(String(next))
+    }
+  }
+  return <label className="pt-inline-inspector__field">
+    <span>{label}</span>
+    <div ref={boxRef} className="pt-inline-inspector__input"
+      title={'Lăn chuột để tăng/giảm '+label+' · Shift: nhanh ×10 · Alt: tinh chỉnh'}>
+      <input ref={inputRef} type="number" min={min} max={max} step="any"
+        value={draft} aria-label={label}
+        onChange={event=>change(event.currentTarget.value)}
+        onBlur={finish}
+        onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur()}}/>
+      {suffix&&<small>{suffix}</small>}
+    </div>
+  </label>
+}
+
 export default function InlinePortfolioInspector({
   selection,layer,device='desktop',onApply,onClose,onClearNotice
 }){
@@ -43,30 +111,17 @@ export default function InlinePortfolioInspector({
   const rect=selection.rect||{}
   const posTop=clamp(rect.top||120,74,Math.max(74,
     (typeof window!=='undefined'?window.innerHeight:850)-430))
-  const apply=(group,patch)=>{onApply(selection.sectionId,id,group,patch);onClearNotice?.()}
+  const apply=(group,patch)=>onApply(selection.sectionId,id,group,patch)
   const numberField=(label,value,group,key,min,max,step=1,suffix='',convert=n=>n)=>
-    <label className="pt-inline-inspector__field" key={key}>
-      <span>{label}</span>
-      <div className="pt-inline-inspector__input">
-        <input key={selection.sectionId+id+device+key+String(value)}
-          type="number" min={min} max={max} step={step} defaultValue={value}
-          aria-label={label}
-          onKeyDown={event=>{if(event.key==='Enter')event.currentTarget.blur()}}
-          onBlur={event=>{
-            if(!event.currentTarget.validity.valid)return
-            const n=Number(event.currentTarget.value)
-            if(!Number.isFinite(n)||n<min||n>max||Math.abs(n-value)<.001)return
-            apply(group,{[key]:convert(n)})
-          }}/>
-        {suffix&&<small>{suffix}</small>}
-      </div>
-    </label>
+    <LiveNumberField key={key} label={label} value={value}
+      min={min} max={max} step={step} suffix={suffix}
+      identity={selection.sectionId+':'+device+':'+id+':'+key}
+      onApply={n=>apply(group,{[key]:convert(n)})}/>
   const colorField=(label,value,group,key)=>
     <label className="pt-inline-inspector__field pt-inline-inspector__field--color" key={key}>
       <span>{label}</span>
-      <input type="color" key={selection.sectionId+id+device+key+value}
-        defaultValue={hex(value)} aria-label={label}
-        onBlur={event=>{
+      <input type="color" value={hex(value)} aria-label={label}
+        onChange={event=>{
           const next=event.currentTarget.value
           if(next!==hex(value))apply(group,{[key]:next})
         }}/>
@@ -114,7 +169,7 @@ export default function InlinePortfolioInspector({
           </>:numberField('Rộng khung',width,'position','widthPct',15,100,1,'%')}
         </div>
         <p className="pt-inline-inspector__actual">
-          Thông số được lấy từ phần tử đang hiển thị, không đặt về kích thước mặc định.
+          Lăn chuột trên ô số để tăng/giảm; trang cập nhật ngay khi nhập.
           Mỗi thiết bị có bộ thông số riêng.</p>
       </>}
       {tab==='layout'&&<>
@@ -143,7 +198,7 @@ export default function InlinePortfolioInspector({
           {scene&&numberField('Thứ tự lớp',number(vals.z,10),'position','z',0,99,1)}
         </div>
         <p className="pt-inline-inspector__actual">
-          Kéo trực tiếp phần tử trên trang hoặc nhập tọa độ chính xác tại đây.</p>
+          Kéo trực tiếp hoặc lăn chuột trên ô số để điều chỉnh ngay (Shift ×10, Alt ×0.2).</p>
       </>}
       {tab==='type'&&!image&&<>
         <label className="pt-inline-inspector__field">
@@ -188,7 +243,7 @@ export default function InlinePortfolioInspector({
       </>}
     </div>
     <footer className="pt-inline-inspector__footer">
-      <small>Chỉnh xong rời ô nhập để tự lưu</small>
+      <small>Thay đổi hiển thị ngay · tự lưu sau khi dừng thao tác</small>
       <button type="button" onClick={onClose}>Xong</button>
     </footer>
   </aside>

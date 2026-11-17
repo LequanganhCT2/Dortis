@@ -148,3 +148,17 @@
 .pt-published--admin-edit .pt-site [data-pt-public-editable]{
   pointer-events:auto!important;
 }
+
+/* Numeric fields are live wheel targets; surrounding page keeps normal scroll. */
+.pt-inline-inspector__input{
+  transition:border-color .12s ease,box-shadow .12s ease,background .12s ease;
+  cursor:ns-resize;
+}
+.pt-inline-inspector__input:hover,
+.pt-inline-inspector__input:focus-within{
+  border-color:#79acc4;
+  box-shadow:0 0 0 2px #cce9f366;
+  background:#f9fdff;
+}
+.pt-inline-inspector__input input{font-variant-numeric:tabular-nums;cursor:ns-resize}
+.pt-inline-inspector__input input:focus{cursor:text}
