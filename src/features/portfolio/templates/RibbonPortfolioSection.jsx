@@ -37,7 +37,7 @@ function positionStyle(position={},type={},key=''){
 export default function RibbonPortfolioSection({
   section,index=0,urls={},artistRole='',isPublic=false,
   selectedLayer='',positions={},typography={},onMoveElement,onSelectLayer,
-  onEditText,onUploadImage,lockImageRatio=true
+  onEditText,onUploadImage,lockImageRatio=true,onDirectMoveTitle
 }){
   const drag=useRef(null),suppressClick=useRef(false)
   const fileInput=useRef(null),pendingSlot=useRef(-1)
@@ -53,7 +53,8 @@ export default function RibbonPortfolioSection({
   const layout=tiles.length?'pt-ribbon-layout--'+section.layout:'pt-ribbon-layout--text'
 
   function startDrag(event,key,resizing=false,locked=false){
-    if(!onMoveElement||event.button!==0||event.isPrimary===false)return
+    const canDirectDrag=key==='title'&&Boolean(onDirectMoveTitle)
+    if((!onMoveElement&&!canDirectDrag)||event.button!==0||event.isPrimary===false)return
     if(!resizing&&event.target.closest('button,input'))return
     event.stopPropagation()
     const target=resizing?event.currentTarget.parentElement:event.currentTarget
@@ -103,7 +104,11 @@ export default function RibbonPortfolioSection({
     drag.current=null
     if(commit&&current.preview){
       suppressClick.current=true
-      onMoveElement?.(current.key,current.preview)
+      if(current.key==='title'&&!onMoveElement&&onDirectMoveTitle){
+        onDirectMoveTitle(section.id,current.preview)
+      }else{
+        onMoveElement?.(current.key,current.preview)
+      }
     }else if(current.mode==='text-width'){
       current.element.style.width=current.originalStyleWidth
     }else{
@@ -115,19 +120,27 @@ export default function RibbonPortfolioSection({
   }
   function moveKey(event,key){
     const d={ArrowUp:[0,-.5],ArrowDown:[0,.5],ArrowLeft:[-.5,0],ArrowRight:[.5,0]}[event.key]
-    if(!d||!onMoveElement)return false
+    if(!d||(!onMoveElement&&!(key==='title'&&onDirectMoveTitle)))return false
     event.preventDefault();event.stopPropagation()
     const original=positions?.[key]||{x:0,y:0}
     const multiplier=event.shiftKey?10:1
     onSelectLayer?.(key)
-    onMoveElement(key,{...original,
+    const next={...original,
       x:clampPosition((Number(original.x)||0)+d[0]*multiplier),
-      y:clampPosition((Number(original.y)||0)+d[1]*multiplier)})
+      y:clampPosition((Number(original.y)||0)+d[1]*multiplier)}
+    if(key==='title'&&!onMoveElement&&onDirectMoveTitle){
+      onDirectMoveTitle(section.id,next)
+    }else onMoveElement(key,next)
     return true
   }
   const draggableProps=key=>({
     style:positionStyle(positions?.[key],typography?.[key],key),
-    ...(onMoveElement?{
+    ...(onMoveElement||(key==='title'&&onDirectMoveTitle)?{
+      ...(key==='title'&&onDirectMoveTitle&&!onMoveElement?{
+        'data-pt-direct-title':'',
+        'aria-label':'Kéo để thay đổi vị trí tiêu đề; dùng phím mũi tên để di chuyển',
+        title:'Kéo tiêu đề để đổi vị trí · Mũi tên để tinh chỉnh'
+      }:{}),
       'data-portfolio-movable':'',tabIndex:0,
       onPointerDown:event=>startDrag(event,key),
       onPointerMove:dragMove,

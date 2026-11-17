@@ -342,7 +342,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
 export default function PortfolioTemplateSite({
   template,instance,profile,urls={},device='desktop',
   focusedSectionId='',editSectionId='',selectedLayer='',lockImageRatio=true,
-  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
+  onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,onDirectMoveTitle,publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -527,6 +527,7 @@ export default function PortfolioTemplateSite({
             typography={instance?.content?.typography?.[section.id]?.[device]}
             selectedLayer={selectedLayer} lockImageRatio={lockImageRatio}
             onMoveElement={editSectionId===section.id?onMoveElement:undefined}
+            onDirectMoveTitle={onDirectMoveTitle}
             onSelectLayer={editSectionId===section.id?onSelectLayer:undefined}
             onEditText={editSectionId===section.id?onEditText:undefined}
             onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>

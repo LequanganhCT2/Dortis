@@ -1,8 +1,9 @@
-import React,{useEffect,useState} from 'react'
+import React,{useEffect,useRef,useState} from 'react'
 import {supabase} from '../../../infrastructure/supabase/client'
 import {canManageContent} from '../../../core/auth/roles'
 import {clientNavigate} from '../../../app/navigation'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
+import {withPublishedTitlePosition} from './publicTitlePosition'
 import './template-admin.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -15,6 +16,9 @@ const BUCKET='dortis-artist-web-drafts'
 export default function PublishedPortfolio(){
   const id=window.location.pathname.split('/')[2]
   const [publication,setPublication]=useState(null)
+  const [saveState,setSaveState]=useState('')
+  const [saveNotice,setSaveNotice]=useState('')
+  const savingRef=useRef(false)
   const [publishedAt,setPublishedAt]=useState('')
   const [replayKey,setReplayKey]=useState(0)
   const [reducedMotion,setReducedMotion]=useState(()=>
@@ -86,7 +90,7 @@ export default function PublishedPortfolio(){
       finally{if(active&&sequence===requestSequence)setLoading(false)}
     }
     function refreshOnReturn(){
-      if(document.visibilityState==='hidden')return
+      if(document.visibilityState==='hidden'||savingRef.current)return
       const now=Date.now()
       if(now-lastRefresh<1200)return
       lastRefresh=now
@@ -112,6 +116,56 @@ export default function PublishedPortfolio(){
     clientNavigate('/admin/templates?edit='+encodeURIComponent(id))
   }
 
+  async function movePublishedTitle(sectionId,position){
+    // Admin role is verified again inside publish_artist_portfolio (JWT + RLS).
+    // Never allow ordinary visitors to write a public page.
+    if(!admin||!publication||!supabase||savingRef.current)return
+    if(!publication.view?.sections?.some(section=>section.id===sectionId))return
+    const device=mobile?'mobile':'desktop'
+    const previous=publication
+    savingRef.current=true
+    setSaveState('saving')
+    setSaveNotice('Đang lưu vị trí tiêu đề…')
+    // Immediate local feedback: title stays where the user dropped it.
+    setPublication(current=>withPublishedTitlePosition(current,sectionId,device,position))
+    try{
+      // Read the latest draft/revision and published snapshot so only the
+      // title moves. Do not overwrite other Admin changes or artist data.
+      const [draftResult,publicResult]=await Promise.all([
+        supabase.from('artist_website_instances')
+          .select('id,revision,content').eq('id',id).single(),
+        supabase.from('artist_portfolio_publications')
+          .select('snapshot,image_paths').eq('instance_id',id).single()
+      ])
+      if(draftResult.error)throw draftResult.error
+      if(publicResult.error)throw publicResult.error
+      const draft=draftResult.data
+      const live=publicResult.data
+      if(!draft||!live?.snapshot)throw new Error('Không tìm thấy nội dung đã xuất bản.')
+      const nextDraft=withPublishedTitlePosition(draft.content||{},sectionId,device,position)
+      const nextSnapshot=withPublishedTitlePosition(live.snapshot,sectionId,device,position)
+      const {error:publishError}=await supabase.rpc('publish_artist_portfolio',{
+        p_instance_id:id,
+        p_revision:draft.revision,
+        p_content:nextDraft,
+        p_snapshot:nextSnapshot,
+        p_image_paths:Array.isArray(live.image_paths)?live.image_paths:[]
+      }).single()
+      if(publishError)throw publishError
+      setPublication(nextSnapshot)
+      setSaveState('saved')
+      setSaveNotice('Đã tự động lưu và cập nhật website.')
+    }catch(e){
+      // Restore the last visible state instead of pretending the change was saved.
+      setPublication(previous)
+      setSaveState('error')
+      setSaveNotice('Không lưu được vị trí: '+(e.message||String(e))+
+        ' · Tải lại trang nếu có bản chỉnh sửa khác.')
+    }finally{
+      savingRef.current=false
+    }
+  }
+
   // The published snapshot is authoritative: preserve its theme, speed,
   // positions and photo paths without needing private draft access.
   const view=publication?.view
@@ -124,7 +178,7 @@ export default function PublishedPortfolio(){
     typography:publication.typography||{},
     revealSpeed:view?.revealSpeed
   }:null
-  return <div className="pt-published">
+  return <div className={'pt-published'+(admin?' pt-published--admin-edit':'')}>
     {admin&&publication&&<div className="pt-published__toolbar">
       {reducedMotion&&<span className="pt-published__motion-note">
         Thiết bị đang bật Giảm chuyển động. Bấm Phát hiệu ứng để xem thử.
@@ -138,6 +192,10 @@ export default function PublishedPortfolio(){
         Chỉnh sửa website
       </button>
     </div>}
+    {saveNotice&&admin&&<div className={'pt-published__inline-save pt-published__inline-save--'+saveState}
+      role={saveState==='error'?'alert':'status'} aria-live="polite">
+      {saveNotice}
+    </div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {loading&&<p role="status">Đang tải portfolio…</p>}
     {!loading&&publication&&<PortfolioTemplateSite
@@ -145,6 +203,7 @@ export default function PublishedPortfolio(){
       publishedView={view} template={publishedTemplate} publicPage
       revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
+      onDirectMoveTitle={admin?movePublishedTitle:undefined}
       device={mobile?'mobile':'desktop'}/>}
   </div>
 }
