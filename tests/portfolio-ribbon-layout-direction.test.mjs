@@ -52,7 +52,7 @@ test('Admin includes paired selectors on each template and in the blueprint edit
   assert.match(manager,/pt-template__ribbon-choice/)
   assert.match(manager,/updateRibbonChoice\(group,\{ribbonLayout:e\.target\.value\}\)/)
   assert.match(manager,/updateRibbonChoice\(group,\{ribbonDirection:e\.target\.value\}\)/)
-  assert.match(manager,/ribbonDirectionOptions\(normalizeBlueprint\(group\.blueprint\)\.ribbonLayout\)/)
+  assert.match(manager,/ribbonDirectionOptions\(normalizeTemplateBlueprint\(group\)\.ribbonLayout\)/)
   assert.match(manager,/normalizeRibbonChoice\(e\.target\.value\)/)
   assert.match(manager,/\.eq\('version',form.version\)/)
 })
