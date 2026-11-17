@@ -17,8 +17,13 @@ export default function ScrollTextAtmosphere({
 }){
   const canvasRef=useRef(null)
   useLayoutEffect(()=>{
-    const root=rootRef.current
+    // React mounts child layout effects before attaching the parent's ref.
+    // On first public-page load rootRef.current can still be null, which
+    // previously disabled every reveal until a later Admin replay.
+    // The canvas ref belongs to this component and its closest <main> is
+    // already in the DOM at this point.
     const canvas=canvasRef.current
+    const root=canvas?.closest('main.pt-site')||rootRef.current
     if(!root||paused||!canvas)return undefined
     const motion=window.matchMedia?.('(prefers-reduced-motion: reduce)')
     // Respect reduced-motion by default. An explicit Play action can opt in.
