@@ -44,13 +44,13 @@
 .pt-flow-stage__sheet--2{--flow-dx:-34px;--flow-dy:19px;animation-duration:33s;animation-delay:-18s;}
 .pt-flow-stage__sheet--3{--flow-dx:18px;--flow-dy:25px;animation-duration:29s;animation-delay:-13s;}
 @keyframes pt-flow-chiffon{
-  0%{transform:translate3d(0,0,0) rotate(-.16deg)}
-  100%{transform:translate3d(var(--flow-dx),var(--flow-dy),0) rotate(.22deg)}
+  0%{transform:translate3d(-7px,3px,0) rotate(-.35deg)}
+  100%{transform:translate3d(var(--flow-dx),var(--flow-dy),0) rotate(.32deg)}
 }
 .pt-flow-stage__softlight{
   position:absolute;inset:0;z-index:1;
   background:
-    linear-gradient(90deg,#ffffffb5 0%,#ffffff27 26%,transparent 61%,#ffffff3c 100%),
+    linear-gradient(90deg,#ffffff61 0%,#ffffff16 26%,transparent 61%,#ffffff20 100%),
     radial-gradient(ellipse at 61% 18%,#fff9,transparent 32%);
   pointer-events:none;
 }
@@ -136,7 +136,7 @@
   animation-play-state:paused!important;
 }
 @media(max-width:680px){
-  .pt-site.pt-site--silk-flow > .pt-flow-stage{opacity:.76}
+  .pt-site.pt-site--silk-flow > .pt-flow-stage{opacity:.9}
   .pt-site.pt-site--silk-flow .pt-ribbon__copy h2{font-size:clamp(38px,10vw,62px)}
 }
 @media(prefers-reduced-motion:reduce){
@@ -182,4 +182,24 @@
 }
 .pt-template__visual.pt-template__visual--flow .pt-template__skeleton i{
   background:#86b4d05c!important;
+}
+
+/* Use the same real chiffon mesh in the Template 02 library cover.
+   It replaces the old two flat pseudo-element bars. */
+.pt-template__visual.pt-template__visual--flow:before,
+.pt-template__visual.pt-template__visual--flow:after{
+  display:none!important;content:none!important;
+}
+.pt-template__visual.pt-template__visual--flow > .pt-flow-stage{
+  position:absolute;inset:0;z-index:0;overflow:hidden;
+  pointer-events:none;opacity:.95;
+}
+.pt-template__visual.pt-template__visual--flow > .pt-flow-stage .pt-flow-stage__svg{
+  width:100%;height:100%;
+}
+.pt-template__visual.pt-template__visual--flow > .pt-flow-stage .pt-flow-stage__softlight{
+  background:linear-gradient(90deg,#ffffff9c,transparent 75%);
+}
+.pt-template__visual.pt-template__visual--flow > span{
+  text-shadow:0 2px 16px #ffffffec;
 }

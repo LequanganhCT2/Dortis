@@ -46,13 +46,17 @@ test('Chiffon is procedural, translucent, responsive to all four ribbon layouts'
   for(const sheet of FLOW_SHEETS){
     for(const [layout,direction] of layouts){
       const bands=buildChiffonSheets(sheet,5800,layout,direction)
-      for(const field of ['surface','underside','luminous','fold','nearEdge','farEdge']){
-        assert.ok(bands[field].length>300,field+' missing')
-        assert.doesNotMatch(bands[field],/NaN|Infinity/)
+      assert.ok(bands.passes.length>=6,'should span the full document')
+      for(const panel of bands.passes){
+        for(const field of ['surface','underside','luminous','fold','gauze','nearEdge','farEdge']){
+          assert.ok(panel[field].length>300,field+' missing')
+          assert.doesNotMatch(panel[field],/NaN|Infinity/)
+        }
+        assert.equal(panel.threads.length,21)
+        assert.match(panel.surface,/ Z$/)
+        assert.ok(panel.threads.every(x=>x.length>200))
+        assert.ok(panel.surface.includes('L '),'fabric must be a wide filled surface')
       }
-      assert.equal(bands.threads.length,7)
-      assert.match(bands.surface,/ Z$/)
-      assert.ok(bands.threads.every(x=>x.length>200))
     }
   }
 })
@@ -87,4 +91,23 @@ test('New DB seed clones the current Atelier blueprint and never edits or archiv
   assert.doesNotMatch(sql,/delete\s+from/i)
   assert.doesNotMatch(sql,/update\s+public\.artist_website_templates/i)
   assert.doesNotMatch(sql,/insert into public\.artist_website_instances/i)
+})
+
+test('Reference-style cloth runs horizontally with raised peaks and a deep middle fold',()=>{
+  const sheet=FLOW_SHEETS[1]
+  const geometry=buildChiffonSheets(sheet,5200,'diagonal','down-right')
+  const panel=geometry.passes[0]
+  const coords=[...panel.nearEdge.matchAll(/(?:M|L) (-?\d+\.\d) (-?\d+\.\d)/g)]
+    .map(match=>[Number(match[1]),Number(match[2])])
+  assert.ok(coords.length>40)
+  const xSpan=Math.max(...coords.map(p=>p[0]))-Math.min(...coords.map(p=>p[0]))
+  const ySpan=Math.max(...coords.map(p=>p[1]))-Math.min(...coords.map(p=>p[1]))
+  assert.ok(xSpan>1100,'silk must extend across the viewport instead of as a vertical strip')
+  assert.ok(ySpan>200,'folds must rise and sink, not appear as a flat ribbon')
+  const component=src('SilkFlowBackdrop.jsx')
+  const manager=src('PortfolioTemplateManager.jsx')
+  assert.match(component,/sheet\.paths\.passes\.map/)
+  assert.match(component,/panel\.threads\.map/)
+  assert.match(manager,/<SilkFlowBackdrop[\s\S]*?motionPaused\/>/)
+  assert.match(src('silk-flow.css'),/pt-template__visual\.pt-template__visual--flow > \.pt-flow-stage/)
 })

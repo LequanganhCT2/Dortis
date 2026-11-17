@@ -2,6 +2,7 @@ import React,{useCallback,useEffect,useMemo,useState} from 'react'
 import {normalizeBlueprint,templateAssignments,FORM_LAYOUTS,FORM_EFFECTS,FORM_VISUAL_THEMES,FORM_RIBBON_LAYOUTS,
   ribbonDirectionOptions,normalizeRibbonChoice} from './model'
 import PortfolioPalettePicker from './PortfolioPalettePicker'
+import SilkFlowBackdrop from './SilkFlowBackdrop'
 import {paletteOptionsForTheme} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import {clientNavigate} from '../../../app/navigation'
@@ -318,6 +319,12 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
             <div className={'pt-template__visual pt-template__visual--'+(group.blueprint?.style||'editorial')+
               ' pt-template__visual--palette-'+normalizeBlueprint(group.blueprint).colorPalette+
               (normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'?' pt-template__visual--flow':'')}>
+              {normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'&&
+                <SilkFlowBackdrop
+                  palette={normalizeBlueprint(group.blueprint).colorPalette}
+                  layout={normalizeBlueprint(group.blueprint).ribbonLayout}
+                  direction={normalizeBlueprint(group.blueprint).ribbonDirection}
+                  motionPaused/>}
               <span>{group.name}</span>
               <div className="pt-template__skeleton"><i/><i/><i/></div>
               <small>FORM / {group.slug.toUpperCase()}</small>
