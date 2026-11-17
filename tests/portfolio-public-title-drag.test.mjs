@@ -44,7 +44,7 @@ test('Public title drag is admin-only, no new navigation and does not expose edi
   assert.match(pub,/withPublishedTitlePosition\(current,sectionId,device,position\)/)
   assert.match(pub,/const device=mobile\?'mobile':'desktop'/)
   assert.match(site,/onDirectMoveTitle=\{onDirectMoveTitle\}/)
-  assert.match(ribbon,/key==='title'&&Boolean\(onDirectMoveTitle\)/)
+  assert.match(ribbon,/const canDirectDrag=Boolean\(onDirectMoveElement\|\|\(key==='title'&&onDirectMoveTitle\)\)/)
   assert.match(ribbon,/current\.key==='title'&&!onMoveElement&&onDirectMoveTitle/)
   assert.match(ribbon,/onDirectMoveTitle\(section\.id,current\.preview\)/)
   assert.match(ribbon,/data-pt-direct-title/)

@@ -91,7 +91,7 @@ test('Gallery grids use explicit slots with no absolute stacking',()=>{
   assert.match(component,/pt-ribbon__media/)
   assert.match(styles,/\.pt-ribbon__media\{grid-area:media;display:grid/)
   assert.match(styles,/\.pt-ribbon__tile\{position:relative/)
-  assert.match(styles,/object-fit:cover/)
+  assert.match(styles,/object-fit:var\(--pt-direct-image-fit,cover\)/)
   assert.doesNotMatch(styles,/\.pt-ribbon__tile\{position:absolute/)
 })
 test('Animated SVG backdrop and reduced-motion/performance fallbacks are shared',()=>{
