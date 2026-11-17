@@ -24,7 +24,8 @@ const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif'
 const getSlot=(section,index)=>section.id+':'+index
 
 export default function PortfolioInstanceEditor({
-  supabase,user,template,instance,profile,onBack,onSaved,onPublished,backLabel='← Quay về chọn mẫu Portfolio'
+  supabase,user,template,instance,profile,onBack,onSaved,onPublished,
+  onPreviewOther,otherTemplateName='',backLabel='← Quay về chọn mẫu Portfolio'
 }){
   const [content,setContent]=useState(()=>instance.content||{})
   const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
@@ -626,10 +627,17 @@ export default function PortfolioInstanceEditor({
       </aside>
       <section className="pt-editor__preview" ref={previewRef}>
         <div className="pt-editor__preview-head"><div>
-          <strong>{visualEditing?'CHỈNH TRỰC TIẾP TRÊN FORM GỐC':'LIVE PREVIEW · FORM HIỆN TẠI'}</strong>
+          <strong>{visualEditing?'CHỈNH TRỰC TIẾP · '+template.name:
+            'ĐANG CHỈNH SỬA · '+template.name}</strong>
           <span> {visualEditing?(scene?'Kéo thả layer của '+current.label:'Bấm để sửa chữ, kéo để di chuyển · '+current.label):
-            'Xem toàn bộ Form với nội dung và ảnh riêng của nghệ sĩ'}</span>
+            'Đây là mẫu đang gán cho nghệ sĩ. Xem mẫu khác không thay đổi bản lưu.'}</span>
         </div><div className="pt-editor__preview-controls">
+          {onPreviewOther&&<button type="button"
+            className="pt-editor__compare-template"
+            disabled={busy}
+            onClick={()=>{if(confirmLeave())onPreviewOther()}}>
+            Xem trước {otherTemplateName||'mẫu còn lại'} ↗
+          </button>}
           <button type="button" className={'pt-editor__view-button'+(visualEditing?' is-active':'')}
             disabled={busy} onClick={()=>visualEditing?setVisualEditing(false):beginVisualEdit()}>
             {visualEditing?'◧ Xem toàn bộ bản hiện tại':'✥ Chỉnh trực tiếp trang này'}

@@ -5,6 +5,8 @@ import PortfolioPalettePicker from './PortfolioPalettePicker'
 import SilkFlowBackdrop from './SilkFlowBackdrop'
 import {paletteOptionsForTheme} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
+import PortfolioTemplateSite from './PortfolioTemplateSite'
+import {resolveInstance} from './model'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
 
@@ -22,6 +24,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   const [selection,setSelection]=useState(null)
   const [linkedTemplate,setLinkedTemplate]=useState(null)
   const [choice,setChoice]=useState({})
+  const [previewTemplateId,setPreviewTemplateId]=useState(null)
   const [editingTemplate,setEditingTemplate]=useState(null)
   const [blueprint,setBlueprint]=useState(null)
   const load=useCallback(async()=>{
@@ -77,6 +80,32 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
   const template=selected&&(templates.find(t=>t.id===selected.template_id)||
     (linkedTemplate?.id===selected.template_id?linkedTemplate:null))
   const desired=profiles.find(p=>p.slug===initialArtistSlug)
+  const previewTemplate=templates.find(item=>item.id===previewTemplateId)
+  const previewIsFlow=previewTemplate?.slug==='silk-flow'
+  const demoView=useMemo(()=>{
+    if(!previewTemplate)return null
+    const demo=resolveInstance(previewTemplate,{content:{}},{name:'Nghệ sĩ minh họa'})
+    const names=['CHÂN DUNG NGHỆ SĨ','CÂU CHUYỆN NGHỆ THUẬT','HÀNH TRÌNH & DẤU ẤN',
+      'PHONG CÁCH SÁNG TẠO','DẤU ẤN NỔI BẬT','KHOẢNH KHẮC BIỂU DIỄN',
+      'THƯ VIỆN NGHỆ THUẬT','KẾT NỐI & BOOKING']
+    return {...demo,sections:demo.sections.map((section,index)=>({
+      ...section,
+      eyebrow:section.label,
+      title:names[index]||section.label,
+      body:index===0?
+        'Bản xem trước thiết kế mẫu. Lụa và bố cục hiển thị ở đây không thay thế nội dung hồ sơ nghệ sĩ.':
+        'Lớp lụa mềm chuyển động phía sau tiêu đề, phần nội dung và các vị trí ảnh của Portfolio.',
+      images:Array.from({length:section.slots},()=>null)
+    }))}
+  },[previewTemplate])
+  function openReadOnlyPreview(form){
+    setError('');setNotice('')
+    setPreviewTemplateId(form.id)
+  }
+  function openOtherTemplateFromEditor(form){
+    closeInstanceEditor()
+    openReadOnlyPreview(form)
+  }
   function closeInstanceEditor(){
     setSelection(null)
     // Removing the deep-link prevents the editor reopening on subsequent
@@ -193,8 +222,44 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     return <main className="pt-manager">
       <PortfolioInstanceEditor key={selected.id} supabase={supabase} user={user}
         template={template} instance={selected} profile={artist}
+        otherTemplateName={templates.find(item=>item.id!==template.id)?.name}
+        onPreviewOther={templates.find(item=>item.id!==template.id)?
+          ()=>openOtherTemplateFromEditor(templates.find(item=>item.id!==template.id)):undefined}
         onBack={closeInstanceEditor} onSaved={record=>
           setInstances(list=>list.map(item=>item.id===record.id?record:item))}/>
+    </main>
+  }
+  if(previewTemplate&&demoView){
+    return <main className="pt-manager pt-manager--sample">
+      <div className="pt-sample-preview__toolbar">
+        <div>
+          <span className="pt-overline">XEM TRƯỚC MẪU · KHÔNG THAY ĐỔI DỮ LIỆU</span>
+          <h1>{previewTemplate.name}</h1>
+          <p>{previewIsFlow?
+            'TEMPLATE 02 — nền trắng, lụa xanh bán trong suốt trải ngang như vải bay.':
+            'TEMPLATE 01 — nền lụa đỏ–vàng của Silk Atelier giữ nguyên.'}
+            {' '}Đây là nội dung minh họa, chưa gán cho nghệ sĩ nào.</p>
+        </div>
+        <button type="button" className="pt-btn pt-btn--light"
+          onClick={()=>setPreviewTemplateId(null)}>← Quay về thư viện</button>
+      </div>
+      <div className="pt-sample-preview__switcher" role="group"
+        aria-label="Chuyển mẫu xem trước">
+        {templates.map(item=><button key={item.id} type="button"
+          aria-pressed={item.id===previewTemplate.id}
+          className={'pt-sample-preview__switch'+(item.id===previewTemplate.id?' is-active':'')}
+          onClick={()=>openReadOnlyPreview(item)}>
+          {item.slug==='silk-flow'?'02 · Silk Flow (xanh – trắng)':
+            '01 · Silk Atelier (đỏ – vàng)'}
+        </button>)}
+      </div>
+      <div className="pt-sample-preview__hint">
+        <strong>{previewIsFlow?'ĐANG XEM TEMPLATE 02 · SILK FLOW':'ĐANG XEM TEMPLATE 01 · SILK ATELIER'}</strong>
+        <span>Chỉ xem trước. Để áp dụng mẫu cho nghệ sĩ, quay lại thư viện và chọn Gán mẫu ở đúng thẻ.</span>
+      </div>
+      <PortfolioTemplateSite template={previewTemplate}
+        instance={{content:{}}} profile={{name:'Nghệ sĩ minh họa'}}
+        publishedView={demoView} device="desktop"/>
     </main>
   }
   if(selected&&artist&&!template&&initialInstanceId)return <main className="pt-manager">
@@ -212,7 +277,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
     {desired&&<div className="pt-manager__focus">Đang chọn mẫu cho <strong>{desired.name}</strong>.
-      Hãy chọn Form Silk Atelier bên dưới để gán hồ sơ nghệ sĩ này.</div>}
+      Hãy chọn Silk Atelier hoặc Silk Flow bên dưới để gán hồ sơ nghệ sĩ này.</div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
     {editingTemplate&&blueprint?
@@ -362,6 +427,14 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                 options={paletteOptionsForTheme(normalizeBlueprint(group.blueprint).visualTheme)}
                 disabled={working}
                 onChange={palette=>updateTemplateChoice(group,{colorPalette:palette})}/>
+              <button type="button"
+                className={'pt-btn pt-template__preview'+
+                  (normalizeBlueprint(group.blueprint).visualTheme==='silk-flow'?
+                    ' pt-template__preview--blue':'')}
+                onClick={()=>openReadOnlyPreview(group)}>
+                {group.slug==='silk-flow'?'Xem trước lụa xanh · Template 02':
+                  'Xem trước mẫu đỏ–vàng · Template 01'}
+              </button>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"
                 onClick={()=>openTemplateEdit(group)}>Chỉnh bố cục form gốc</button>
               <div className="pt-template__assign">
