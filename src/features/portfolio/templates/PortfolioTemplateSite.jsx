@@ -488,7 +488,10 @@ export default function PortfolioTemplateSite({
         window.innerHeight||Number.POSITIVE_INFINITY,
         root.closest('.pt-device')?.getBoundingClientRect().bottom||Number.POSITIVE_INFINITY
       )
-      const next=pickPortfolioActiveSection(sections,navBottom,viewportBottom)
+      const labeled=sections.filter(node=>navIds.split('|').includes(node.id.slice(3)))
+      const lineForLabel=navBottom+32
+      const ordered=labeled.map(node=>({id:node.id.slice(3),top:eyebrowAnchor(node).getBoundingClientRect().top})).sort((a,b)=>a.top-b.top)
+      const next=ordered.filter(entry=>entry.top<=lineForLabel).at(-1)?.id||ordered[0]?.id||''
       const pending=pendingNavigationRef.current
       // A click selects the intended tab immediately. While a smooth scroll
       // passes through intermediary sections, don't flash older tabs.
@@ -543,6 +546,9 @@ export default function PortfolioTemplateSite({
     const left=current.offsetLeft-nav.offsetLeft-(nav.clientWidth-current.clientWidth)/2
     nav.scrollTo({left:Math.max(0,left),behavior:'smooth'})
   },[activeSectionId,device])
+  function eyebrowAnchor(section){
+    return section.querySelector('[data-portfolio-text-frame="eyebrow"],[data-pt-scroll-reveal="eyebrow"]')||section
+  }
   function jumpToSection(event,id){
     event.preventDefault()
     const section=Array.from(rootRef.current?.querySelectorAll(':scope > section[id^="pt-"]')||[])
@@ -559,7 +565,21 @@ export default function PortfolioTemplateSite({
     },1800)
     setActiveSectionId(id)
     const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    section.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})
+    const anchor=eyebrowAnchor(section)
+    const behavior=reduce?'auto':'smooth'
+    let host=anchor.parentElement
+    while(host&&host!==document.body&&host!==document.documentElement){
+      const overflow=getComputedStyle(host).overflowY
+      if(/auto|scroll|overlay/.test(overflow)&&host.scrollHeight>host.clientHeight+1)break
+      host=host.parentElement
+    }
+    const headerHeight=navRef.current?.getBoundingClientRect().height||0
+    const gap=headerHeight+20
+    if(host&&host!==document.body&&host!==document.documentElement){
+      host.scrollTo({top:Math.max(0,host.scrollTop+anchor.getBoundingClientRect().top-host.getBoundingClientRect().top-host.clientTop-gap),behavior})
+    }else{
+      window.scrollTo({top:Math.max(0,window.scrollY+anchor.getBoundingClientRect().top-gap),behavior})
+    }
     if(reduce)resyncNavigationRef.current?.()
   }
   return <div className={'pt-device pt-device--'+device+(focusedSectionId?' pt-device--focused':'')}>
