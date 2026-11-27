@@ -16,7 +16,7 @@ function NumberField({label,value,min,max,step=1,onChange}){
 export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onBlockAction,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice,inspector}){
   const sections=publication?.view?.sections||[]
   const [sectionId,setSectionId]=useState(sections[0]?.id||'')
-  const [blockOpen,setBlockOpen]=useState(false)
+  const [blockOpen,setBlockOpen]=useState(true)
   const [tab,setTab]=useState('content')
   const [collapsed,setCollapsed]=useState(false)
   const [pos,setPos]=useState(null)
@@ -57,7 +57,13 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
     {!collapsed&&<div className="pt-studio-panel__body">
       <div className="pt-studio-panel__grid"><button aria-pressed={device==='desktop'} onClick={()=>onDevice('desktop')}>Desktop</button><button aria-pressed={device==='mobile'} onClick={()=>onDevice('mobile')}>Mobile</button>
       <button disabled={!canUndo||busy} onClick={onUndo}>↶ Hoàn tác</button><button disabled={!canRedo||busy} onClick={onRedo}>↷ Làm lại</button></div>
-      <button type="button" aria-expanded={blockOpen} onClick={()=>setBlockOpen(x=>!x)}>Khối nội dung {blockOpen?'−':'+'}</button>
+      <label>Khu vực<select value={section?.id||''} onChange={e=>{setSectionId(e.target.value);studio.clear();document.getElementById('pt-'+e.target.value)?.scrollIntoView({block:'start',behavior:'smooth'})}}>{sections.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
+      <div className="pt-studio-panel__grid">
+        {Object.entries(labels).map(([kind,label])=><button disabled={busy||!section} key={kind} onClick={()=>kind==='image'?upload.current.click():onAdd(section.id,kind)}>+ {label}</button>)}
+        <button disabled={busy} onClick={()=>{const name=window.prompt('Tên khu vực mới','Khu vực mới');if(name?.trim()){const id=onAddSection(name.trim());if(id)setSectionId(id)}}}>+ Khu vực trống</button>
+        <button disabled={busy||!section} onClick={()=>studio.clear()}>Bỏ chọn</button>
+      </div>
+      <button type="button" aria-expanded={blockOpen} onClick={()=>setBlockOpen(x=>!x)}>Mẫu nhanh & sắp xếp khu vực {blockOpen?'−':'+'}</button>
       {blockOpen&&<div style={{display:'grid',gap:6}}>
         <label>Mẫu nhanh<select value="" disabled={busy} onChange={e=>{const preset=CONTENT_BLOCK_PRESETS[Number(e.target.value)];if(preset){const id=onAddSection(...preset);if(id)setSectionId(id)}}}><option value="" disabled>+ Thêm mẫu nội dung</option>{CONTENT_BLOCK_PRESETS.map((p,i)=><option key={i} value={i}>{p[0]}</option>)}</select></label>
         {sections.map((s,i)=><div key={s.id} draggable={!busy} onDragStart={e=>e.dataTransfer.setData('text/plain',s.id)} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();onBlockAction(e.dataTransfer.getData('text/plain'),'move',s.id)}} style={{display:'grid',gap:3,border:'1px solid #7775',borderRadius:6,padding:5}}>
@@ -65,15 +71,10 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
           <div className="pt-studio-panel__grid"><button disabled={busy} onClick={()=>onBlockAction(s.id,'toggle')}>{publication.contentBlockHidden?.[s.id]?'Hiện':'Ẩn'}</button><button disabled={busy} onClick={()=>onBlockAction(s.id,'clone')}>Clone</button><button disabled={busy||i===0} onClick={()=>onBlockAction(s.id,'move',sections[i-1].id)}>↑</button><button disabled={busy||i===sections.length-1} onClick={()=>onBlockAction(s.id,'move',sections[i+1].id)}>↓</button></div>
         </div>)}
       </div>}
-      <label>Khu vực<select value={section?.id||''} onChange={e=>{setSectionId(e.target.value);studio.clear();document.getElementById('pt-'+e.target.value)?.scrollIntoView({block:'start',behavior:'smooth'})}}>{sections.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
-      <div className="pt-studio-panel__grid">
-        {Object.entries(labels).map(([kind,label])=><button disabled={busy||!section} key={kind} onClick={()=>kind==='image'?upload.current.click():onAdd(section.id,kind)}>+ {label}</button>)}
-        <button disabled={busy} onClick={()=>{const name=window.prompt('Tên khu vực mới','Khu vực mới');if(name?.trim()){const id=onAddSection(name.trim());if(id)setSectionId(id)}}}>+ Section</button>
-        <button disabled={busy||!section} onClick={()=>studio.clear()}>Bỏ chọn</button>
-      </div>
       <input ref={upload} hidden type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple onChange={e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(section&&files.length)onUpload(section.id,files)}}/>
       <input ref={replace} hidden type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(item)onUpload(section.id,[file],item.id);else if(baseSelection)onReplaceBase(baseSelection.sectionId,baseSelection.layerId,file)}}/>
       <strong>Layer · {section?.label}</strong>
+      {section&&<div className="pt-studio-panel__grid"><button disabled={busy} onClick={()=>onBlockAction(section.id,'toggle')}>{publication.contentBlockHidden?.[section.id]?'Hiện khu vực':'Ẩn khu vực'}</button><button disabled={busy} onClick={()=>onBlockAction(section.id,'clone')}>Clone khu vực</button></div>}
       <div className="pt-studio-panel__layers">
         {items.slice().sort((a,b)=>resolveStudioLayout(b[device],b.kind,device).z-resolveStudioLayout(a[device],a.kind,device).z).map(e=><button key={e.id} aria-pressed={item?.id===e.id} onClick={()=>studio.select(section.id,e.id)}>{e[device]?.hidden?'◌ ':''}{e[device]?.locked?'🔒 ':''}{labels[e.kind]} · {e.text||e.alt||'Layer'}</button>)}
         {section&&['eyebrow','title','body',...Array.from({length:section.slots||0},(_,i)=>'image:'+i)].map(id=><button key={id} aria-pressed={baseSelection?.sectionId===section.id&&baseSelection?.layerId===id} onClick={()=>onSelectBase(section.id,id)}>{id.startsWith('image:')?'Ảnh '+(Number(id.slice(6))+1):({eyebrow:'Nhãn phụ',title:'Tiêu đề gốc',body:'Nội dung gốc'})[id]}</button>)}
