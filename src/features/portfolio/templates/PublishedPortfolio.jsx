@@ -9,8 +9,10 @@ import {getPublishedText,isEditablePortfolioText} from './publicTextContent'
 import {removeSceneNote} from './sectionDesign.js'
 import InlinePortfolioInspector from './InlinePortfolioInspector'
 import {setSlotImage} from './model.js'
-import {addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements} from './studioModel.js'
+import {addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
 import StudioPanel from './StudioPanel'
+import {quickTextPreset} from './textQuickLayouts.js'
+import {studioTextMotion} from './studioTextPresentation.js'
 import {photoMotionMode,photoMotionIntensity,photoMotionPointer} from './photoMotionConfig.js'
 import useStudioSession from './useStudioSession.js'
 import './template-admin.css'
@@ -329,6 +331,26 @@ export default function PublishedPortfolio(){
     typography:publication.typography||{},studioElements:publication.studioElements||{},
     revealSpeed:view?.revealSpeed
   }:null
+  const customSection=view?.sections?.find(s=>s.id===customSelection?.sectionId)
+  const customItem=customSection&&studioElements(publication,customSection.id).find(e=>e.id===customSelection.id)
+  const customText=customItem&&isStudioText(customItem.kind)
+  const customValues=customText?resolveStudioLayout(customItem[device],customItem.kind,device):null
+  const [customMetrics,setCustomMetrics]=useState({})
+  useEffect(()=>{
+    if(!customText)return
+    const frame=requestAnimationFrame(()=>{
+      const node=Array.from(document.querySelectorAll('[data-studio-text-id]')).find(n=>n.dataset.studioTextId===customItem.id)
+      if(node)setCustomMetrics({...measurePublicElement(node),id:customItem.id})
+    })
+    return ()=>cancelAnimationFrame(frame)
+  },[customItem,device,publication])
+  function applyCustomText(sectionId,id,group,patch){
+    if(group==='content')return patchItem(sectionId,id,{text:patch.value})
+    if(group==='layout')return patchItem(sectionId,id,quickTextPreset(patch.id))
+    if(group==='motion')return patchItem(sectionId,id,{effect:patch.effect||customValues.effect,motion:{...studioTextMotion(customValues),...patch},...(patch.duration!=null?{duration:patch.duration/1000}:{}),...(patch.delay!=null?{delay:patch.delay/1000}:{})})
+    const {borderWidth,...rest}=patch
+    patchItem(sectionId,id,{...rest,...(borderWidth!=null?{border:borderWidth}:{})})
+  }
   const editorActive=Boolean(admin&&editMode&&studioSession.active)
   return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')+(studioSession.active&&deviceOverride==='mobile'?' pt-studio-mobile-preview':'')}>
     {admin&&publication&&<div className="pt-published__toolbar"
@@ -380,6 +402,15 @@ export default function PublishedPortfolio(){
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}
       canUndo={studioSession.canUndo} canRedo={studioSession.canRedo} onDevice={value=>{clearSelection();setDeviceOverride(value)}}
       onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice}/>}
+    {editorActive&&admin&&customText&&<InlinePortfolioInspector
+      selection={{sectionId:customSection.id,layerId:customItem.id,...(customMetrics.id===customItem.id?customMetrics:{})}}
+      layer={{section:customSection,scene:true,custom:true,kind:customItem.kind,values:{...customValues,borderWidth:customValues.border,motion:studioTextMotion(customValues)}}}
+      device={device} onApply={applyCustomText} textValue={customItem.text||''}
+      onDelete={()=>removeItem(customSection.id,customItem.id)}
+      onToggleHidden={()=>patchItem(customSection.id,customItem.id,{hidden:!customValues.hidden})}
+      onResetTypography={()=>patchItem(customSection.id,customItem.id,{inheritTypography:true})}
+      onCustomPatch={patch=>patchItem(customSection.id,customItem.id,patch)}
+      onReplayMotion={previewStudio} onClose={()=>{clearSelection();finishPendingPublicEdits()}}/>}
     {editorActive&&admin&&selection&&publication&&<InlinePortfolioInspector
       selection={selection}
       layer={lookupPublishedLayer(publication,selection.sectionId,

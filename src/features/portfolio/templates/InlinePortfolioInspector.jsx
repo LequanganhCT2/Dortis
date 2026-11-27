@@ -1,5 +1,6 @@
 import React,{useEffect,useRef,useState} from 'react'
 import {FONT_OPTIONS,detectCurrentFont,isImageLayer} from './publicElementStyle'
+import {STUDIO_FONTS} from './studioModel.js'
 import {SCENE_LAYER_LABELS} from './sectionDesign'
 import {TEXT_QUICK_LAYOUTS} from './textQuickLayouts'
 import {wheelStepValue} from './inlineInspectorWheel'
@@ -89,7 +90,7 @@ function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}
 
 export default function InlinePortfolioInspector({
   selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion,
-  textValue='',onStartInlineEdit,onDelete
+  textValue='',onStartInlineEdit,onDelete,onToggleHidden,onResetTypography,onCustomPatch
 }){
   const [tab,setTab]=useState('size')
   const [panelPosition,setPanelPosition]=useState(null)
@@ -126,11 +127,13 @@ export default function InlinePortfolioInspector({
 
   const id=selection.layerId
   const image=isImageLayer(id),scene=layer.scene
-  const vals=layer.values||{},measured=selection.metrics||{}
+  const raw=layer.values||{},measured=selection.metrics||{}
+  const vals=layer.custom?{...raw,...Object.fromEntries(['size','weight','lineHeight','spacing','align','color'].filter(k=>!raw.textOverrides?.[k]&&measured[k==='size'?'fontSize':k]!=null).map(k=>[k,measured[k==='size'?'fontSize':k]]))}:raw
   const motion=normalizeTextMotion(vals.motion)
-  const title=image?'Ảnh '+(Number(id.split(':')[1])+1):
+  const title=layer.custom?(layer.kind==='title'?'Tiêu đề':layer.kind==='button'?'Nút':'Nội dung'):image?'Ảnh '+(Number(id.split(':')[1])+1):
     SCENE_LAYER_LABELS[id]||(id.startsWith('note:')?'Chữ trang trí':'Nội dung')
-  const fontId=vals.font||detectCurrentFont(measured.fontFamily)
+  const fontOptions=layer.custom?STUDIO_FONTS.map(font=>({id:font,label:font})):FONT_OPTIONS
+  const fontId=layer.custom?(vals.textOverrides?.font?vals.font:STUDIO_FONTS.find(f=>measured.fontFamily?.toLowerCase().includes(f.toLowerCase()))||vals.font):vals.font||detectCurrentFont(measured.fontFamily)
   // For a scene the stored font is a design unit (cqw). The input always
   // shows real rendered pixels; edits are translated back to design units.
   const size=number(measured.fontSize,number(vals.size,16))
@@ -211,10 +214,12 @@ export default function InlinePortfolioInspector({
             rows={id==='body'?6:3}
             onChange={event=>apply('content',{value:event.currentTarget.value})}/>
         </label>
-        <button type="button" className="pt-inline-inspector__replay"
+        {onStartInlineEdit&&<button type="button" className="pt-inline-inspector__replay"
           onClick={onStartInlineEdit}>
           <span aria-hidden="true">✎</span> Sửa trực tiếp trên chữ
-        </button>
+        </button>}
+        {onToggleHidden&&<button type="button" className="pt-inline-inspector__replay" onClick={onToggleHidden}>{vals.hidden?"Hiện nội dung":"Ẩn nội dung"}</button>}
+        {onResetTypography&&<button type="button" className="pt-inline-inspector__replay" onClick={onResetTypography}>Khôi phục CSS template</button>}
         {onDelete&&<button type="button" className="pt-inline-inspector__replay" style={{color:"#ff7777"}} onClick={()=>{if(window.confirm("Xóa nội dung này khỏi portfolio?"))onDelete()}}>Xóa nội dung</button>}
         <p className="pt-inline-inspector__actual">
           Nhấp đúp lên chữ trong trang để nhập ngay tại vị trí đó. Nội dung
@@ -224,7 +229,7 @@ export default function InlinePortfolioInspector({
       {tab==='size'&&<>
         <div className="pt-inline-inspector__grid">
           {!image&&numberField('Cỡ chữ hiện tại',size,'typography','size',8,180,1,'px',
-            n=>scene?clamp(number(storedFontSize*n/Math.max(size,1),storedFontSize,2),9,240):n)}
+            n=>scene&&!layer.custom?clamp(number(storedFontSize*n/Math.max(size,1),storedFontSize,2),9,240):n)}
           {scene?<>
             {numberField('Rộng khung',width,'position','w',8,100,1,'%')}
             {numberField('Cao khung',height,'position','h',3,100,1,'%')}
@@ -273,7 +278,7 @@ export default function InlinePortfolioInspector({
         <label className="pt-inline-inspector__field">
           <span>Font chữ hiện tại</span>
           <select value={fontId} onChange={event=>apply('typography',{font:event.target.value})}>
-            {FONT_OPTIONS.map(font=><option key={font.id} value={font.id}>{font.label}</option>)}
+            {fontOptions.map(font=><option key={font.id} value={font.id}>{font.label}</option>)}
           </select>
         </label>
         <div className="pt-inline-inspector__grid">

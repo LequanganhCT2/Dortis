@@ -26,6 +26,7 @@ export function sceneTextStyle(layer,role,section,device,continuousSilk){
   }
 }
 export function studioTextMotion(v,sourceMotion){
+  if(v.motion)return normalizeTextMotion(v.motion)
   if(v.effect==='inherit')return sourceMotion
   if(v.effect==='auto')return undefined
   return normalizeTextMotion({effect:v.effect==='letters'?'rise':v.effect,

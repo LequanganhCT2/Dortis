@@ -1,3 +1,4 @@
+import {normalizeTextMotion} from './textLayerMotion.js'
 const clamp=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback
 export const STUDIO_KINDS=['title','text','body','image','shape','button']
 export const STUDIO_EFFECTS=['inherit','auto','none','fade','rise','slide','zoom','flip','blur','letters']
@@ -25,6 +26,7 @@ export function studioLayout(raw={},kind='text',device='desktop'){
     fit:raw.fit==='contain'?'contain':'cover',
     effect:STUDIO_EFFECTS.includes(raw.effect)?raw.effect:'inherit',
     duration:clamp(raw.duration,.1,5,.8),delay:clamp(raw.delay,0,5,0),
+    ...(raw.motion&&typeof raw.motion==='object'?{motion:normalizeTextMotion(raw.motion)}:{}),
     reverse:raw.reverse!==false,hidden:raw.hidden===true,locked:raw.locked===true
   }
 }
