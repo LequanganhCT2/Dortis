@@ -409,7 +409,7 @@ export default function PublishedPortfolio(){
       onToggleHidden={()=>patchItem(customSection.id,customItem.id,{hidden:!customValues.hidden})}
       onResetTypography={()=>patchItem(customSection.id,customItem.id,{inheritTypography:true})}
       onCustomPatch={patch=>patchItem(customSection.id,customItem.id,patch)}
-      onReplayMotion={()=>setReplayKey(v=>v+1)} onClose={()=>{clearSelection();finishPendingPublicEdits()}}/ >):selection&&publication?(<InlinePortfolioInspector embedded
+      onReplayMotion={()=>setReplayKey(v=>v+1)} onClose={()=>{clearSelection();finishPendingPublicEdits()}}/>):selection&&publication?(<InlinePortfolioInspector embedded
       selection={selection}
       layer={lookupPublishedLayer(publication,selection.sectionId,
         device,selection.layerId)}
@@ -421,6 +421,6 @@ export default function PublishedPortfolio(){
       onStartInlineEdit={()=>beginInlineTextEdit(selection.sectionId,
         selection.layerId)}
       onReplayMotion={()=>setReplayKey(v=>v+1)}
-      onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/ >):null}/>}
+      onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/>):null}/>}
   </div>
 }
