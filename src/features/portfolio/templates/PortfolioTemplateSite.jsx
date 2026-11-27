@@ -453,7 +453,7 @@ export default function PortfolioTemplateSite({
   const sharedPortfolioUI=continuousSilk&&!useClassic
   // The header navigates to Form section labels (01 ·, 02 ·, ...), NOT
   // the artist's editable heading. Include every section, even empty ones.
-  const navSections=view.sections
+  const navSections=view.sections.filter(s=>String(s.eyebrow||'').trim())
   const rootRef=useRef(null),navRef=useRef(null),navScrollRef=useRef(null)
   const pendingNavigationRef=useRef(null)
   const navTimerRef=useRef(null)
@@ -589,7 +589,7 @@ export default function PortfolioTemplateSite({
             aria-current={activeSectionId===s.id?'location':undefined}
             href={'#pt-'+s.id} onClick={event=>jumpToSection(event,s.id)}>
               <span className="pt-site__nav-label">
-                {s.label.replace(/^\s*(?:\d+\s*\/\s*)?\d+\s*[·.:\-/]\s*/,'')}
+                {s.eyebrow.trim()}
               </span>
             </a>)}
         </nav>
