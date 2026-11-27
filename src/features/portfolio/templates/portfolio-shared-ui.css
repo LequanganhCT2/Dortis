@@ -215,8 +215,11 @@
   50% { translate:0 -4px; }
 }
 @media (prefers-reduced-motion:no-preference){
-  .pt-site:not(.pt-site--motion-paused) :is(.pt-ribbon__copy,.pt-site__copy,.pt-artboard__text){
+  .pt-site:not(.pt-site--motion-paused) :is(.pt-ribbon__copy,.pt-site__copy,.pt-artboard__text,.pt-studio-copy:not(:has(.pt-artboard__text))){
     animation:pt-ambient-copy-drift 9s ease-in-out infinite;
+  }
+  .pt-site:not(.pt-site--motion-paused) .pt-studio-layer__visual:not(.is-text):has(img){
+    animation:pt-ambient-image-drift 12s ease-in-out infinite;
   }
   .pt-site:not(.pt-site--motion-paused) .pt-photo-motion--still .pt-photo-motion__animated{
     animation:pt-ambient-image-drift 12s ease-in-out infinite!important;
