@@ -23,7 +23,7 @@ export default function PhotoMotion({
   // Keep layout/selection geometry stationary, but move the actual painted frame.
   useLayoutEffect(()=>{
     const element=host.current
-    const shell=element?.closest('.pt-artboard__photo,.pt-ribbon__tile,.pt-site__media-tile')
+    const shell=element?.closest('.pt-artboard__photo,.pt-ribbon__tile,.pt-site__media-tile,.pt-studio-layer__visual')
     const surface=element?.querySelector('.pt-photo-motion__animated')
     if(!shell||!surface||shell.closest('.is-cutout,.pt-ribbon__tile--cutout'))return
     function sync(){

@@ -3,6 +3,7 @@ import {resolveStudioLayout,studioLayout,safeStudioHref,isStudioText} from './st
 import {studioTextPresentation,studioMotionAttributes} from './studioTextPresentation.js'
 import DirectEditableText from './DirectEditableText'
 import PhotoReveal from './PhotoReveal'
+import PhotoMotion from './PhotoMotion'
 import './studio.css'
 
 function StudioLayer({item,section,sectionId,device,urls,studio,scene,typography,useClassic,continuousSilk}){
@@ -78,7 +79,7 @@ function StudioLayer({item,section,sectionId,device,urls,studio,scene,typography
               onChange={value=>studio?.patch(sectionId,item.id,{text:value})} onFinish={()=>setInline(false)}/>}
         </TextTag>
       </div>:item.kind==='image'?<PhotoReveal {...studioMotionAttributes(v)}>
-        {src?<img src={src} alt={item.alt||''} draggable={false} style={{objectFit:v.fit}}/>:editing?<span>Chưa có ảnh</span>:null}
+        {src?<PhotoMotion asset={{...(section?.images?.find(a=>a?.path)||{}),...(v.photoMotion&&v.photoMotion!=='inherit'?{motion:v.photoMotion}:{}),...(v.photoIntensity!=null?{motionIntensity:v.photoIntensity}:{}),...(v.photoPointer!=null?{motionPointer:v.photoPointer}:{})}} paused={editing}><img src={src} alt={item.alt||''} draggable={false} style={{objectFit:v.fit}}/></PhotoMotion>:editing?<span>Chưa có ảnh</span>:null}
       </PhotoReveal>:null}
     </div>
     {selected&&!v.locked&&['nw','n','ne','e','se','s','sw','w'].map(dir=><button key={dir} className={'pt-studio-layer__resize handle-'+dir} type="button" aria-label={'Thay đổi kích thước '+dir} onPointerDown={e=>start(e,dir)}/>)}
