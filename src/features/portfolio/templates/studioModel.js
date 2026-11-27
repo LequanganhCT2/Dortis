@@ -15,7 +15,7 @@ export function studioLayout(raw={},kind='text',device='desktop'){
     align:['left','center','right'].includes(raw.align)?raw.align:'left',
     spacing:clamp(raw.spacing,-8,20,0),lineHeight:clamp(raw.lineHeight,.7,3,1.25),
     color:hex(raw.color,'#233950'),background:hex(raw.background,'#ffffff'),
-    fill:raw.fill===true||kind==='shape'||kind==='button',
+    fill:raw.fill==null?(kind==='shape'||kind==='button'):raw.fill===true,
     opacity:clamp(raw.opacity,0,100,100),radius:clamp(raw.radius,0,200,0),
     border:clamp(raw.border,0,20,0),borderColor:hex(raw.borderColor,'#233950'),
     shadow:clamp(raw.shadow,0,80,0),blur:clamp(raw.blur,0,20,0),

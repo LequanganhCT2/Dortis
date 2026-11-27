@@ -17,7 +17,7 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
     setVisible(false);io.observe(node);return ()=>io.disconnect()
   },[editing,paused,v.effect,v.reverse])
   useEffect(()=>{if(!selected||!editing)setInline(false)},[selected,editing])
-  function start(e,resize=false){
+  function start(e,resize=''){
     if(!editing||e.button!==0||inline)return
     e.stopPropagation();studio.select(sectionId,item.id)
     if(v.locked)return
@@ -31,9 +31,18 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
     if(!d||d.pointer!==e.pointerId)return
     const dx=(e.clientX-d.x)*100/Math.max(1,d.box.width),dy=(e.clientY-d.y)*100/Math.max(1,d.box.height)
     if(Math.abs(dx)+Math.abs(dy)<.2&&!d.next)return
-    let patch=d.resize?{w:d.base.w+dx,h:e.shiftKey?d.base.h*(d.base.w+dx)/d.base.w:d.base.h+dy}:{x:d.base.x+dx,y:d.base.y+dy}
+    let patch
+    if(d.resize){
+      const west=d.resize.includes('w'),north=d.resize.includes('n'),east=d.resize.includes('e'),south=d.resize.includes('s')
+      const rawW=d.base.w+(west?-dx:east?dx:0),rawH=d.base.h+(north?-dy:south?dy:0)
+      const w=Math.max(4,Math.min(180,rawW)),h=Math.max(3,Math.min(180,e.shiftKey&&(west||east)?d.base.h*w/d.base.w:rawH))
+      patch={w,h,x:west?d.base.x+d.base.w-w:d.base.x,y:north?d.base.y+d.base.h-h:d.base.y}
+    }else{
+      const snap=n=>e.altKey?n:Math.round(n*2)/2
+      patch={x:snap(d.base.x+dx),y:snap(d.base.y+dy)}
+    }
     const next=studioLayout({...d.base,...patch},item.kind,device)
-    d.next=d.resize?{w:next.w,h:next.h}:{x:next.x,y:next.y}
+    d.next=d.resize?{x:next.x,y:next.y,w:next.w,h:next.h}:{x:next.x,y:next.y}
     setPreview(d.next)
   }
   function finish(e,commit=true){
@@ -53,7 +62,7 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
     onDoubleClick={editing&&['title','text','body','button'].includes(item.kind)&&!v.locked?e=>{e.stopPropagation();setInline(true)}:undefined}>
     <div className={'pt-studio-layer__visual'+(visible?' is-visible':'')+' fx-'+v.effect}
       style={{'--studio-duration':v.duration+'s','--studio-delay':v.delay+'s','--studio-opacity':v.opacity/100,
-        '--studio-blur':v.blur+'px',fontFamily:v.font,fontWeight:v.weight,fontSize:'clamp(8px,'+(v.size/19.2)+'cqw,240px)',
+        '--studio-blur':v.blur+'px',fontFamily:v.font,fontWeight:v.weight,fontSize:'clamp(8px,'+(v.size/(device==='mobile'?7.2:19.2))+'cqw,240px)',
         letterSpacing:v.spacing+'px',lineHeight:v.lineHeight,textAlign:v.align,color:v.color,
         background:v.fill?v.background:'transparent',border:v.border+'px solid '+v.borderColor,borderRadius:v.radius+'px',
         boxShadow:v.shadow?'0 6px '+v.shadow+'px #0004':undefined}}>
@@ -62,7 +71,7 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
         item.kind==='button'&&!editing&&safeStudioHref(item.href)?<a href={safeStudioHref(item.href)}>{text}</a>:
         v.effect==='letters'&&!editing?Array.from(text).map((ch,i)=><span key={i} className="pt-studio-letter" style={{transitionDelay:(v.delay+Math.min(i,60)*.025)+'s'}}>{ch}</span>):<span>{text}</span>}
     </div>
-    {selected&&!v.locked&&<button className="pt-studio-layer__resize" type="button" aria-label="Thay đổi kích thước" onPointerDown={e=>start(e,true)}>↘</button>}
+    {selected&&!v.locked&&['nw','n','ne','e','se','s','sw','w'].map(dir=><button key={dir} className={'pt-studio-layer__resize handle-'+dir} type="button" aria-label={'Thay đổi kích thước '+dir} onPointerDown={e=>start(e,dir)}/>)}
   </div>
 }
 export default function StudioLayers({items,sectionId,device,urls,studio,paused}){

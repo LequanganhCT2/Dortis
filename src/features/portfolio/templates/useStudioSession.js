@@ -1,4 +1,4 @@
-import {useEffect,useRef,useState} from 'react'
+import {useEffect,useLayoutEffect,useRef,useState} from 'react'
 import {snapshotImagePaths,withoutPending} from './studioModel.js'
 const BUCKET='dortis-artist-web-drafts'
 const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif'}
@@ -16,7 +16,7 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
     clearTimer();session.current=null;lock(false);setActive(false);setVersion(v=>v+1)
     if(restore&&s){setPublication(s.live);setUrls(s.liveUrls);setPublishedAt(s.basePublishedAt)}
   }
-  useEffect(()=>{if(session.current&&session.current.owner!==admin?.id){reset();notify('','')}},[admin?.id])
+  useLayoutEffect(()=>{if(session.current&&session.current.owner!==admin?.id){reset();notify('','')}},[admin?.id])
   useEffect(()=>()=>{clearTimer();session.current=null},[])
   useEffect(()=>{
     if(!active)return

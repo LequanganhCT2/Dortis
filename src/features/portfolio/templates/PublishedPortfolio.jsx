@@ -10,6 +10,7 @@ import InlinePortfolioInspector from './InlinePortfolioInspector'
 import {setSlotImage} from './model.js'
 import {addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements} from './studioModel.js'
 import StudioPanel from './StudioPanel'
+import {photoMotionMode,photoMotionIntensity,photoMotionPointer} from './photoMotionConfig.js'
 import useStudioSession from './useStudioSession.js'
 import './template-admin.css'
 
@@ -121,7 +122,7 @@ export default function PublishedPortfolio(){
           images=Object.fromEntries((signed||[]).filter(image=>image.signedUrl)
             .map(image=>[image.path,image.signedUrl]))
         }
-        if(active&&sequence===requestSequence&&!studioSession.session.current){
+        if(active&&sequence===requestSequence&&!studioSession.session.current&&!studioSession.busyRef.current){
           setPublication(data.snapshot)
           setPublishedAt(data.published_at||'')
           setUrls(images)
@@ -159,7 +160,8 @@ export default function PublishedPortfolio(){
   },[id])
 
   function editWebsite(){
-    if(!admin||studioSession.active)return
+    if(!admin)return
+    if(studioSession.active)return
     clientNavigate('/admin/templates?edit='+encodeURIComponent(id))
   }
 
@@ -277,6 +279,19 @@ export default function PublishedPortfolio(){
       }}}
     },true))
   }
+  function patchBaseImage(sectionId,layerId,patch){
+    const index=Number(layerId.slice(6))
+    if(!layerId.startsWith('image:')||!Number.isInteger(index)||index<0)return
+    studioSession.commit(pair=>{
+      const slot=sectionId+':'+index
+      const current=pair.content.images?.[slot]
+      if(!current?.path)return pair
+      const raw={...current,...patch}
+      const next={...raw,motion:photoMotionMode(raw),motionIntensity:photoMotionIntensity(raw),motionPointer:photoMotionPointer(raw)}
+      return {content:setSlotImage(pair.content,slot,next),snapshot:{...pair.snapshot,view:{...pair.snapshot.view,
+        sections:pair.snapshot.view.sections.map(s=>s.id===sectionId?{...s,images:s.images.map((old,i)=>i===index?{...old,...patch,motion:next.motion,motionIntensity:next.motionIntensity,motionPointer:next.motionPointer}:old)}:s)}}}
+    })
+  }
   const studio={selection:customSelection,select:selectCustom,clear:clearSelection,patch:patchItem,duplicate:duplicateItem,remove:removeItem,move:moveItem}
   async function enterStudio(){if(await studioSession.open())setEditMode(true)}
   function previewStudio(){clearSelection();setEditMode(false);finishPendingPublicEdits();setReplayKey(v=>v+1)}
@@ -311,7 +326,7 @@ export default function PublishedPortfolio(){
       <div className="pt-published__mode-switch" role="group" aria-label="Chế độ trang">
         <button type="button" aria-pressed={!editMode}
           className={!editMode?'is-active':''}
-          onClick={previewStudio}><span aria-hidden="true">◉</span> Xem</button>
+          onClick={previewStudio}><span aria-hidden="true">◉</span> {studioSession.active?'Xem trước':'Xem'}</button>
         <button type="button" aria-pressed={editMode}
           className={editMode?'is-active':''}
           disabled={studioSession.busy} onClick={enterStudio}><span aria-hidden="true">✎</span> Sửa</button>
@@ -351,7 +366,7 @@ export default function PublishedPortfolio(){
       onDirectTextFinish={finishInlineTextEdit}
       device={device}/>}
     {editorActive&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
-      onAdd={addItem} onAddSection={addSection} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onSelectBase={selectBase}
+      onAdd={addItem} onAddSection={addSection} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}
       canUndo={studioSession.canUndo} canRedo={studioSession.canRedo} onDevice={value=>{clearSelection();setDeviceOverride(value)}}
       onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice}/>}
@@ -365,7 +380,7 @@ export default function PublishedPortfolio(){
         device,selection.layerId)}
       onStartInlineEdit={()=>beginInlineTextEdit(selection.sectionId,
         selection.layerId)}
-      onReplayMotion={()=>setReplayKey(value=>value+1)}
+      onReplayMotion={previewStudio}
       onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/>}
   </div>
 }

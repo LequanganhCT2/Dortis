@@ -34,3 +34,15 @@
 .pt-studio-publish{background:#243b5c!important;color:#fff!important}
 .pt-published__toolbar{flex-wrap:wrap}
 @media(prefers-reduced-motion:reduce){.pt-studio-layer__visual,.pt-studio-letter{transition:none!important;opacity:var(--studio-opacity)!important;transform:none!important;filter:none!important}}
+
+.pt-studio-layer__resize{width:12px;height:12px;padding:0;background:#fff;border:2px solid #4388e7;border-radius:1px;z-index:2;transform:translate(-50%,-50%);right:auto;bottom:auto}
+.pt-studio-layer__resize.handle-nw{left:0;top:0;cursor:nwse-resize}
+.pt-studio-layer__resize.handle-n{left:50%;top:0;cursor:ns-resize}
+.pt-studio-layer__resize.handle-ne{left:100%;top:0;cursor:nesw-resize}
+.pt-studio-layer__resize.handle-e{left:100%;top:50%;cursor:ew-resize}
+.pt-studio-layer__resize.handle-se{left:100%;top:100%;cursor:nwse-resize}
+.pt-studio-layer__resize.handle-s{left:50%;top:100%;cursor:ns-resize}
+.pt-studio-layer__resize.handle-sw{left:0;top:100%;cursor:nesw-resize}
+.pt-studio-layer__resize.handle-w{left:0;top:50%;cursor:ew-resize}
+.pt-studio-layer__resize:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.pt-studio-panel input[hidden]{display:none}

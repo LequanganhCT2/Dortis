@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState} from 'react'
 import {STUDIO_EFFECTS,STUDIO_FONTS,studioElements,studioLayout} from './studioModel.js'
 import './studio.css'
+import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer,supportsPhotoPointer} from './photoMotionConfig.js'
 const labels={title:'Tiêu đề',text:'Text',body:'Nội dung',image:'Ảnh',shape:'Hình khối',button:'Button'}
 const effects={none:'Không',fade:'Fade in/out',slide:'Trượt',zoom:'Scale',flip:'3D Rotate',blur:'Blur reveal',letters:'Từng ký tự'}
 function NumberField({label,value,min,max,step=1,onChange}){
@@ -12,7 +13,7 @@ function NumberField({label,value,min,max,step=1,onChange}){
   },[value,min,max,step,onChange])
   return <label>{label}<input ref={ref} type="number" value={value} min={min} max={max} step={step} onChange={e=>{if(e.target.value!=='')onChange(Number(e.target.value))}}/></label>
 }
-export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onUpload,onReplaceBase,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice}){
+export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice}){
   const sections=publication?.view?.sections||[]
   const [sectionId,setSectionId]=useState(sections[0]?.id||'')
   const [tab,setTab]=useState('content')
@@ -25,6 +26,7 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
   const items=studioElements(publication,section?.id)
   const item=items.find(e=>studio.selection?.sectionId===section?.id&&studio.selection?.id===e.id)
   const v=item?studioLayout(item[device],item.kind,device):null
+  const baseImage=!item&&baseSelection?.sectionId===section?.id&&baseSelection?.layerId?.startsWith('image:')?section.images?.[Number(baseSelection.layerId.slice(6))]:null
   function moveTo(x,y){const w=panel.current?.offsetWidth||300;setPos({x:Math.max(0,Math.min(x,window.innerWidth-w)),y:Math.max(0,Math.min(y,window.innerHeight-48))})}
   useEffect(()=>{const resize=()=>setPos(p=>p?{x:Math.max(0,Math.min(p.x,window.innerWidth-(panel.current?.offsetWidth||300))),y:Math.max(0,Math.min(p.y,window.innerHeight-48))}:p);window.addEventListener('resize',resize);return()=>window.removeEventListener('resize',resize)},[])
   const patch=p=>studio.patch(section.id,item.id,p)
@@ -54,7 +56,11 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
         {items.slice().sort((a,b)=>studioLayout(b[device],b.kind,device).z-studioLayout(a[device],a.kind,device).z).map(e=><button key={e.id} aria-pressed={item?.id===e.id} onClick={()=>studio.select(section.id,e.id)}>{e[device]?.hidden?'◌ ':''}{e[device]?.locked?'🔒 ':''}{labels[e.kind]} · {e.text||e.alt||'Layer'}</button>)}
         {section&&['eyebrow','title','body',...Array.from({length:section.slots||0},(_,i)=>'image:'+i)].map(id=><button key={id} aria-pressed={baseSelection?.sectionId===section.id&&baseSelection?.layerId===id} onClick={()=>onSelectBase(section.id,id)}>{id.startsWith('image:')?'Ảnh '+(Number(id.slice(6))+1):({eyebrow:'Nhãn phụ',title:'Tiêu đề gốc',body:'Nội dung gốc'})[id]}</button>)}
       </div>
-      {baseSelection?.layerId?.startsWith('image:')&&!item&&<button disabled={busy} onClick={()=>replace.current.click()}>Thay ảnh đang chọn</button>}
+      {baseSelection?.layerId?.startsWith('image:')&&!item&&<><button disabled={busy} onClick={()=>replace.current.click()}>Thay / thêm ảnh đang chọn</button>
+        {baseImage?.path&&<><label>Hiệu ứng ảnh<select value={photoMotionMode(baseImage)} onChange={e=>onPatchBaseImage(section.id,baseSelection.layerId,{motion:e.target.value,motionPointer:supportsPhotoPointer(e.target.value)})}>{PHOTO_MOTION_OPTIONS.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select></label>
+        <NumberField label="Cường độ ảnh (%)" value={photoMotionIntensity(baseImage)} min={0} max={100} onChange={value=>onPatchBaseImage(section.id,baseSelection.layerId,{motionIntensity:value})}/>
+        {supportsPhotoPointer(photoMotionMode(baseImage))&&<label><span><input type="checkbox" checked={photoMotionPointer(baseImage)} onChange={e=>onPatchBaseImage(section.id,baseSelection.layerId,{motionPointer:e.target.checked})}/> Theo con trỏ</span></label>}</>}
+      </>}
       {item&&<>
         <div className="pt-studio-panel__tabs">{[['content','Nội dung'],['type','Kiểu chữ'],['layout','Bố cục'],['style','Giao diện'],['motion','Hiệu ứng'],['layer','Layer']].map(([id,label])=><button key={id} aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}</button>)}</div>
         {tab==='content'&&<>{item.kind==='image'?<><label>Mô tả ảnh<input value={item.alt||''} onChange={e=>patch({alt:e.target.value})}/></label><button disabled={busy} onClick={()=>replace.current.click()}>Thay ảnh</button></>:item.kind!=='shape'?<><label>Nội dung<textarea rows={4} value={item.text||''} onChange={e=>patch({text:e.target.value})}/></label>{item.kind==='button'&&<label>Liên kết<input value={item.href||''} onChange={e=>patch({href:e.target.value})} placeholder="https://..."/></label>}</>:<span>Chỉnh nền, viền tại Giao diện.</span>}</>}
