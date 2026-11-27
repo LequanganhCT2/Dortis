@@ -1,22 +1,16 @@
 import React,{useEffect,useRef,useState} from 'react'
-import {studioLayout,safeStudioHref} from './studioModel.js'
+import {resolveStudioLayout,studioLayout,safeStudioHref,isStudioText} from './studioModel.js'
+import {studioTextPresentation,studioMotionAttributes} from './studioTextPresentation.js'
+import DirectEditableText from './DirectEditableText'
+import PhotoReveal from './PhotoReveal'
 import './studio.css'
 
-function StudioLayer({item,sectionId,device,urls,studio,paused}){
-  const v=studioLayout(item[device],item.kind,device)
+function StudioLayer({item,section,sectionId,device,urls,studio,scene,typography,useClassic,continuousSilk}){
+  const v=resolveStudioLayout(item[device],item.kind,device)
   const ref=useRef(null),drag=useRef(null)
   const [preview,setPreview]=useState(null)
-  const [visible,setVisible]=useState(true)
   const [inline,setInline]=useState(false)
   const editing=Boolean(studio),selected=studio?.selection?.sectionId===sectionId&&studio?.selection?.id===item.id
-  useEffect(()=>{
-    if(v.hidden&&!editing)return
-    if(editing||paused||v.effect==='none'||typeof IntersectionObserver==='undefined'||window.matchMedia('(prefers-reduced-motion: reduce)').matches){setVisible(true);return}
-    const node=ref.current
-    if(!node)return
-    const io=new IntersectionObserver(([entry])=>setVisible(old=>entry.isIntersecting||(!v.reverse&&old)),{threshold:.12})
-    setVisible(false);io.observe(node);return ()=>io.disconnect()
-  },[editing,paused,v.effect,v.reverse,v.hidden])
   useEffect(()=>{if(!selected||!editing)setInline(false)},[selected,editing])
   function start(e,resize=''){
     if(!editing||e.button!==0||inline)return
@@ -55,27 +49,42 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
   if(v.hidden&&!editing)return null
   const p={...v,...preview},src=urls[item.path]
   const text=item.text||''
+  const isText=isStudioText(item.kind)
+  const presentation=isText?studioTextPresentation({v,kind:item.kind,section,device,scene,typography,continuousSilk}):null
+  const TextTag=item.kind==='title'?'h2':item.kind==='button'?'p':'p'
+  const copyClass=scene?'pt-artboard__layer is-text':useClassic?'pt-site__copy':'pt-ribbon__copy'
   return <div ref={ref} className={'pt-studio-layer'+(editing?' is-editable':'')+(selected?' is-selected':'')+(v.hidden?' is-hidden':'')}
     style={{left:p.x+'%',top:p.y+'%',width:p.w+'%',height:p.h+'%',zIndex:p.z,
-      transform:'rotate('+p.rotation+'deg)',opacity:v.hidden ? .25 : 1}}
+      transform:'rotate('+p.rotation+'deg)',opacity:(v.hidden ? .25 : 1)*v.opacity/100}}
     onPointerDown={editing?start:undefined} onPointerMove={move}
     onPointerUp={finish} onPointerCancel={e=>finish(e,false)} onLostPointerCapture={e=>finish(e,false)}
     onDoubleClick={editing&&['title','text','body','button'].includes(item.kind)&&!v.locked?e=>{e.stopPropagation();setInline(true)}:undefined}>
-    <div className={'pt-studio-layer__visual'+(visible?' is-visible':'')+' fx-'+v.effect}
-      style={{'--studio-duration':v.duration+'s','--studio-delay':v.delay+'s','--studio-opacity':v.opacity/100,
-        '--studio-blur':v.blur+'px',fontFamily:v.font,fontWeight:v.weight,fontSize:'clamp(8px,'+(v.size/(device==='mobile'?7.2:19.2))+'cqw,240px)',
-        letterSpacing:v.spacing+'px',lineHeight:v.lineHeight,textAlign:v.align,color:v.color,
+    <div className={'pt-studio-layer__visual'+(isText?' is-text':'')}
+      {...(!isText&&item.kind==='shape'?{'data-pt-scroll-reveal':'body',...studioMotionAttributes(v)}:{})}
+      style={{filter:v.blur?'blur('+v.blur+'px)':undefined,
         background:v.fill?v.background:'transparent',border:v.border+'px solid '+v.borderColor,borderRadius:v.radius+'px',
         boxShadow:v.shadow?'0 6px '+v.shadow+'px #0004':undefined}}>
-      {item.kind==='image'?(src?<img src={src} alt={item.alt||''} draggable={false} style={{objectFit:v.fit}}/>:editing?<span>Chưa có ảnh</span>:null):
-        item.kind==='shape'?null:inline&&editing?<textarea autoFocus value={text} onPointerDown={e=>e.stopPropagation()} onChange={e=>studio.patch(sectionId,item.id,{text:e.target.value})} onBlur={()=>setInline(false)}/>:
-        item.kind==='button'&&!editing&&safeStudioHref(item.href)?<a href={safeStudioHref(item.href)}>{text}</a>:
-        v.effect==='letters'&&!editing?Array.from(text).map((ch,i)=><span key={i} className="pt-studio-letter" style={{transitionDelay:(v.delay+Math.min(i,60)*.025)+'s'}}>{ch}</span>):<span>{text}</span>}
+      {isText?<div className={'pt-studio-copy '+copyClass} data-pt-authored-color={scene&&presentation.authoredColor?'true':undefined}
+        style={scene?{'--pt-direct-text-color':presentation.style['--pt-direct-text-color']}:undefined}>
+        <TextTag className={scene?'pt-artboard__text':undefined}
+          data-studio-text-id={item.id} data-portfolio-text-frame={presentation.role}
+          data-pt-scroll-reveal={presentation.role}
+          data-pt-authored-font-size={presentation.authoredSize?'true':undefined}
+          data-pt-authored-color={presentation.authoredColor?'true':undefined}
+          {...presentation.attrs} style={presentation.style}>
+          {item.kind==='button'&&!editing&&safeStudioHref(item.href)?<a href={safeStudioHref(item.href)}>{text}</a>:
+            <DirectEditableText text={text} active={inline&&editing} kind={presentation.role}
+              mode={presentation.mode} maxCharacters={presentation.mode==='letters'?300:1600}
+              onChange={value=>studio?.patch(sectionId,item.id,{text:value})} onFinish={()=>setInline(false)}/>}
+        </TextTag>
+      </div>:item.kind==='image'?<PhotoReveal {...studioMotionAttributes(v)}>
+        {src?<img src={src} alt={item.alt||''} draggable={false} style={{objectFit:v.fit}}/>:editing?<span>Chưa có ảnh</span>:null}
+      </PhotoReveal>:null}
     </div>
     {selected&&!v.locked&&['nw','n','ne','e','se','s','sw','w'].map(dir=><button key={dir} className={'pt-studio-layer__resize handle-'+dir} type="button" aria-label={'Thay đổi kích thước '+dir} onPointerDown={e=>start(e,dir)}/>)}
   </div>
 }
-export default function StudioLayers({items,sectionId,device,urls,studio,paused}){
+export default function StudioLayers({items,section,sectionId,device,urls,studio,scene,typography,useClassic,continuousSilk}){
   if(!items?.length)return null
-  return <div className="pt-studio-layer-plane">{items.map(item=><StudioLayer key={item.id} {...{item,sectionId,device,urls,studio,paused}}/>)}</div>
+  return <div className="pt-studio-layer-plane">{items.map(item=><StudioLayer key={item.id} {...{item,section,sectionId,device,urls,studio,scene,typography,useClassic,continuousSilk}}/>)}</div>
 }

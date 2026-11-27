@@ -2,18 +2,17 @@
 .pt-site>section:has(.pt-studio-layer-plane){position:relative}
 .pt-studio-layer-plane{position:absolute;inset:0;pointer-events:none;container-type:inline-size;z-index:20}
 .pt-studio-layer{position:absolute;box-sizing:border-box;pointer-events:none}
-.pt-studio-layer__visual{width:100%;height:100%;box-sizing:border-box;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;
-  opacity:var(--studio-opacity);filter:blur(var(--studio-blur));transition:opacity var(--studio-duration) var(--studio-delay),transform var(--studio-duration) var(--studio-delay),filter var(--studio-duration) var(--studio-delay)}
+/* Geometry only. Typography and reveal come from the existing template
+   selectors and ScrollTextAtmosphere, not a second set of visual styles. */
+.pt-studio-layer__visual{width:100%;height:100%;box-sizing:border-box;overflow:hidden;overflow-wrap:anywhere}
+.pt-studio-layer__visual.is-text{overflow:visible}
 .pt-studio-layer__visual img{width:100%;height:100%;display:block}
 .pt-studio-layer__visual a{color:inherit;pointer-events:auto}
-.pt-studio-layer__visual textarea{width:100%;height:100%;font:inherit;color:inherit;background:#fff2;border:0;resize:none;white-space:pre-wrap}
-.pt-studio-layer__visual:not(.is-visible):not(.fx-none){opacity:0}
-.pt-studio-layer__visual.fx-slide:not(.is-visible){transform:translateY(45px)}
-.pt-studio-layer__visual.fx-zoom:not(.is-visible){transform:scale(.8)}
-.pt-studio-layer__visual.fx-flip:not(.is-visible){transform:perspective(800px) rotateX(60deg)}
-.pt-studio-layer__visual.fx-blur:not(.is-visible){filter:blur(18px)}
-.pt-studio-letter{display:inline-block;white-space:pre;transition:transform var(--studio-duration),opacity var(--studio-duration)}
-.fx-letters:not(.is-visible) .pt-studio-letter{transform:translateY(20px);opacity:0}
+.pt-studio-layer__visual textarea{width:100%;font:inherit;color:inherit}
+.pt-site .pt-studio-layer .pt-studio-copy{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:100%!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0!important}
+.pt-site .pt-studio-layer .pt-studio-copy [data-studio-text-id]{max-width:100%;margin:0;overflow-wrap:anywhere}
+.pt-site .pt-studio-layer .pt-studio-copy [data-pt-authored-font-size="true"]{font-size:var(--pt-direct-font-size)!important}
+.pt-studio-shape-reveal{height:100%;width:100%}
 .pt-studio-layer.is-editable{pointer-events:auto;cursor:grab;touch-action:none}
 .pt-studio-layer.is-selected{outline:2px solid #6ba7ff;outline-offset:3px;z-index:100!important}
 .pt-studio-layer.is-hidden{outline:1px dashed #888}
@@ -33,7 +32,6 @@
 .pt-studio-panel__status{font-size:11px;color:#cad5e1}
 .pt-studio-publish{background:#243b5c!important;color:#fff!important}
 .pt-published__toolbar{flex-wrap:wrap}
-@media(prefers-reduced-motion:reduce){.pt-studio-layer__visual,.pt-studio-letter{transition:none!important;opacity:var(--studio-opacity)!important;transform:none!important;filter:none!important}}
 
 .pt-studio-layer__resize{width:12px;height:12px;padding:0;background:#fff;border:2px solid #4388e7;border-radius:1px;z-index:2;transform:translate(-50%,-50%);right:auto;bottom:auto}
 .pt-studio-layer__resize.handle-nw{left:0;top:0;cursor:nwse-resize}
@@ -49,9 +47,9 @@
 
 /* The older ribbon rule targets every child of its grid. Keep the Studio
    overlay outside that grid so percentages always refer to the full page. */
-.pt-site>section>.pt-studio-layer-plane{position:absolute!important;inset:0!important;z-index:20!important}
+.pt-site>section>.pt-studio-layer-plane,.pt-site .pt-artboard>.pt-studio-layer-plane{position:absolute!important;inset:0!important;z-index:20!important}
 .pt-site>section[id^="pt-studio-"]{min-height:clamp(420px,56.25vw,1080px)}
 .pt-device--mobile .pt-site>section[id^="pt-studio-"]{min-height:620px}
 .pt-published.pt-studio-mobile-preview>.pt-device--mobile{width:min(390px,100%);margin-inline:auto}
 .pt-site>section:has(.pt-studio-layer-plane){overflow:visible}
-.pt-published--admin-edit .pt-site>section:has(.pt-studio-layer-plane){overflow:visible!important}
+.pt-published--admin-edit .pt-site>section:has(.pt-studio-layer-plane),.pt-published--admin-edit .pt-site .pt-artboard:has(.pt-studio-layer-plane){overflow:visible!important}

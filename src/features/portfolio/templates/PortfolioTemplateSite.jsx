@@ -1,5 +1,5 @@
 import StudioLayers from './StudioLayers'
-import {studioElements} from './studioModel.js'
+import {studioElements,resolveStudioLayout} from './studioModel.js'
 import React,{useEffect,useRef,useState} from 'react'
 import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
@@ -457,14 +457,18 @@ export default function PortfolioTemplateSite({
   const [activeSectionId,setActiveSectionId]=useState(navSections[0]?.id||'')
   const navIds=navSections.map(s=>s.id).join('|')
   const revealKey=visibleSections.map(s=>[s.id,s.eyebrow,s.title,s.body,
-    ...(s.images||[]).map(asset=>asset?.path||'')].join('::')).join('|')+'|replay:'+revealReplayKey
+    ...(s.images||[]).map(asset=>asset?.path||''),
+    ...studioElements(instance?.content,s.id).map(e=>JSON.stringify([e.id,e.kind,e.text,e.path,e[device]?.hidden]))].join('::')).join('|')+'|replay:'+revealReplayKey
   // Only motion edits restart the viewport observer; moving/typing frame
   // coordinates must not restart text animations on each pointer tick.
   const motionKey=visibleSections.map(s=>{
     const board=getScene(instance?.content||{},s,device)
     const styles=board?board.layers:instance?.content?.typography?.[s.id]?.[device]||{}
     return s.id+':'+Object.entries(styles||{}).map(([key,value])=>
-      key+'='+JSON.stringify(value?.motion||null)).join(';')
+      key+'='+JSON.stringify(value?.motion||null)).join(';')+';studio:'+studioElements(instance?.content,s.id).map(e=>{
+      const v=resolveStudioLayout(e[device],e.kind,device)
+      return JSON.stringify([e.id,v.effect,v.duration,v.delay,v.reverse])
+    }).join(';')
   }).join('|')
   useEffect(()=>{
     const root=rootRef.current
@@ -590,7 +594,8 @@ export default function PortfolioTemplateSite({
       {visibleSections.map(section=>{
         const index=view.sections.findIndex(item=>item.id===section.id)
         const scene=getScene(instance?.content||{},section,device)
-        const extra=<StudioLayers items={studioElements(instance?.content,section.id)} sectionId={section.id} device={device} urls={urls} studio={studio} paused={motionPaused}/>
+        const extra=<StudioLayers items={studioElements(instance?.content,section.id)} section={section} sectionId={section.id} device={device} urls={urls} studio={studio}
+          scene={scene} typography={instance?.content?.typography?.[section.id]?.[device]} useClassic={useClassic} continuousSilk={continuousSilk}/>
         return scene?<SectionArtboard key={section.id} index={index}
           continuousSilk={continuousSilk}
           ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}
