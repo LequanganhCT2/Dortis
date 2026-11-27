@@ -92,6 +92,34 @@ export default function InlinePortfolioInspector({
   textValue='',onStartInlineEdit
 }){
   const [tab,setTab]=useState('size')
+  const [panelPosition,setPanelPosition]=useState(null)
+  const [collapsed,setCollapsed]=useState(false)
+  const panelRef=useRef(null)
+  const dragRef=useRef(null)
+  function keepInViewport(x,y){
+    const box=panelRef.current?.getBoundingClientRect()
+    return {x:Math.max(0,Math.min(x,window.innerWidth-(box?.width||326))),
+      y:Math.max(0,Math.min(y,window.innerHeight-48))}
+  }
+  useEffect(()=>{
+    const resize=()=>setPanelPosition(p=>p?keepInViewport(p.x,p.y):p)
+    window.addEventListener('resize',resize)
+    return ()=>window.removeEventListener('resize',resize)
+  },[])
+  function startPanelDrag(e){
+    if(e.button!==0||e.target.closest('button'))return
+    const box=panelRef.current.getBoundingClientRect()
+    dragRef.current={id:e.pointerId,dx:e.clientX-box.left,dy:e.clientY-box.top}
+    e.currentTarget.setPointerCapture(e.pointerId)
+    e.preventDefault()
+  }
+  function movePanel(e){
+    const d=dragRef.current
+    if(d?.id===e.pointerId)setPanelPosition(keepInViewport(e.clientX-d.dx,e.clientY-d.dy))
+  }
+  function endPanelDrag(e){
+    if(dragRef.current?.id===e.pointerId)dragRef.current=null
+  }
   useEffect(()=>setTab(isImageLayer(selection?.layerId)?'size':'content'),
     [selection?.sectionId,selection?.layerId])
   if(!selection||!layer)return null
@@ -132,16 +160,22 @@ export default function InlinePortfolioInspector({
           if(next!==hex(value))apply(group,{[key]:next})
         }}/>
     </label>
-  return <aside className="pt-inline-inspector" role="dialog"
-    aria-label={'Chỉnh trực tiếp '+title} style={{'--pt-inspector-top':posTop+'px'}}
+  return <aside ref={panelRef} className={'pt-inline-inspector pt-studio-inspector'+(panelPosition?' is-positioned':'')+(collapsed?' is-collapsed':'')} role="dialog"
+    aria-label={'Chỉnh trực tiếp '+title} style={{'--pt-inspector-top':posTop+'px',...(panelPosition?{'--studio-x':panelPosition.x+'px','--studio-y':panelPosition.y+'px'}:{})}}
     onClick={event=>event.stopPropagation()}
     onPointerDown={event=>event.stopPropagation()}>
-    <header className="pt-inline-inspector__header">
+    <header className="pt-inline-inspector__header" onPointerDown={startPanelDrag}
+      onPointerMove={movePanel} onPointerUp={endPanelDrag} onPointerCancel={endPanelDrag}
+      onLostPointerCapture={endPanelDrag}>
       <div>
-        <strong>{title}</strong>
+        <strong>⠿ {title}</strong>
         <span>{layer.section.label} · {device==='mobile'?'Mobile':'Desktop'}</span>
       </div>
-      <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
+      <div className="pt-studio-panel-actions">
+        <button type="button" aria-label="Đặt lại vị trí menu" onClick={()=>setPanelPosition(null)}>↺</button>
+        <button type="button" aria-label={collapsed?'Mở rộng menu':'Thu nhỏ menu'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?'+':'−'}</button>
+        <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
+      </div>
     </header>
     <div className="pt-inline-inspector__tabs" role="tablist" aria-label="Thông số phần tử">
       {!image&&<button type="button" role="tab" aria-selected={tab==='content'}
