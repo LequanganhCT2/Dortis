@@ -1,4 +1,4 @@
-import React,{useEffect,useId,useRef} from 'react'
+import React,{useEffect,useLayoutEffect,useId,useRef} from 'react'
 import {
   photoMotionSetting,photoPointerOffsets
 } from './photoMotionConfig'
@@ -20,6 +20,30 @@ export default function PhotoMotion({
   const wave=enabled&&mode==='wave'
   const waveLow=(3+Math.round(power*5)).toString()
   const waveHigh=(6+Math.round(power*13)).toString()
+  // Keep layout/selection geometry stationary, but move the actual painted frame.
+  useLayoutEffect(()=>{
+    const element=host.current
+    const shell=element?.closest('.pt-artboard__photo,.pt-ribbon__tile,.pt-site__media-tile')
+    const surface=element?.querySelector('.pt-photo-motion__animated')
+    if(!shell||!surface||shell.closest('.is-cutout,.pt-ribbon__tile--cutout'))return
+    function sync(){
+      shell.classList.remove('pt-photo-frame-transferred')
+      const computed=getComputedStyle(shell)
+      const props=['backgroundColor','backgroundImage','borderTop','borderRight','borderBottom','borderLeft','borderRadius','boxShadow']
+      for(const prop of props)surface.style[prop]=computed[prop]
+      shell.classList.add('pt-photo-frame-transferred')
+    }
+    sync()
+    window.addEventListener('resize',sync)
+    const observer=new MutationObserver(sync)
+    observer.observe(shell,{attributes:true,attributeFilter:['style']})
+    return ()=>{
+      observer.disconnect()
+      window.removeEventListener('resize',sync)
+      shell.classList.remove('pt-photo-frame-transferred')
+      for(const prop of ['backgroundColor','backgroundImage','borderTop','borderRight','borderBottom','borderLeft','borderRadius','boxShadow'])surface.style[prop]=''
+    }
+  },[mode,paused,asset])
   const apply=values=>{
     const element=host.current
     if(!element)return

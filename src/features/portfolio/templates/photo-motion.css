@@ -182,3 +182,21 @@
   .pt-site .pt-photo-motion--wave .pt-photo-motion__animated{filter:none!important}
   .pt-site .pt-photo-motion--spotlight::after{animation:none!important}
 }
+
+/* A single painted photo surface: the outer tile only owns layout and handles.
+   Keep its border width for stable geometry, but remove the stationary paint. */
+.pt-site .pt-photo-frame-transferred{
+  background:transparent!important;border-color:transparent!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+.pt-site .pt-photo-frame-transferred .pt-photo-reveal,
+.pt-site .pt-photo-frame-transferred .pt-photo-motion,
+.pt-site .pt-photo-frame-transferred .pt-photo-motion__hover{
+  overflow:visible!important;
+}
+.pt-site .pt-photo-frame-transferred .pt-photo-motion__animated{
+  box-sizing:border-box;overflow:hidden;transform-style:flat;
+}
+.pt-site .pt-photo-frame-transferred .pt-photo-motion__animated>img{
+  border-radius:inherit;box-shadow:none!important;
+}
