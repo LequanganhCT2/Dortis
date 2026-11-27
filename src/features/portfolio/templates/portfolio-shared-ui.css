@@ -208,20 +208,24 @@
 /* Ambient movement uses independent translate, preserving entrance transforms. */
 @keyframes pt-ambient-copy-drift {
   0%,100% { translate:0 0; }
-  50% { translate:0 -2px; }
+  25% { translate:1px -3px; }
+  50% { translate:0 -6px; }
+  75% { translate:-1px -3px; }
 }
 @keyframes pt-ambient-image-drift {
   0%,100% { translate:0 0; }
-  50% { translate:0 -4px; }
+  25% { translate:3px -5px; }
+  50% { translate:0 -12px; }
+  75% { translate:-3px -5px; }
 }
 @media (prefers-reduced-motion:no-preference){
   .pt-site:not(.pt-site--motion-paused) :is(.pt-ribbon__copy,.pt-site__copy,.pt-artboard__text,.pt-studio-copy:not(:has(.pt-artboard__text))){
-    animation:pt-ambient-copy-drift 9s ease-in-out infinite;
+    animation:pt-ambient-copy-drift 6s ease-in-out infinite;
   }
   .pt-site:not(.pt-site--motion-paused) .pt-studio-layer__visual:not(.is-text):has(img){
-    animation:pt-ambient-image-drift 12s ease-in-out infinite;
+    animation:pt-ambient-image-drift 8s ease-in-out infinite;
   }
-  .pt-site:not(.pt-site--motion-paused) .pt-photo-motion--still .pt-photo-motion__animated{
-    animation:pt-ambient-image-drift 12s ease-in-out infinite!important;
+  .pt-site:not(.pt-site--motion-paused) .pt-photo-motion__hover{
+    animation:pt-ambient-image-drift 8s ease-in-out infinite;
   }
 }
