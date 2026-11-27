@@ -55,7 +55,7 @@ export default function RibbonPortfolioSection({
   selectedLayer='',positions={},typography={},onMoveElement,onSelectLayer,
   onEditText,onUploadImage,lockImageRatio=true,onDirectMoveTitle,
   onDirectMoveElement,onPublicSelect,publicSelection,
-  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish
+  editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,children
 }){
   const drag=useRef(null),suppressClick=useRef(false)
   const fileInput=useRef(null),pendingSlot=useRef(-1)
@@ -342,5 +342,6 @@ export default function RibbonPortfolioSection({
         {resizeHandle('image:'+position,'ảnh '+(position+1),lockImageRatio)}
       </div>)}
     </div>}
+    {children}
   </section>
 }

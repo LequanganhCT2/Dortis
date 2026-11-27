@@ -1,3 +1,4 @@
+import {studioElements,studioImagePaths,withoutPending} from './studioModel.js'
 import React,{useEffect,useMemo,useRef,useState} from 'react'
 import {PORTFOLIO_REVEAL_SPEEDS,normalizeRevealSpeed} from './blockRevealState.js'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
@@ -62,7 +63,7 @@ export default function PortfolioInstanceEditor({
   useEffect(()=>{
     let alive=true
     const entries=Object.values(content.images||{}).filter(x=>x&&x.path)
-    const paths=[...new Set(entries.map(x=>x.path))]
+    const paths=[...new Set([...entries.map(x=>x.path),...studioImagePaths(content)])]
     if(!paths.length){setUrls({});return}
     Promise.all(paths.map(async path=>{
       const {data,error}=await supabase.storage.from(BUCKET).createSignedUrl(path,3600)
@@ -71,7 +72,7 @@ export default function PortfolioInstanceEditor({
       if(alive)setUrls(Object.fromEntries(rows.filter(([,url])=>url)))
     }).catch(e=>{if(alive)setError('Không tải được ảnh xem trước: '+e.message)})
     return ()=>{alive=false}
-  },[instance.id,supabase,content.images])
+  },[instance.id,supabase,content.images,content.studioElements])
   useEffect(()=>{
     if(onPublished)return
     let active=true
@@ -102,6 +103,7 @@ export default function PortfolioInstanceEditor({
     setNotice(message)
   }
   async function persist(next,message='Đã lưu nội dung riêng của nghệ sĩ.'){
+    if(next.studioPending)throw new Error('Có bản nháp Studio. Mở Studio để xử lý trước.')
     const {data,error:dbError}=await supabase.from('artist_website_instances')
       .update({content:next,updated_by:user.id,updated_at:new Date().toISOString(),
         revision:(instance.revision||1)+1})
@@ -141,6 +143,7 @@ export default function PortfolioInstanceEditor({
     setDirty(true);setNotice('Đã nạp mục từ hồ sơ PDF. Nhấn Lưu thay đổi để ghi nhận.')
   }
   async function save(){
+    if(content.studioPending){setError('Có bản nháp Studio. Mở Studio để xuất bản hoặc hủy bản nháp trước.');return}
     if(busy)return
     setBusy(true);setError('')
     try{await persist(content)}
@@ -148,29 +151,30 @@ export default function PortfolioInstanceEditor({
     finally{setBusy(false)}
   }
   async function publishWebsite(){
+    if(content.studioPending){setError('Có bản nháp Studio. Mở Studio để xuất bản hoặc hủy bản nháp trước.');return}
     if(busy||!window.confirm('Xuất bản nội dung và ảnh hiện tại lên website công khai?'))return
     setBusy(true);setError('');setNotice('')
     try{
       const view=resolveArtistPortfolio(template,{...instance,content},sourceProfile)
       const visible=view.sections.filter(section=>section.title||section.body||
-        section.eyebrow||section.images.some(image=>image?.path)||content.scenes?.[section.id])
+        section.eyebrow||section.images.some(image=>image?.path)||content.scenes?.[section.id]||studioElements(content,section.id).length)
       const publicSections=visible.map(section=>{
         const {sourcePage,sourceStatus,fieldOverrides,...publishedSection}=section
         return publishedSection
       })
-      const imagePaths=[...new Set(publicSections.flatMap(section=>
-        section.images.map(image=>image?.path).filter(Boolean)))]
+      const imagePaths=[...new Set([...publicSections.flatMap(section=>
+        section.images.map(image=>image?.path).filter(Boolean)),...studioImagePaths(content)])]
       const snapshot={
         templateSlug:template.slug,
         view:{...view,revealSpeed:normalizeRevealSpeed(content.revealSpeed),
           visualTheme:content.visualTheme==='classic'?'classic':view.visualTheme,
           sections:publicSections},
         scenes:content.scenes||{},positions:content.positions||{},
-        typography:content.typography||{}
+        typography:content.typography||{},studioElements:content.studioElements||{}
       }
       const {data,error:publishError}=await supabase.rpc('publish_artist_portfolio',{
         p_instance_id:instance.id,p_revision:instance.revision||1,
-        p_content:content,p_snapshot:snapshot,p_image_paths:imagePaths
+        p_content:withoutPending(content),p_snapshot:snapshot,p_image_paths:imagePaths
       }).single()
       if(publishError)throw publishError
       setPublished(true)

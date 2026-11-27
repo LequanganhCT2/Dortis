@@ -47,7 +47,7 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
   const text=item.text||''
   return <div ref={ref} className={'pt-studio-layer'+(editing?' is-editable':'')+(selected?' is-selected':'')+(v.hidden?' is-hidden':'')}
     style={{left:p.x+'%',top:p.y+'%',width:p.w+'%',height:p.h+'%',zIndex:p.z,
-      transform:'rotate('+p.rotation+'deg)',opacity:v.hidden?.25:1}}
+      transform:'rotate('+p.rotation+'deg)',opacity:v.hidden ? .25 : 1}}
     onPointerDown={editing?start:undefined} onPointerMove={move}
     onPointerUp={finish} onPointerCancel={e=>finish(e,false)} onLostPointerCapture={e=>finish(e,false)}
     onDoubleClick={editing&&['title','text','body','button'].includes(item.kind)&&!v.locked?e=>{e.stopPropagation();setInline(true)}:undefined}>

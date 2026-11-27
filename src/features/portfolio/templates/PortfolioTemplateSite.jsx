@@ -1,3 +1,5 @@
+import StudioLayers from './StudioLayers'
+import {studioElements} from './studioModel.js'
 import React,{useEffect,useRef,useState} from 'react'
 import {resolveArtistPortfolio} from './resolvedPortfolio'
 import {chooseSectionEffect,sectionHasRealImage} from './visualEffects'
@@ -32,7 +34,7 @@ import {pickPortfolioActiveSection} from './sectionNavigation'
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
  */
-function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio,onDirectMoveElement,onPublicSelect,publicSelection,editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish}){
+function MotionSection({section,index,styleName,urls,artistRole,isPublic,continuousSilk=false,ribbonLayout='vertical',ribbonDirection='right',onEditText,onUploadImage,motionPaused,selectedLayer,positions,typography,onMoveElement,onSelectLayer,lockImageRatio,onDirectMoveElement,onPublicSelect,publicSelection,editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,children}){
   const frame=useRef(0)
   const sectionRef=useRef(null)
   const drag=useRef(null),suppressClick=useRef(false),fileInput=useRef(null)
@@ -412,6 +414,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
       })}
     </div>}
     <span className="pt-fx__detail" aria-hidden="true"/>
+    {children}
   </section>
 }
 export default function PortfolioTemplateSite({
@@ -420,7 +423,7 @@ export default function PortfolioTemplateSite({
   onSelectLayer,onPatchLayer,onUploadImage,onAddNote,onEditText,onMoveElement,onSelectSection,
   onDirectMoveTitle,onDirectMoveElement,onDirectPatchLayer,onPublicSelect,publicSelection,
   editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,
-  publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false
+  publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false,studio
 }){
   const view=publishedView||resolveArtistPortfolio(template,instance,profile)
   // The Form identity is authoritative. Old persisted blueprints or snapshots
@@ -587,6 +590,7 @@ export default function PortfolioTemplateSite({
       {visibleSections.map(section=>{
         const index=view.sections.findIndex(item=>item.id===section.id)
         const scene=getScene(instance?.content||{},section,device)
+        const extra=<StudioLayers items={studioElements(instance?.content,section.id)} sectionId={section.id} device={device} urls={urls} studio={studio} paused={motionPaused}/>
         return scene?<SectionArtboard key={section.id} index={index}
           continuousSilk={continuousSilk}
           ribbonLayout={view.ribbonLayout||'vertical'} ribbonDirection={view.ribbonDirection||'right'}
@@ -599,7 +603,7 @@ export default function PortfolioTemplateSite({
           onDirectStartTextEdit={onDirectStartTextEdit}
           onDirectTextChange={onDirectTextChange}
           onDirectTextFinish={onDirectTextFinish}
-          onUploadImage={onUploadImage} onAddNote={onAddNote}/>:
+          onUploadImage={onUploadImage} onAddNote={onAddNote}>{extra}</SectionArtboard>:
           useClassic?
           <MotionSection key={section.id} section={section} index={index}
             continuousSilk={continuousSilk}
@@ -614,7 +618,7 @@ export default function PortfolioTemplateSite({
             onSelectLayer={onSelectLayer} lockImageRatio={lockImageRatio}
             styleName={view.style} urls={urls} artistRole={view.artistRole} isPublic={Boolean(publishedView)}
             motionPaused={motionPaused} selectedLayer={selectedLayer} onEditText={editSectionId===section.id?onEditText:undefined}
-            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>:
+            onUploadImage={editSectionId===section.id?onUploadImage:undefined}>{extra}</MotionSection>:
           <RibbonPortfolioSection key={section.id} section={section}
             index={index} urls={urls} artistRole={view.artistRole}
             isPublic={Boolean(publishedView)}
@@ -629,7 +633,7 @@ export default function PortfolioTemplateSite({
             onDirectTextChange={onDirectTextChange} onDirectTextFinish={onDirectTextFinish}
             onSelectLayer={editSectionId===section.id?onSelectLayer:undefined}
             onEditText={editSectionId===section.id?onEditText:undefined}
-            onUploadImage={editSectionId===section.id?onUploadImage:undefined}/>
+            onUploadImage={editSectionId===section.id?onUploadImage:undefined}>{extra}</RibbonPortfolioSection>
       })}
       {!focusedSectionId&&<footer className="pt-site__footer">
         <span>{view.artistName||'PORTFOLIO'}</span>
