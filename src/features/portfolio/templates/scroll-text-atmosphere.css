@@ -285,3 +285,31 @@
     animation:none!important;
   }
 }
+
+/* Ambient wave wins only on visible glyphs, independently of WAAPI reveal. */
+@keyframes pt-visible-glyph-wave{
+  0%,100%{translate:0 0}
+  25%{translate:0 calc(-1 * var(--pt-wave-amplitude,.28em))}
+  50%{translate:0 .09em}
+  75%{translate:0 0}
+}
+@media(prefers-reduced-motion:no-preference){
+  .pt-site.pt-site--block-reveal-active:not(.pt-site--motion-paused) > section [data-pt-reveal-state="visible"] .pt-burst-letter,
+  .pt-site:not(.pt-site--motion-paused) > section .pt-burst-letter{
+    --pt-wave-amplitude:clamp(5px,.28em,22px);
+    animation:pt-visible-glyph-wave 2.2s ease-in-out infinite!important;
+    animation-delay:calc(var(--pt-wave-index,0) * -120ms)!important;
+  }
+  .pt-site.pt-site--block-reveal-active:not(.pt-site--motion-paused) > section [data-pt-reveal-state="visible"] .pt-burst-word[data-pt-burst-word]{
+    --pt-wave-amplitude:.22em;
+    animation:pt-visible-glyph-wave 3s ease-in-out infinite!important;
+    animation-delay:calc(var(--pt-word-delay,0ms) * -4)!important;
+  }
+  .pt-site.pt-site--block-reveal-active:not(.pt-site--motion-paused) > section [data-pt-reveal-state^="hidden"] :is(.pt-burst-letter,.pt-burst-word[data-pt-burst-word]){
+    animation:none!important;
+  }
+  .pt-site:not(.pt-site--motion-paused) > section [data-pt-motion-effect="none"] :is(.pt-burst-letter,.pt-burst-word[data-pt-burst-word]),
+  .pt-site:not(.pt-site--motion-paused) > section :is(.pt-ribbon-section--editing,.pt-scene-section.is-editing) :is(.pt-burst-letter,.pt-burst-word[data-pt-burst-word]){
+    animation:none!important;
+  }
+}
