@@ -24,10 +24,13 @@ export function resolveArtistPortfolio(template,instance,profile){
       return {...section,...fields,sourcePage:Number(own.sourcePage),sourceStatus:'missing'}
     }
     const fresh=copySourceSection({sections:{}},'fresh',original).sections.fresh
+    if(linked.sourceMode==='profile-sections')fresh.body=String(original.body||'')
     const fields=Object.fromEntries(FIELDS.map(field=>[
       field,own.fieldOverrides?.[field]===true?String(own[field]||''):String(fresh[field]||'')
     ]))
-    return {...section,...fields,sourcePage:original.page,sourceStatus:'linked',
+    return {...section,...fields,links:Array.isArray(original.links)?original.links:[],
+      ...(linked.sourceMode==='profile-sections'?{label:String(original.name||original.title||section.label)}:{}),
+      sourcePage:original.page,sourceStatus:'linked',
       fieldOverrides:own.fieldOverrides||{}}
   })}
 }
@@ -37,6 +40,7 @@ export function sourceBoundField(profile,content,sectionId,field){
   if(own.fieldOverrides?.[field]===true)return String(own[field]||'')
   const page=artistSourcePages(profile).find(p=>p.page===Number(own.sourcePage))
   if(!page)return ''
+  if(content.sourceMode==='profile-sections'&&field==='body')return String(page.body||'')
   return String(copySourceSection({sections:{}},'live',page).sections.live[field]||'')
 }
 export function restoreLinkedFields(content,sectionId,fields=FIELDS){

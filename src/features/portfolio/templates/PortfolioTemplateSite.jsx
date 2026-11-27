@@ -1,4 +1,6 @@
 import StudioLayers from './StudioLayers'
+import usePortfolioContentFlow from './usePortfolioContentFlow'
+import PortfolioSourceLinks from './PortfolioSourceLinks'
 import {studioElements,resolveStudioLayout} from './studioModel.js'
 import React,{useEffect,useRef,useState} from 'react'
 import {resolveArtistPortfolio} from './resolvedPortfolio'
@@ -29,7 +31,7 @@ import './portfolio-sticky-nav.css'
 import './portfolio-color-palettes.css'
 import './silk-flow.css'
 import './portfolio-shared-ui.css'
-import {pickPortfolioActiveSection} from './sectionNavigation'
+import {pickPortfolioActiveSection,portfolioNavigationLabel} from './sectionNavigation'
 
 /** Preview and future renderer share exactly the same source-bound markup.
  * Visual effects never alter the stored profile text or the original images.
@@ -381,6 +383,7 @@ function MotionSection({section,index,styleName,urls,artistRole,isPublic,continu
             ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'
             :textPresent?'':section.sourceStatus==='linked'?'Mục đã chọn chưa có chữ.':'Chọn mục PDF nguồn hoặc nhập tiêu đề cho khu vực này.'}
         </p>}
+      <PortfolioSourceLinks section={section}/>
       {section.sourceStatus==='linked'&&<span className="pt-fx__source-note">
         Hồ sơ nghệ sĩ · Trang {String(section.sourcePage).padStart(2,'0')}
       </span>}
@@ -453,8 +456,9 @@ export default function PortfolioTemplateSite({
   const sharedPortfolioUI=continuousSilk&&!useClassic
   // The header navigates to Form section labels (01 ·, 02 ·, ...), NOT
   // the artist's editable heading. Include every section, even empty ones.
-  const navSections=view.sections.filter(s=>String(s.eyebrow||'').trim())
+  const navSections=view.sections
   const rootRef=useRef(null),navRef=useRef(null),navScrollRef=useRef(null)
+  usePortfolioContentFlow(rootRef)
   const pendingNavigationRef=useRef(null)
   const navTimerRef=useRef(null)
   const resyncNavigationRef=useRef(null)
@@ -490,7 +494,7 @@ export default function PortfolioTemplateSite({
       )
       const labeled=sections.filter(node=>navIds.split('|').includes(node.id.slice(3)))
       const lineForLabel=navBottom+32
-      const ordered=labeled.map(node=>({id:node.id.slice(3),top:eyebrowAnchor(node).getBoundingClientRect().top})).sort((a,b)=>a.top-b.top)
+      const ordered=labeled.map(node=>({id:node.id.slice(3),top:node.getBoundingClientRect().top})).sort((a,b)=>a.top-b.top)
       const next=ordered.filter(entry=>entry.top<=lineForLabel).at(-1)?.id||ordered[0]?.id||''
       const pending=pendingNavigationRef.current
       // A click selects the intended tab immediately. While a smooth scroll
@@ -546,9 +550,6 @@ export default function PortfolioTemplateSite({
     const left=current.offsetLeft-nav.offsetLeft-(nav.clientWidth-current.clientWidth)/2
     nav.scrollTo({left:Math.max(0,left),behavior:'smooth'})
   },[activeSectionId,device])
-  function eyebrowAnchor(section){
-    return section.querySelector('[data-portfolio-text-frame="eyebrow"],[data-pt-scroll-reveal="eyebrow"]')||section
-  }
   function jumpToSection(event,id){
     event.preventDefault()
     const section=Array.from(rootRef.current?.querySelectorAll(':scope > section[id^="pt-"]')||[])
@@ -565,7 +566,7 @@ export default function PortfolioTemplateSite({
     },1800)
     setActiveSectionId(id)
     const reduce=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    const anchor=eyebrowAnchor(section)
+    const anchor=section
     const behavior=reduce?'auto':'smooth'
     let host=anchor.parentElement
     while(host&&host!==document.body&&host!==document.documentElement){
@@ -609,7 +610,7 @@ export default function PortfolioTemplateSite({
             aria-current={activeSectionId===s.id?'location':undefined}
             href={'#pt-'+s.id} onClick={event=>jumpToSection(event,s.id)}>
               <span className="pt-site__nav-label">
-                {s.eyebrow.trim()}
+                {portfolioNavigationLabel(s)}
               </span>
             </a>)}
         </nav>

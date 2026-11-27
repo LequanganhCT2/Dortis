@@ -1,4 +1,5 @@
 import React,{useEffect,useLayoutEffect,useRef,useState} from 'react'
+import NewImagePreview from './NewImagePreview'
 import {CONTENT_BLOCK_PRESETS,STUDIO_EFFECTS,STUDIO_FONTS,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
 import './studio.css'
 import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer,supportsPhotoPointer} from './photoMotionConfig.js'
@@ -19,6 +20,7 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
   const [workspace,setWorkspace]=useState('layers')
   const [tab,setTab]=useState('content')
   const [collapsed,setCollapsed]=useState(false)
+  const [pendingImages,setPendingImages]=useState(null)
   const [pos,setPos]=useState(null)
   const panel=useRef(null),drag=useRef(null),upload=useRef(null),replace=useRef(null)
   useEffect(()=>{if(studio.selection?.sectionId){setSectionId(studio.selection.sectionId);setWorkspace('properties')}},[studio.selection?.sectionId])
@@ -72,7 +74,13 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
           <div className="pt-studio-panel__grid"><button disabled={busy} onClick={()=>onBlockAction(s.id,'toggle')}>{publication.contentBlockHidden?.[s.id]?'Hiện':'Ẩn'}</button><button disabled={busy} onClick={()=>onBlockAction(s.id,'clone')}>Clone</button><button disabled={busy||i===0} onClick={()=>onBlockAction(s.id,'move',sections[i-1].id)}>↑</button><button disabled={busy||i===sections.length-1} onClick={()=>onBlockAction(s.id,'move',sections[i+1].id)}>↓</button></div>
         </div>)}
       </div>}
-      <input ref={upload} hidden type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple onChange={e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(section&&files.length)onUpload(section.id,files)}}/>
+      <input ref={upload} hidden type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple onChange={e=>{const files=Array.from(e.target.files||[]);e.target.value='';if(section&&files.length)setPendingImages({sectionId:section.id,files})}}/>
+      {pendingImages&&<NewImagePreview files={pendingImages.files} busy={busy}
+        onCancel={()=>setPendingImages(null)} onConfirm={async(appearance,entries)=>{
+          const saved=await onUpload(pendingImages.sectionId,pendingImages.files,undefined,appearance,entries)
+          if(saved===false)throw new Error('Tải ảnh chưa hoàn tất. Kiểm tra thông báo Studio trước khi thử lại.')
+          setPendingImages(null)
+        }}/>}
       <input ref={replace} hidden type="file" accept="image/jpeg,image/png,image/webp,image/avif" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;if(item)onUpload(section.id,[file],item.id);else if(baseSelection)onReplaceBase(baseSelection.sectionId,baseSelection.layerId,file)}}/>
       {workspace==='layers'&&<><strong>Layer · {String(section?.eyebrow||'').trim()||'Khu vực chưa có nhãn phụ'}</strong>
       <div className="pt-studio-panel__layers">

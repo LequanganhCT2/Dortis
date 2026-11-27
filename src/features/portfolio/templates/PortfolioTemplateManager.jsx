@@ -7,7 +7,7 @@ import {paletteOptionsForTheme} from './portfolioPalette'
 import PortfolioInstanceEditor from './PortfolioInstanceEditor'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {resolveInstance} from './model'
-import {hydrateInstanceFromArtist} from './sourceBinding'
+import {importProfileSections} from './profileSections'
 import {clientNavigate} from '../../../app/navigation'
 import './template-admin.css'
 
@@ -92,7 +92,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     return {...demo,sections:demo.sections.map((section,index)=>({
       ...section,
       eyebrow:section.label,
-      title:names[index]||section.label,
+      title:['template-1','template-2'].includes(previewTemplate.slug)?section.label.replace(/^\d+ · /,''):names[index]||section.label,
       body:index===0?
         'Bản xem trước thiết kế mẫu. Lụa và bố cục hiển thị ở đây không thay thế nội dung hồ sơ nghệ sĩ.':
         'Lớp lụa mềm chuyển động phía sau tiêu đề, phần nội dung và các vị trí ảnh của Portfolio.',
@@ -124,8 +124,8 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     try{
       const {data,error:e}=await supabase.from('artist_website_instances')
         .insert({template_id:t.id,profile_id:profileId,
-          content:hydrateInstanceFromArtist(t,profiles.find(p=>p.id===profileId),
-            {sections:{},images:{}},true),
+          content:importProfileSections(t,profiles.find(p=>p.id===profileId),
+            {sections:{},images:{}}),
           updated_by:user.id,status:'draft'}).select().single()
       if(e)throw e
       setInstances(current=>[data,...current]);setSelection(data.id)
@@ -237,7 +237,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
         <div>
           <span className="pt-overline">XEM TRƯỚC MẪU · KHÔNG THAY ĐỔI DỮ LIỆU</span>
           <h1>{previewTemplate.name}</h1>
-          <p>{previewIsFlow?
+          <p>{['template-1','template-2'].includes(previewTemplate.slug)?previewTemplate.name+' — '+demoView.sections.length+' phần; nhập nội dung và ảnh riêng.':previewIsFlow?
             'TEMPLATE 02 — nền trắng, lụa xanh bán trong suốt trải ngang như vải bay.':
             'TEMPLATE 01 — nền lụa đỏ–vàng của Silk Atelier giữ nguyên.'}
             {' '}Đây là nội dung minh họa, chưa gán cho nghệ sĩ nào.</p>
@@ -251,12 +251,12 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
           aria-pressed={item.id===previewTemplate.id}
           className={'pt-sample-preview__switch'+(item.id===previewTemplate.id?' is-active':'')}
           onClick={()=>openReadOnlyPreview(item)}>
-          {item.slug==='silk-flow'?'02 · Silk Flow (xanh – trắng)':
+          {['template-1','template-2'].includes(item.slug)?item.name+' · '+item.blueprint.sections.length+' phần':item.slug==='silk-flow'?'02 · Silk Flow (xanh – trắng)':
             '01 · Silk Atelier (đỏ – vàng)'}
         </button>)}
       </div>
       <div className="pt-sample-preview__hint">
-        <strong>{previewIsFlow?'ĐANG XEM TEMPLATE 02 · SILK FLOW':'ĐANG XEM TEMPLATE 01 · SILK ATELIER'}</strong>
+        <strong>{['template-1','template-2'].includes(previewTemplate.slug)?'ĐANG XEM '+previewTemplate.name.toUpperCase():previewIsFlow?'ĐANG XEM TEMPLATE 02 · SILK FLOW':'ĐANG XEM TEMPLATE 01 · SILK ATELIER'}</strong>
         <span>Chỉ xem trước. Để áp dụng mẫu cho nghệ sĩ, quay lại thư viện và chọn Gán mẫu ở đúng thẻ.</span>
       </div>
       <PortfolioTemplateSite template={previewTemplate}
@@ -273,13 +273,13 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     <header className="pt-manager__header">
       <div><span className="pt-overline">DORTIS / SHARED DESIGN SYSTEM</span>
         <h1>Dortis Portfolio Studio<span>.</span></h1>
-        <p>Hai Template nghệ thuật độc lập: Silk Atelier đỏ-vàng và Silk Flow xanh-trắng.
-          Cả hai kế thừa hệ thống 8 khu vực, dữ liệu hồ sơ PDF, ảnh và trình chỉnh sửa riêng cho từng nghệ sĩ.</p></div>
+        <p>Chọn mẫu, nhập các phần hồ sơ và tải ảnh riêng cho từng nghệ sĩ.
+          Template 1 gồm 12 phần theo cấu trúc PDF; Silk Atelier và Silk Flow giữ thiết kế riêng.</p></div>
       <div><span className="pt-status">{templates.length} FORM · {groups.reduce((sum,group)=>sum+group.people.length,0)} HỒ SƠ ĐƯỢC GÁN</span>
         <button type="button" className="pt-btn pt-btn--light" onClick={onArtistList}>Hồ sơ nghệ sĩ ↗</button></div>
     </header>
     {desired&&<div className="pt-manager__focus">Đang chọn mẫu cho <strong>{desired.name}</strong>.
-      Hãy chọn Silk Atelier hoặc Silk Flow bên dưới để gán hồ sơ nghệ sĩ này.</div>}
+      Chọn Template 1, Silk Atelier hoặc Silk Flow bên dưới để gán hồ sơ nghệ sĩ này.</div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {notice&&<p className="pt-note" role="status">{notice}</p>}
     {editingTemplate&&blueprint?
@@ -381,8 +381,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
     <>
       <section className="pt-catalog">
         <div className="pt-catalog__heading"><h2>Thư viện Template Portfolio</h2>
-          <p>Template 01 – Silk Atelier giữ nguyên. Template 02 – Silk Flow dùng lụa xanh trong suốt;
-          mỗi Template có Form và Portfolio nghệ sĩ riêng, cùng bộ công cụ chỉnh sửa.</p></div>
+          <p>Template 1 gồm 12 phần để điền thông tin. Mỗi mẫu có cấu trúc riêng; nội dung nghệ sĩ được lưu độc lập.</p></div>
         <div className="pt-catalog__grid">{groups.map(group=>{
           const chosen=choice[group.id]||''
           const person=group.people.find(item=>item.artist.id===chosen)
@@ -438,7 +437,7 @@ export default function PortfolioTemplateManager({supabase,user,initialArtistSlu
                   (normalizeTemplateBlueprint(group).visualTheme==='silk-flow'?
                     ' pt-template__preview--blue':'')}
                 onClick={()=>openReadOnlyPreview(group)}>
-                {group.slug==='silk-flow'?'Xem trước lụa xanh · Template 02':
+                {['template-1','template-2'].includes(group.slug)?'Xem trước '+group.name+' · '+group.blueprint.sections.length+' phần':group.slug==='silk-flow'?'Xem trước lụa xanh · Template 02':
                   'Xem trước mẫu đỏ–vàng · Template 01'}
               </button>
               <button type="button" className="pt-btn pt-btn--light pt-template__edit"

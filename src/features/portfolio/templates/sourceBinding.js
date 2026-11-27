@@ -30,6 +30,7 @@ export function artistSourcePages(profile){
     .sort((a,b)=>a.page-b.page)
 }
 const combineSourceText=section=>{
+  if(section.contentVersion===2)return String(section.body||'')
   const blocks=[String(section.body||'').trim()]
   if(Array.isArray(section.highlights)&&section.highlights.length)
     blocks.push(section.highlights.map(s=>'• '+String(s)).join('\n'))
@@ -76,6 +77,7 @@ export function copySourceSection(content={},sectionId,source){
  * All manual text (including deliberate blank overrides) remains untouched.
  */
 export function hydrateInstanceFromArtist(template,profile,content={},onlyBlank=true){
+  if(content.sourceMode==='profile-sections')return content
   const sections=portfolioSections(template,content)
   const sources=artistSourcePages(profile)
   let result={...content,sections:{...(content.sections||{})},images:{...(content.images||{})}}

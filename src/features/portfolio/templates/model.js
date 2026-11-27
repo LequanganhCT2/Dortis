@@ -113,6 +113,12 @@ export function normalizeTemplateBlueprint(template){
     colorPalette:validFlowPalette?blueprint.colorPalette:'ice-blue'}
 }
 export function portfolioSections(template,content){
+  if(content?.sourceMode==='profile-sections'){
+    const source=normalizeBlueprint({sections:content.profileSections}).sections
+    const ids=new Set(source.map(section=>section.id))
+    return [...source,...normalizeBlueprint({sections:content.extraSections}).sections
+      .filter(section=>!ids.has(section.id))]
+  }
   const shared=normalizeBlueprint(template?.blueprint||{}).sections
   const sharedIds=new Set(shared.map(section=>section.id))
   const personal=normalizeBlueprint({sections:content?.extraSections}).sections

@@ -345,7 +345,11 @@ export default function ArtistPdfImportWizard({supabase,user,onImported}){
               onChange={e=>patchPage('layout',e.target.value)}>
               {LAYOUTS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
             </select></label>
-          <label>Tiêu đề mục
+          <label>Tên phần (dùng để nhận biết trong hồ sơ)
+            <input value={page.name||''} disabled={busy} maxLength={160}
+              placeholder={'Ví dụ: Phần '+page.page+' · Giới thiệu'}
+              onChange={e=>patchPage('name',e.target.value)}/></label>
+          <label>Tiêu đề hiển thị trên portfolio
             <input value={page.title} disabled={busy} maxLength={240}
               placeholder="Nhập chính xác tiêu đề trên trang PDF"
               onChange={e=>patchPage('title',e.target.value)}/></label>

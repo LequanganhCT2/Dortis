@@ -1,5 +1,6 @@
 import React,{useEffect,useRef,useState} from 'react'
 import {supabase} from '../../../infrastructure/supabase/client'
+import {newStyledImage} from './newImageAppearance.js'
 import {canManageContent} from '../../../core/auth/roles'
 import {clientNavigate} from '../../../app/navigation'
 import PortfolioTemplateSite from './PortfolioTemplateSite'
@@ -239,8 +240,10 @@ export default function PublishedPortfolio(){
     setSelection({sectionId,layerId,rect:{top:120,left:0},metrics:{}})
   }
   function both(pair,fn){return {content:fn(pair.content),snapshot:fn(pair.snapshot)}}
-  function addItem(sectionId,kind,path='',alt=''){
-    const item=newStudioElement(kind,crypto.randomUUID(),{path,alt})
+  function addItem(sectionId,kind,path='',alt='',appearance,imageInfo){
+    const id=crypto.randomUUID()
+    const item=kind==='image'&&appearance?newStyledImage(id,path,alt,appearance,imageInfo):
+      newStudioElement(kind,id,{path,alt})
     if(studioSession.commit(pair=>both(pair,doc=>replaceStudioElements(doc,sectionId,[...studioElements(doc,sectionId),item])),Boolean(path))){
       selectCustom(sectionId,item.id)
       document.getElementById('pt-'+sectionId)?.scrollIntoView({block:'start',behavior:'smooth'})
@@ -296,10 +299,10 @@ export default function PublishedPortfolio(){
     }
     if(studioSession.commit(pair=>manageContentBlock(pair,id,action,target)))clearSelection()
   }
-  function uploadItems(sectionId,files,replaceId){
-    return studioSession.upload(sectionId,files,(path,name)=>{
+  function uploadItems(sectionId,files,replaceId,appearance,entries=[]){
+    return studioSession.upload(sectionId,files,(path,name,file)=>{
       if(replaceId)patchItem(sectionId,replaceId,{path,alt:name},true)
-      else addItem(sectionId,'image',path,name)
+      else addItem(sectionId,'image',path,name,appearance,entries.find(entry=>entry.file===file)?.info)
     })
   }
   function replaceBaseImage(sectionId,layerId,file){

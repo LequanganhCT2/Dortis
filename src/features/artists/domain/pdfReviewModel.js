@@ -81,6 +81,7 @@ export function buildReviewFromExtraction(parsed={}){
 export function normalizeReviewedPage(page){
   return {
     page:Number(page.page)||1,layout:page.layout||'feature',
+    name:plain(page.name).slice(0,160),contentVersion:2,
     title:plain(page.title).slice(0,240),eyebrow:plain(page.eyebrow).slice(0,160),
     subtitle:'',body:String(page.body||''),
     kind:'reviewed_pdf_text',
@@ -99,7 +100,7 @@ export function normalizeReviewedPage(page){
       })).filter(block=>block.text),
     highlights:Array.isArray(page.highlights)?page.highlights.slice(0,24):[],
     metrics:Array.isArray(page.metrics)?page.metrics.slice(0,12):[],
-    links:[],media:[],photos:[],
+    links:Array.isArray(page.links)?page.links.filter(link=>typeof link==='string').slice(0,6):[],media:[],photos:[],
     image_url:null,image_storage_path:null,original_page_url:null,original_page_path:null
   }
 }

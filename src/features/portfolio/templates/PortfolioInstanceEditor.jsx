@@ -6,6 +6,7 @@ import PortfolioPalettePicker from './PortfolioPalettePicker'
 import {paletteOptionsForTheme} from './portfolioPalette'
 import {normalizeBlueprint,normalizeTemplateBlueprint,portfolioSections,setSectionField,setSlotImage,LUXURY_RIBBON} from './model'
 import {artistSourcePages,copySourceSection,hydrateInstanceFromArtist,suggestSourceForLayout} from './sourceBinding'
+import {importProfileSections} from './profileSections'
 import {sourceBoundField,restoreLinkedFields,resolveArtistPortfolio} from './resolvedPortfolio'
 import SceneLayerInspector from './SceneLayerInspector'
 import PortraitCutout from './PortraitCutout'
@@ -30,7 +31,7 @@ export default function PortfolioInstanceEditor({
   onPreviewOther,otherTemplateName='',backLabel='← Quay về chọn mẫu Portfolio'
 }){
   const [content,setContent]=useState(()=>hydrateInstanceFromArtist(template,profile,instance.content||{},true))
-  const [active,setActive]=useState(()=>normalizeBlueprint(template.blueprint).sections[0]?.id||'')
+  const [active,setActive]=useState(()=>portfolioSections(template,instance.content)[0]?.id||'')
   const [sourcePage,setSourcePage]=useState('')
   const [sourceProfile,setSourceProfile]=useState(profile)
   const [refreshingProfile,setRefreshingProfile]=useState(false)
@@ -57,7 +58,8 @@ export default function PortfolioInstanceEditor({
   const [notice,setNotice]=useState('')
   const [published,setPublished]=useState(Boolean(onPublished))
   const websitePath='/portfolio/'+instance.id
-  const sections=useMemo(()=>portfolioSections(template,content),[template,content.extraSections])
+  const sections=useMemo(()=>portfolioSections(template,content),
+    [template,content.extraSections,content.sourceMode,content.profileSections])
   const current=sections.find(s=>s.id===active)||sections[0]
   const sourcePages=useMemo(()=>artistSourcePages(sourceProfile),[sourceProfile])
   useEffect(()=>{
@@ -125,7 +127,10 @@ export default function PortfolioInstanceEditor({
         .select('id,name,role,sections').eq('id',profile.id).single()
       if(dbError)throw dbError
       setSourceProfile(data)
-      setContent(previous=>hydrateInstanceFromArtist(template,data,previous,true))
+      setContent(previous=>previous.sourceMode==='profile-sections'
+        ?importProfileSections(template,data,previous)
+        :hydrateInstanceFromArtist(template,data,previous,true))
+      if(content.sourceMode==='profile-sections')setDirty(true)
       setNotice('Đã đọc Hồ sơ nghệ sĩ mới nhất. Tiêu đề và nội dung PDF tự đồng bộ vào các mục trống; phần sửa riêng được giữ nguyên.')
     }catch(e){setError('Không đọc lại được Hồ sơ nghệ sĩ: '+e.message)}
     finally{setRefreshingProfile(false)}
@@ -134,6 +139,14 @@ export default function PortfolioInstanceEditor({
     if(!currentOwn.sourcePage)return
     setContent(prev=>restoreLinkedFields(prev,current.id))
     setDirty(true);setNotice('Đã liên kết lại tiêu đề và mô tả với mục nguồn. Lưu để áp dụng.')
+  }
+  function importAllProfileSections(){
+    if(!window.confirm('Nạp từng phần hồ sơ vào mẫu theo đúng thứ tự? Bố cục cũ được giữ trong dữ liệu; bản xem trước chuyển sang các phần hồ sơ. Chưa xuất bản website.'))return
+    try{
+      const next=importProfileSections(template,sourceProfile,content)
+      setContent(next);setActive(next.profileSections[0].id);setDirty(true)
+      setError('');setNotice('Đã nạp đủ '+next.profileSections.length+' phần hồ sơ. Kiểm tra bản xem trước rồi lưu; xuất bản là thao tác riêng.')
+    }catch(e){setError(e.message)}
   }
   function importCurrentSource(pageNumber=sourcePage){
     if(!current||!pageNumber)return
@@ -425,7 +438,7 @@ export default function PortfolioInstanceEditor({
         <p className="pt-overline">DORTIS / PORTFOLIO INSTANCE</p>
         <h1>{sourceProfile.name}</h1>
         <p>Đang kế thừa <strong>{template.name}</strong> · phiên bản {template.version}.
-          Form lấy chữ theo {sourcePages.length} mục trong Hồ sơ nghệ sĩ đã nhập PDF.
+          Hồ sơ có {sourcePages.length} phần từ PDF hoặc nhập thủ công.
           Ảnh bạn tải vào đây sẽ được giữ riêng, không dùng ảnh cắt từ PDF.</p></div>
       <div className="pt-editor__actions">
         <button type="button" className="pt-btn pt-btn--light" disabled={busy}
@@ -435,6 +448,8 @@ export default function PortfolioInstanceEditor({
           {refreshingProfile?'Đang cập nhật...':'↻ Đọc lại Hồ sơ nghệ sĩ'}
         </button>
         {published&&<a className="pt-btn pt-btn--light" href={websitePath} target="_blank" rel="noopener">Xem website</a>}
+        <button type="button" className="pt-btn pt-btn--light" disabled={busy||!sourcePages.length}
+          onClick={importAllProfileSections}>Nạp các phần hồ sơ vào mẫu</button>
         <button type="button" className="pt-btn" disabled={busy} onClick={publishWebsite}>
           {published?'Cập nhật website':'Tạo website'}
         </button>
@@ -502,15 +517,15 @@ export default function PortfolioInstanceEditor({
             </select>
           </label>
           <div className="pt-editor__source">
-            <span className="pt-overline">KẾ THỪA CÁC MỤC TỪ HỒ SƠ PDF</span>
+            <span className="pt-overline">NỘI DUNG TỪ HỒ SƠ NGHỆ SĨ</span>
             <p>{sourcePages.length?sourcePages.length+' mục đang có trong Hồ sơ nghệ sĩ. Khi sửa hồ sơ, bạn bấm Đọc lại để đồng bộ chữ đã liên kết.':
-              'Hồ sơ nghệ sĩ chưa có mục chữ. Tải PDF từ trang Hồ sơ nghệ sĩ.'}</p>
+              'Hồ sơ chưa có phần nội dung. Nhập từ PDF hoặc nhập thủ công tại Hồ sơ nghệ sĩ.'}</p>
             <label>Chọn mục nguồn để điền vào phần này
               <select value={sourcePage||String(currentOwn.sourcePage||'')} disabled={busy||!sourcePages.length}
                 onChange={e=>setSourcePage(e.target.value)}>
                 <option value="">Chọn trang PDF / mục nội dung</option>
                 {sourcePages.map(p=><option key={p.page} value={p.page}>
-                  Trang {String(p.page).padStart(2,'0')} · {p.title||'Chưa có tiêu đề'}
+                  Phần {String(p.page).padStart(2,'0')} · {p.name||p.title||'Chưa đặt tên'}
                 </option>)}
               </select>
             </label>

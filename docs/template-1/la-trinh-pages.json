@@ -1,0 +1,272 @@
+{
+  "id": null,
+  "name": "La Trinh",
+  "slug": "la-trinh",
+  "role": "Ca sĩ",
+  "tagline": "Âm nhạc là hành trình kết nối những cảm xúc.",
+  "intro": "Với La Trinh, âm nhạc không chỉ là những giai điệu, mà là tiếng lòng, là nơi cô gửi gắm trọn vẹn những thăng trầm của cảm xúc. Khởi đầu từ niềm đam mê cháy bỏng, mỗi bước đi trên con đường nghệ thuật đều là một dấu ấn của sự nỗ lực, rèn luyện không ngừng nghỉ để hoàn thiện bản thân.\nCô luôn tin rằng, mỗi ca khúc là một câu chuyện, và người nghệ sĩ là người kể chuyện bằng cả trái tim.",
+  "render_mode": "editorial",
+  "status": "draft",
+  "cover_image_url": null,
+  "sections": [
+    {
+      "page": 1,
+      "name": "Bìa nghệ sĩ",
+      "title": "LA TRINH",
+      "eyebrow": "CA SĨ",
+      "body": "",
+      "contentVersion": 2,
+      "layout": "cover",
+      "input_hint": "Tên nghệ sĩ và vai trò.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 1,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "CA SĨ\n\nLA TRINH",
+        "media_description": "Một ảnh chân dung nghệ sĩ mặc váy trắng bên phải."
+      }
+    },
+    {
+      "page": 2,
+      "name": "Hành trình âm nhạc",
+      "title": "HÀNH TRÌNH ÂM NHẠC",
+      "eyebrow": "",
+      "body": "Với La Trinh, âm nhạc không chỉ là những giai điệu, mà là tiếng lòng, là nơi cô gửi gắm trọn vẹn những thăng trầm của cảm xúc. Khởi đầu từ niềm đam mê cháy bỏng, mỗi bước đi trên con đường nghệ thuật đều là một dấu ấn của sự nỗ lực, rèn luyện không ngừng nghỉ để hoàn thiện bản thân.\nCô luôn tin rằng, mỗi ca khúc là một câu chuyện, và người nghệ sĩ là người kể chuyện bằng cả trái tim.\n\nÂm nhạc là hành trình kết nối những cảm xúc.",
+      "contentVersion": 2,
+      "layout": "feature",
+      "input_hint": "Tiểu sử, hành trình và câu nói riêng.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 2,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Một ảnh nghệ sĩ mặc áo dài đỏ bên trái."
+      }
+    },
+    {
+      "page": 3,
+      "name": "Dấu ấn nghệ thuật",
+      "title": "DẤU ẤN NGHỆ THUẬT",
+      "eyebrow": "",
+      "body": "10 NĂM HOẠT ĐỘNG NGHỆ THUẬT\n1.000+ CHƯƠNG TRÌNH BIỂU DIỄN LỚN NHỎ\n\nMột hành trình bền bỉ với âm nhạc, từ các chương trình văn hóa nghệ thuật đến những sân khấu và sự kiện đa dạng.\n\nLA TRINH",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Số năm, số chương trình, mô tả và tên ký cuối trang.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 3,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "DẤU ẤN NGHỆ THUẬT\n\nMột hành trình bền bỉ với âm nhạc, từ các chương trình\n\nvăn hóa nghệ thuật đến những sân khấu và sự kiện\n\nđa dạng.",
+        "media_description": "Ba ảnh nghệ sĩ, trong đó ảnh chính mặc váy đỏ cầm micro."
+      }
+    },
+    {
+      "page": 4,
+      "name": "Thể loại âm nhạc",
+      "title": "THỂ LOẠI ÂM NHẠC",
+      "eyebrow": "CHUYÊN MÔN",
+      "body": "01 Quê hương – đất nước\n02 Trữ tình – dân ca\n03 Nhạc trẻ\n\nLinh hoạt lựa chọn tiết mục phù hợp với tính chất chương trình và đối tượng khán giả.",
+      "contentVersion": 2,
+      "layout": "feature",
+      "input_hint": "Danh sách thể loại và lời mô tả.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 4,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Một ảnh nghệ sĩ cầm micro bên trái."
+      }
+    },
+    {
+      "page": 5,
+      "name": "Chương trình & sự kiện",
+      "title": "CHƯƠNG TRÌNH & SỰ KIỆN",
+      "eyebrow": "KINH NGHIỆM THỰC TẾ",
+      "body": "01 Các chương trình văn hóa, nghệ thuật tại Đà Nẵng.\n02 Hoạt động nghệ thuật của các đơn vị tại Quảng Nam.\n03 Chương trình do các đơn vị văn hóa và lực lượng Công an tại Đà Nẵng tổ chức.\n04 Các sự kiện và chương trình biểu diễn thuộc nhiều quy mô khác nhau.",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Mỗi chương trình hoặc nhóm sự kiện một dòng.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 5,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Hai ảnh nghệ sĩ bên phải: trang phục Công an và áo dài cờ đỏ sao vàng."
+      }
+    },
+    {
+      "page": 6,
+      "name": "Hình ảnh biểu diễn",
+      "title": "HÌNH ẢNH BIỂU DIỄN",
+      "eyebrow": "TƯ LIỆU NGHỆ SĨ",
+      "body": "",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Ảnh biểu diễn riêng; chỉ thêm chú thích có thật.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 6,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Ba ảnh biểu diễn; trang không có đoạn mô tả riêng."
+      }
+    },
+    {
+      "page": 7,
+      "name": "Chương trình văn hóa",
+      "title": "CHƯƠNG TRÌNH VĂN HÓA",
+      "eyebrow": "HOẠT ĐỘNG NGHỆ THUẬT",
+      "body": "",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Ảnh hoạt động văn hóa, chú thích nếu có.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 7,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Ảnh hoạt động biểu diễn tập thể và chân dung nghệ sĩ; không có đoạn mô tả riêng."
+      }
+    },
+    {
+      "page": 8,
+      "name": "Song ca & biểu diễn phối hợp",
+      "title": "SONG CA & BIỂU DIỄN PHỐI HỢP",
+      "eyebrow": "TƯ LIỆU SÂN KHẤU",
+      "body": "",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Ảnh song ca, phối hợp và thông tin đã xác minh.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 8,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "",
+        "media_description": "Cụm ảnh song ca/biểu diễn phối hợp; không có tên đối tác, ngày hoặc địa điểm được ghi riêng."
+      }
+    },
+    {
+      "page": 9,
+      "name": "Biểu diễn đơn ca",
+      "title": "BIỂU DIỄN ĐƠN CA",
+      "eyebrow": "",
+      "body": "",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Ảnh đơn ca và chú thích nếu có.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 9,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "BIỂU DIỄN\n\nĐƠN CA",
+        "media_description": "Ba ảnh đơn ca; không có đoạn mô tả riêng."
+      }
+    },
+    {
+      "page": 10,
+      "name": "Hình ảnh & video",
+      "title": "HÌNH ẢNH & VIDEO",
+      "eyebrow": "THƯ VIỆN TƯ LIỆU",
+      "body": "XEM THƯ VIỆN ĐẦY ĐỦ\nNHẤN VÀO ĐÂY ĐỂ LẤY LINK\nMÃ QR / QR CODE",
+      "contentVersion": 2,
+      "layout": "gallery",
+      "input_hint": "Lời mời xem thư viện, đường dẫn và mã QR nếu có.",
+      "links": [
+        "https://drive.google.com/drive/folders/11vw4JRnh1bmoYHRrbkCBcO8N5r-b_ZPE",
+        "https://q.me-qr.com/j5fx2147"
+      ],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 10,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "NHẤN VÀO ĐÂY ĐỂ LẤY LINK",
+        "media_description": "Ảnh chân dung, ba ảnh nhỏ và một mã QR. Ảnh nhỏ ở giữa có chữ trên phông sân khấu, không phải một mục nội dung riêng của trang.",
+        "qr_status": "decoded",
+        "qr_url": "https://q.me-qr.com/j5fx2147"
+      }
+    },
+    {
+      "page": 11,
+      "name": "Liên hệ & booking",
+      "title": "LIÊN HỆ & BOOKING",
+      "eyebrow": "HỢP TÁC NGHỆ SĨ",
+      "body": "LA TRINH\n\nĐIỆN THOẠI / ZALO\n0788-699-241\n\nEMAIL\nlatrinh111@gmail.com\n\nMẠNG XÃ HỘI\nFacebook",
+      "contentVersion": 2,
+      "layout": "feature",
+      "input_hint": "Tên nghệ sĩ, điện thoại/Zalo, email và mạng xã hội.",
+      "links": [
+        "https://www.facebook.com/share/19ot1gbbvx/?mibextid=wwXIfr"
+      ],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 11,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "0788-699-241\n\nlatrinh111@gmail.com\n\nFacebook",
+        "media_description": "Trang thông tin liên hệ; không có ảnh chân dung."
+      }
+    },
+    {
+      "page": 12,
+      "name": "Cảm ơn",
+      "title": "TRÂN TRỌNG CẢM ƠN",
+      "eyebrow": "",
+      "body": "Cảm ơn Quý đối tác đã dành thời gian theo dõi.\n\nLA TRINH",
+      "contentVersion": 2,
+      "layout": "feature",
+      "input_hint": "Lời cảm ơn và tên ký cuối trang.",
+      "links": [],
+      "photos": [],
+      "media": [],
+      "extraction": {
+        "source": "pdf_text_and_visual_transcription",
+        "source_page": 12,
+        "source_document": "CA SĨ LA TRINH - PORTFOLIO .pdf",
+        "reviewed": true,
+        "text_layer": "Cảm ơn Quý đối tác đã dành\n\nthời gian theo dõi.",
+        "media_description": "Một ảnh chân dung bên trái."
+      }
+    }
+  ]
+}

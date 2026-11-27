@@ -1,4 +1,5 @@
 import React,{useRef} from 'react'
+import PortfolioSourceLinks from './PortfolioSourceLinks'
 import {sceneFont,resizeDimensions} from './sectionDesign'
 import {ribbonGridColumns} from './ribbonLayout'
 import {OFFSET_MOVE_LIMIT,hasOverflowPlacement} from './freePlacement'
@@ -306,6 +307,7 @@ export default function RibbonPortfolioSection({
             ?'Mục liên kết không còn trong Hồ sơ nghệ sĩ. Hãy chọn lại nguồn.'
             :'Chưa có nội dung từ Hồ sơ nghệ sĩ.'}
         </p>:null}
+      <PortfolioSourceLinks section={section}/>
       {section.sourceStatus==='linked'&&!isPublic&&<span className="pt-ribbon__source">
         Hồ sơ nghệ sĩ · Trang {String(section.sourcePage).padStart(2,'0')}
       </span>}

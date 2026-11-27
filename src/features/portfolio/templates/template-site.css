@@ -371,3 +371,5 @@
   cursor:ew-resize;
   touch-action:none;
 }
+.pt-source-links{display:flex;flex-direction:column;gap:.6em;overflow-wrap:anywhere}
+.pt-source-links a{color:inherit;text-underline-offset:.2em}

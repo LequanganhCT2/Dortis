@@ -7,6 +7,9 @@ import ArtistOriginalPages from './ArtistOriginalPages'
 import ArtistPortfolioSections from './ArtistPortfolioSections'
 import ArtistPortfolioCatalog from './features/artists/components/ArtistPortfolioCatalog'
 import ArtistPdfImportWizard from './features/artists/components/ArtistPdfImportWizard'
+import {createTemplate1Profile} from './features/portfolio/templates/template1'
+import {createTemplate2Profile} from './features/portfolio/templates/template2'
+import {saveArtistProfile} from './features/artists/application/saveArtistProfile'
 import { downloadArtistPdf, removeArtistPdf } from './artistPdfStorage'
 import './admin-artists.css'
 
@@ -87,6 +90,32 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
     setError('');setNotice('');setPreview(false);setPreviewData(null)
   }
   function updateField(key,value){setForm(prev=>({...prev,[key]:value}))}
+  function createManualProfile(){
+    setSelected(null);setError('');setNotice('');setPreview(false);setPreviewData(null)
+    setForm({id:null,name:'',slug:'',role:'Nghệ sĩ',tagline:'',intro:'',
+      render_mode:'editorial',status:'draft',cover_image_url:null,
+      sections:[{page:1,name:'Giới thiệu',title:'',body:'',contentVersion:2,layout:'cover'}]})
+  }
+  function startTemplate1(factory=createTemplate1Profile,label='Template 1 · 12 phần'){
+    setSelected(null);setError('');setNotice('Template 1 · Điền thông tin trong 12 phần, lưu hồ sơ rồi chọn Template 1 trong thư viện mẫu.')
+    setNotice(label+' · Điền thông tin, lưu hồ sơ rồi chọn mẫu tương ứng trong thư viện.')
+    setPreview(false);setPreviewData(null);setForm(factory())
+    window.requestAnimationFrame(()=>editorRef.current?.scrollIntoView({block:'start',behavior:'instant'}))
+  }
+  function addContentPart(){
+    setForm(previous=>({...previous,sections:[...previous.sections,{
+      page:Math.max(0,...previous.sections.map(section=>Number(section.page)||0))+1,
+      name:'Phần '+(previous.sections.length+1),title:'',body:'',contentVersion:2,layout:'feature'
+    }]}))
+  }
+  function moveContentPart(index,offset){
+    setForm(previous=>{
+      const sections=[...previous.sections],target=index+offset
+      if(target<0||target>=sections.length)return previous
+      ;[sections[index],sections[target]]=[sections[target],sections[index]]
+      return {...previous,sections}
+    })
+  }
   function updateSection(index,key,value){
     setForm(prev=>({...prev,sections:prev.sections.map((section,i)=>
       i===index?{...section,[key]:value}:section)}))
@@ -198,31 +227,15 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
     return null
   }
 
-  async function uniqueSlug(seed){
-    const slug=slugifyArtist(seed)
-    const {data,error:queryError}=await supabase.from('artist_profiles').select('slug').like('slug',slug+'%')
-    if(queryError)throw queryError
-    const used=new Set((data||[]).map(x=>x.slug))
-    if(!used.has(slug))return slug
-    let n=2
-    while(used.has(slug+'-'+n))n++
-    return slug+'-'+n
-  }
 
 
 
   async function save(){
     if(!form||busy)return
-    const issue=validate(form)
-    if(issue){setError(issue);return}
-    setBusy(true);setError('');setProgress('Đang lưu nội dung đã chỉnh sửa...')
+    setBusy(true);setError('');setNotice('');setProgress('Đang lưu nội dung đã chỉnh sửa...')
     try{
-      const {error:saveError}=await supabase.from('artist_profiles').update({
-        name:form.name.trim(),slug:form.slug,role:form.role.trim()||'Nghệ sĩ',
-        tagline:form.tagline.trim(),intro:form.intro,
-        render_mode:form.render_mode||'original',sections:form.sections.map(cleanSection),updated_at:new Date().toISOString()
-      }).eq('id',form.id)
-      if(saveError)throw saveError
+      const saved=await saveArtistProfile({supabase,userId:user?.id,profile:form})
+      setForm(previous=>({...previous,id:saved.id,slug:saved.slug,role:saved.role}));setSelected(saved.id)
       await load()
       setNotice('Đã lưu hồ sơ '+form.name+'.')
     }catch(e){setError(getError(e,'Không lưu được hồ sơ.'))}
@@ -392,6 +405,16 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
         }}/>
       <ArtistPortfolioCatalog profiles={profiles} loading={loadingProfiles}
         selected={selected} onSelect={openPortfolio} disabled={busy}/>
+      <button type="button" className="artist-admin-save" disabled={busy} onClick={createManualProfile}>
+        + NHẬP HỒ SƠ THỦ CÔNG
+      </button>
+      <button type="button" className="artist-admin-save" disabled={busy} onClick={()=>startTemplate1()}>
+        + TEMPLATE 1 · ĐIỀN 12 PHẦN
+      </button>
+      <button type="button" className="artist-admin-save" disabled={busy}
+        onClick={()=>startTemplate1(createTemplate2Profile,'Template 2 · 8 phần')}>
+        + TEMPLATE 2 · ĐIỀN 8 PHẦN
+      </button>
       <section className="artist-admin-content">
         <div className="artist-admin-editor" id="artist-editor" ref={editorRef}>
           {!form?<div className="artist-admin-empty"><span>✳ DORTIS / PROFILE EDITOR</span><h2>Chọn một hồ sơ để chỉnh sửa.</h2><p>Thay tên nghệ sĩ, sửa nội dung trích xuất từng trang, kiểm duyệt rồi xuất bản để tạo website riêng.</p></div>:
@@ -416,21 +439,24 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
             <div className="artist-admin-fields">
               <label>TÊN NGHỆ SĨ<input value={form.name} disabled={busy} onChange={e=>updateField('name',e.target.value)} maxLength={160}/></label>
               <label>VAI TRÒ<input value={form.role} disabled={busy} onChange={e=>updateField('role',e.target.value)} maxLength={120} placeholder="Ca sĩ, biên đạo, nghệ sĩ..."/></label>
-              <label className="span-2">ĐƯỜNG DẪN <input value={form.slug} disabled={busy} onChange={e=>updateField('slug',slugifyArtist(e.target.value))}/></label>
+              <label className="span-2">ĐƯỜNG DẪN <input value={form.slug} disabled={busy}
+                placeholder={form.name.trim()?slugifyArtist(form.name):'Tự tạo từ tên nghệ sĩ khi lưu'}
+                onChange={e=>updateField('slug',e.target.value.trim()?slugifyArtist(e.target.value):'')}/>
+                <small>Để trống để tự tạo khi lưu. Hồ sơ mới trùng tên sẽ có hậu tố riêng.</small></label>
               <label className="span-2">DÒNG GIỚI THIỆU NGẮN<input value={form.tagline} disabled={busy} onChange={e=>updateField('tagline',e.target.value)} maxLength={250} placeholder="Dòng phụ xuất hiện trên trang cá nhân"/></label>
               <label className="span-2">GIỚI THIỆU<textarea value={form.intro} rows={5} disabled={busy} onChange={e=>updateField('intro',e.target.value)} maxLength={4000}/></label>
             </div>
             <div className="artist-admin-source">
-              <span>NGUỒN DỮ LIỆU</span><strong>{sources[form.id]?.original_filename||'Nội dung đã trích xuất và kiểm tra từ PDF'}</strong>
+              <span>NGUỒN DỮ LIỆU</span><strong>{sources[form.id]?.original_filename||'Các phần hồ sơ · PDF hoặc nhập thủ công'}</strong>
               <small>{sources[form.id]
                 ? 'Hồ sơ nhập theo quy trình cũ, có tệp nguồn trong Storage.'
                 : 'Hồ sơ mới chỉ lưu chữ và các mục. PDF gốc không được lưu trên Supabase.'}</small>
             </div>
             <div className="artist-admin-pages-heading">
-              <div><h3>{form.render_mode==='original'?'Trang PDF nguyên bản':'Các mục nội dung đã trích xuất'}</h3>
+              <div><h3>{form.render_mode==='original'?'Trang PDF nguyên bản':'Các phần nội dung hồ sơ'}</h3>
                 <p>{form.render_mode==='original'
                   ? form.sections.length+' trang sẽ được hiển thị đúng thứ tự và tỷ lệ gốc, không đổi vị trí các thành phần.'
-                  : form.sections.length+' trang PDF tương ứng các section HTML/CSS có thể chỉnh sửa.'}</p></div>
+                  : form.sections.length+' phần · mỗi phần có tên riêng, tiêu đề và nội dung. Khi chọn mẫu, các phần được nạp đúng thứ tự này.'}</p></div>
               <div className="artist-admin-design-tools">
                 <button type="button" disabled={busy||form.status==='published'||form.render_mode==='original'||!identifyArtistLayout(sources[form.id]?.original_filename)}
                   onClick={applyOriginalDesign}>ÁP DỤNG BỐ CỤC PDF GỐC</button>
@@ -439,6 +465,8 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
               </div>
             </div>
             <div className="artist-admin-pages">
+              {form.render_mode!=='original'&&<button type="button" disabled={busy||form.sections.length>=24}
+                onClick={addContentPart}>+ Thêm phần nội dung</button>}
               {form.render_mode==='original' ? form.sections.map((section,i)=>
                 <article key={section.page||i} className="artist-admin-original-page-row">
                   <strong>TRANG {String(section.page||i+1).padStart(2,'0')}</strong>
@@ -449,6 +477,14 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
               ) : form.sections.map((section,i)=><article key={section.page||i} className="artist-admin-page">
                 <div className="artist-admin-page-top"><span>SECTION {String(section.page||i+1).padStart(2,'0')}</span>
                   <span>{(section.photos||[]).length} ẢNH RIÊNG · {(section.highlights||[]).length} MỤC CHỮ</span></div>
+                <div>
+                  <button type="button" disabled={busy||i===0} onClick={()=>moveContentPart(i,-1)} aria-label={'Đưa phần '+(i+1)+' lên'}>↑</button>
+                  <button type="button" disabled={busy||i===form.sections.length-1} onClick={()=>moveContentPart(i,1)} aria-label={'Đưa phần '+(i+1)+' xuống'}>↓</button>
+                </div>
+                <label>TÊN PHẦN {i+1}
+                  <input disabled={busy} value={section.name||''} maxLength={160}
+                    onChange={e=>updateSection(i,'name',e.target.value)} placeholder="Ví dụ: Giới thiệu, Hành trình, Liên hệ"/>
+                </label>
                 <label>KIỂU BỐ CỤC CSS
                   <select value={section.layout||'feature'} disabled={busy} onChange={e=>updateSection(i,'layout',e.target.value)}>
                     {ARTIST_LAYOUT_OPTIONS.map(([id,label])=><option key={id} value={id}>{label}</option>)}
@@ -469,7 +505,11 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
                 <label>NỘI DUNG CHỮ (HTML/CSS THẬT)
                   <textarea disabled={busy} rows={Math.min(9,Math.max(4,(section.body||'').split('\n').length))}
                     value={section.body||''} onChange={e=>updateSection(i,'body',e.target.value)}
-                    placeholder="Nội dung chữ được dựng thành văn bản có thể chọn và chỉnh sửa trên website." />
+                    placeholder={section.input_hint||'Nhập đầy đủ nội dung của phần này.'} />
+                </label>
+                <label>LIÊN KẾT CỦA PHẦN (MỖI DÒNG MỘT URL)
+                  <textarea disabled={busy} rows={2} value={(section.links||[]).join('\n')}
+                    onChange={e=>updateSection(i,'links',e.target.value.split('\n').map(x=>x.trim()).filter(Boolean))}/>
                 </label>
                 <label>DANH SÁCH / THÀNH TÍCH (MỖI DÒNG MỘT MỤC)
                   <textarea disabled={busy} rows={4} value={(section.highlights||[]).join('\n')}
@@ -511,20 +551,22 @@ export default function AdminArtistProfiles({user,supabase,initialSlug=''}){
                 ? <ArtistOriginalPages profile={previewData} sections={previewData.sections}/>
                 : <ArtistPortfolioSections profile={previewData} sections={previewData.sections}/>}
             </section>}
+            {error&&<p className="admin-alert error" role="alert">{error}</p>}
+            {notice&&<p className="admin-alert success" role="status">{notice}</p>}
             <div className="artist-admin-editor-actions">
               <button type="button" className="artist-admin-save" disabled={busy} onClick={save}>LƯU NỘI DUNG</button>
               {form.status==='draft'?(sources[form.id]?
                 <button type="button" className="artist-admin-publish" disabled={busy} onClick={publish}>XUẤT BẢN HỒ SƠ ↗</button>:
-                <a className="artist-admin-publish" href={'/admin/templates?artist='+encodeURIComponent(form.slug)}>
+                form.id?<a className="artist-admin-publish" href={'/admin/templates?artist='+encodeURIComponent(form.slug)}>
                   GÁN VÀO MẪU PORTFOLIO ↗
-                </a>):
+                </a>:<span>Lưu hồ sơ trước khi chọn mẫu portfolio.</span>):
                 <button type="button" className="artist-admin-unpublish" disabled={busy} onClick={unpublish}>CHUYỂN VỀ BẢN NHÁP</button>}
               {form.status==='published'&&<a href={'/artists/'+form.slug} target="_blank" rel="noreferrer">XEM TRANG CÔNG KHAI ↗</a>}
-              <button type="button" className="artist-admin-delete" disabled={busy} onClick={()=>setDeleteTarget(profiles.find(x=>x.id===form.id))}>XÓA HỒ SƠ</button>
+              <button type="button" className="artist-admin-delete" disabled={busy||!form.id} onClick={()=>setDeleteTarget(profiles.find(x=>x.id===form.id))}>XÓA HỒ SƠ</button>
             </div>
             <p className="artist-admin-warning">{sources[form.id]
               ? 'Hồ sơ cũ còn PDF nguồn phục vụ xuất bản theo chế độ cũ. Bạn có thể chỉnh nội dung riêng và gán form.'
-              : 'Hồ sơ được nhập từ lớp chữ PDF, đã duyệt từng trang và chỉ lưu dữ liệu chữ. Không có PDF nguyên bản trên server. Ảnh riêng được tải trong phần Mẫu Portfolio; nếu PDF có chữ nằm trong ảnh, hãy nhập tay các mục thiếu trước khi gán form.'}</p>
+              : 'Bạn có thể dùng chữ trích từ PDF hoặc tự nhập từng phần. Lưu hồ sơ, chọn mẫu portfolio rồi kiểm tra nội dung trước khi xuất bản. Ảnh được tải riêng trong phần Mẫu Portfolio.'}</p>
           </div>}
         </div>
       </section>

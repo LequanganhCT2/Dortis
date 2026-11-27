@@ -4,6 +4,11 @@
  * This prevents the navigation from lagging by one section when smooth
  * scrolling stops at a scroll-margin offset.
  */
+export function portfolioNavigationLabel(section){
+  return String(section.label||section.title||section.eyebrow||'Phần nội dung')
+    .replace(/^\s*(?:\d+\s*\/\s*)?\d+\s*[·.:\-/]\s*/,'').trim()
+}
+
 export function portfolioReadingLine(headerBottom,viewportBottom){
   const top=Math.max(0,Number(headerBottom)||0)
   const bottom=Math.max(top+1,Number(viewportBottom)||0)

@@ -138,6 +138,12 @@
   pointer-events:none;
 }
 .pt-site section[id^="pt-"]{scroll-margin-top:calc(var(--pt-nav-height,78px) + 18px)}
+/* A short page still fills the reading area beneath the sticky menu.
+   Content may grow taller naturally, including stacked mobile photos. */
+.pt-device .pt-site > section[id^="pt-"]{
+  box-sizing:border-box;
+  min-height:calc(100svh - var(--pt-nav-height,78px))!important;
+}
 @keyframes pt-nav-appear{
   from{opacity:.3;transform:translateY(-20px)}
   to{opacity:1;transform:translateY(0)}
@@ -183,4 +189,11 @@
   .pt-site > .pt-site__nav--sticky .pt-site__nav-links a{
     transition:none!important;
   }
+}
+.pt-device .pt-site > section[data-pt-content-overflow]{
+  margin-bottom:var(--pt-content-overflow-space)!important;
+  overflow:visible!important;
+}
+.pt-site > section[data-pt-content-overflow] .pt-artboard{
+  overflow:visible!important;
 }

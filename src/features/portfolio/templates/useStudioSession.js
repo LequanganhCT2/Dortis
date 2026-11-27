@@ -144,7 +144,7 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
   }
   async function upload(sectionId,files,onReady){
     const s=session.current
-    if(!s||!valid(s)||busyRef.current)return
+    if(!s||!valid(s)||busyRef.current)return false
     lock(true);notify('saving','Đang tải ảnh…')
     try{
       for(const file of files){
@@ -155,10 +155,11 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
         const nextUrls=await signed([path])
         if(!valid(s))return
         setUrls(u=>({...u,...nextUrls}))
-        onReady(path,file.name)
+        onReady(path,file.name,file)
       }
       notify('saving','Đã tải ảnh · Đang lưu bản nháp…')
-    }catch(e){if(valid(s))notify('error','Tải ảnh thất bại: '+e.message)}
+      return true
+    }catch(e){if(valid(s))notify('error','Tải ảnh thất bại: '+e.message);return false}
     finally{lock(false);if(valid(s)&&s.version!==s.savedVersion)schedule()}
   }
   return {active,busy,busyRef,session,version,open,commit,history,flush,publish,discard,upload,

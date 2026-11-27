@@ -15,7 +15,7 @@ test('All eight Silk Atelier section labels, not editable headings, appear in th
   const site=src('PortfolioTemplateSite.jsx')
   assert.match(site,/const navSections=view\.sections/)
   assert.match(site,/navSections\.map\(s=>/)
-  assert.match(site,/s\.label\.replace\(/)
+  assert.match(site,/portfolioNavigationLabel\(s\)/)
   assert.doesNotMatch(site,/pt-site__nav-number/)
   assert.equal(view.sections[1].label.replace(/^\s*(?:\d+\s*\/\s*)?\d+\s*[·.:\-/]\s*/,''),'Câu chuyện nghệ thuật')
   assert.equal('07 / 07 · Thư viện nghệ thuật'.replace(/^\s*(?:\d+\s*\/\s*)?\d+\s*[·.:\-/]\s*/,''),'Thư viện nghệ thuật')

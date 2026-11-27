@@ -129,6 +129,9 @@ export function normalizeArtistSection(row={}) {
   const layouts=['cover','biography','feature','stats','gallery','awards','list','media','quote','contact']
   return {
     page:Math.max(1,Number(row.page)||1),
+    name:String(row.name||'').slice(0,160),
+    input_hint:String(row.input_hint||'').slice(0,400),
+    ...(row.contentVersion===2?{contentVersion:2}:{}),
     layout:layouts.includes(row.layout)?row.layout:'feature',
     title:String(row.title||'').slice(0,240),
     eyebrow:String(row.eyebrow||'').slice(0,160),
