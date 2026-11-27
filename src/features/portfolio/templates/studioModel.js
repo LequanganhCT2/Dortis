@@ -102,8 +102,8 @@ export function manageContentBlock(pair,id,action,target){
    const next=addStudioSection(pair,target,source.label+' (bản sao)')
    const copy={...source,id:target,label:source.label+' (bản sao)'}
    const items=studioElements(pair.snapshot,id).map(e=>({...e,id:crypto.randomUUID()}))
-   return {content:replaceStudioElements({...next.content,sections:{...next.content.sections,[target]:{...pair.content.sections?.[id],title:source.title,body:source.body,eyebrow:source.eyebrow,fieldOverrides:{title:true,body:true,eyebrow:true}}}},target,items),
-   snapshot:replaceStudioElements({...next.snapshot,view:{...next.snapshot.view,sections:sections.flatMap(s=>s.id===id?[s,copy]:[s])}},target,items)}
+   return {content:replaceStudioElements({...next.content,contentBlockOrder:sections.flatMap(s=>s.id===id?[id,target]:[s.id]),sections:{...next.content.sections,[target]:{...pair.content.sections?.[id],title:source.title,body:source.body,eyebrow:source.eyebrow,fieldOverrides:{title:true,body:true,eyebrow:true}}}},target,items),
+   snapshot:replaceStudioElements({...next.snapshot,contentBlockOrder:sections.flatMap(s=>s.id===id?[id,target]:[s.id]),view:{...next.snapshot.view,sections:sections.flatMap(s=>s.id===id?[s,copy]:[s])}},target,items)}
  }
  const order=sections.map(s=>s.id)
  if(action==='move'){const from=order.indexOf(id),to=order.indexOf(target);if(to<0)return pair;order.splice(from,1);order.splice(to,0,id)}

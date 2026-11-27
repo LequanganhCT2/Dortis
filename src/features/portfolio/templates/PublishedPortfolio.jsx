@@ -336,6 +336,7 @@ export default function PublishedPortfolio(){
     scenes:publication.scenes||{},
     positions:publication.positions||{},
     typography:publication.typography||{},studioElements:publication.studioElements||{},
+    contentBlockHidden:publication.contentBlockHidden||{},contentBlockOrder:publication.contentBlockOrder||[],
     revealSpeed:view?.revealSpeed
   }:null
   const customSection=view?.sections?.find(s=>s.id===customSelection?.sectionId)
@@ -374,7 +375,7 @@ export default function PublishedPortfolio(){
         onClick={()=>setReplayKey(value=>value+1)}
         title={reducedMotion?'Phát hiệu ứng, bỏ qua cài đặt giảm chuyển động':
           'Phát lại hiệu ứng chữ và ảnh'} aria-label="Phát lại hiệu ứng">↻</button>
-      {studioSession.active&&<button type="button" className="pt-studio-publish" disabled={studioSession.busy} onClick={publishStudio}>Xuất bản</button>}
+      {studioSession.active&&!editorActive&&<button type="button" className="pt-studio-publish" disabled={studioSession.busy} onClick={publishStudio}>Xuất bản</button>}
       <button type="button" className="pt-published__open-editor"
         onClick={editWebsite} disabled={studioSession.active} title="Mở trình biên tập nội dung portfolio"
         aria-label="Mở trình biên tập nội dung">⋯</button>

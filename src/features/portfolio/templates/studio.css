@@ -83,3 +83,7 @@
 .pt-studio-panel .pt-inline-inspector__presets button,.pt-studio-panel .pt-inline-inspector__replay,.pt-studio-panel .pt-inline-inspector__textarea,.pt-studio-panel .pt-inline-inspector__field>select{background:#343d4b;color:#edf3fa;border-color:#596579}
 .pt-studio-panel .pt-inline-inspector__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:480px){.pt-studio-panel{width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - var(--studio-panel-y,95px) - 8px)}}
+
+.pt-studio-workspace-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;position:sticky;top:0;background:#202630;z-index:2;padding:4px 0}
+.pt-studio-panel__body select{width:100%;max-width:100%}
+.pt-studio-panel__layers{max-height:none;min-height:0;overflow:visible}
