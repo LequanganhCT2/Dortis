@@ -46,3 +46,12 @@
 .pt-studio-layer__resize.handle-w{left:0;top:50%;cursor:ew-resize}
 .pt-studio-layer__resize:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .pt-studio-panel input[hidden]{display:none}
+
+/* The older ribbon rule targets every child of its grid. Keep the Studio
+   overlay outside that grid so percentages always refer to the full page. */
+.pt-site>section>.pt-studio-layer-plane{position:absolute!important;inset:0!important;z-index:20!important}
+.pt-site>section[id^="pt-studio-"]{min-height:clamp(420px,56.25vw,1080px)}
+.pt-device--mobile .pt-site>section[id^="pt-studio-"]{min-height:620px}
+.pt-published.pt-studio-mobile-preview>.pt-device--mobile{width:min(390px,100%);margin-inline:auto}
+.pt-site>section:has(.pt-studio-layer-plane){overflow:visible}
+.pt-published--admin-edit .pt-site>section:has(.pt-studio-layer-plane){overflow:visible!important}

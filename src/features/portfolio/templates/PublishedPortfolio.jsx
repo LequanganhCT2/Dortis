@@ -320,7 +320,7 @@ export default function PublishedPortfolio(){
     revealSpeed:view?.revealSpeed
   }:null
   const editorActive=Boolean(admin&&editMode&&studioSession.active)
-  return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')}>
+  return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')+(studioSession.active&&deviceOverride==='mobile'?' pt-studio-mobile-preview':'')}>
     {admin&&publication&&<div className="pt-published__toolbar"
       role="group" aria-label="Chọn chế độ xem hoặc chỉnh sửa portfolio">
       <div className="pt-published__mode-switch" role="group" aria-label="Chế độ trang">
