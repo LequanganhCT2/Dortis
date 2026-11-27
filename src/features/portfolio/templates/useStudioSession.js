@@ -148,7 +148,7 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
     lock(true);notify('saving','Đang tải ảnh…')
     try{
       for(const file of files){
-        if(!EXT[file.type]||file.size===0||file.size>15*1024*1024)throw new Error('Chỉ nhận JPG, PNG, WebP, AVIF từ 1 byte đến 15 MB.')
+        if(!EXT[file.type]||file.size===0||file.size>25*1024*1024)throw new Error('Chỉ nhận JPG, PNG, WebP, AVIF từ 1 byte đến 25 MB.')
         const path=s.profileId+'/'+s.templateId+'/'+sectionId+'/studio-'+crypto.randomUUID()+'.'+EXT[file.type]
         const {error}=await supabase.storage.from(BUCKET).upload(path,file,{contentType:file.type,cacheControl:'3600',upsert:false})
         if(error)throw error
