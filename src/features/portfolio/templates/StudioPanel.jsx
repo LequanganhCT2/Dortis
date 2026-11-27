@@ -1,5 +1,5 @@
 import React,{useEffect,useLayoutEffect,useRef,useState} from 'react'
-import {STUDIO_EFFECTS,STUDIO_FONTS,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
+import {CONTENT_BLOCK_PRESETS,STUDIO_EFFECTS,STUDIO_FONTS,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
 import './studio.css'
 import {PHOTO_MOTION_OPTIONS,photoMotionMode,photoMotionIntensity,photoMotionPointer,supportsPhotoPointer} from './photoMotionConfig.js'
 const labels={title:'Tiêu đề',text:'Text',body:'Nội dung',image:'Ảnh',shape:'Hình khối',button:'Button'}
@@ -13,9 +13,10 @@ function NumberField({label,value,min,max,step=1,onChange}){
   },[value,min,max,step,onChange])
   return <label>{label}<input ref={ref} type="number" value={value} min={min} max={max} step={step} onChange={e=>{if(e.target.value!=='')onChange(Number(e.target.value))}}/></label>
 }
-export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice,inspector}){
+export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onBlockAction,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice,inspector}){
   const sections=publication?.view?.sections||[]
   const [sectionId,setSectionId]=useState(sections[0]?.id||'')
+  const [blockOpen,setBlockOpen]=useState(false)
   const [tab,setTab]=useState('content')
   const [collapsed,setCollapsed]=useState(false)
   const [pos,setPos]=useState(null)
@@ -56,6 +57,14 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
     {!collapsed&&<div className="pt-studio-panel__body">
       <div className="pt-studio-panel__grid"><button aria-pressed={device==='desktop'} onClick={()=>onDevice('desktop')}>Desktop</button><button aria-pressed={device==='mobile'} onClick={()=>onDevice('mobile')}>Mobile</button>
       <button disabled={!canUndo||busy} onClick={onUndo}>↶ Hoàn tác</button><button disabled={!canRedo||busy} onClick={onRedo}>↷ Làm lại</button></div>
+      <button type="button" aria-expanded={blockOpen} onClick={()=>setBlockOpen(x=>!x)}>Khối nội dung {blockOpen?'−':'+'}</button>
+      {blockOpen&&<div style={{display:'grid',gap:6}}>
+        <label>Mẫu nhanh<select value="" disabled={busy} onChange={e=>{const preset=CONTENT_BLOCK_PRESETS[Number(e.target.value)];if(preset){const id=onAddSection(...preset);if(id)setSectionId(id)}}}><option value="" disabled>+ Thêm mẫu nội dung</option>{CONTENT_BLOCK_PRESETS.map((p,i)=><option key={i} value={i}>{p[0]}</option>)}</select></label>
+        {sections.map((s,i)=><div key={s.id} draggable={!busy} onDragStart={e=>e.dataTransfer.setData('text/plain',s.id)} onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();onBlockAction(e.dataTransfer.getData('text/plain'),'move',s.id)}} style={{display:'grid',gap:3,border:'1px solid #7775',borderRadius:6,padding:5}}>
+          <button onClick={()=>{setSectionId(s.id);studio.clear();document.getElementById('pt-'+s.id)?.scrollIntoView({block:'start'})}}>⠿ {s.label}</button>
+          <div className="pt-studio-panel__grid"><button disabled={busy} onClick={()=>onBlockAction(s.id,'toggle')}>{publication.contentBlockHidden?.[s.id]?'Hiện':'Ẩn'}</button><button disabled={busy} onClick={()=>onBlockAction(s.id,'clone')}>Clone</button><button disabled={busy||i===0} onClick={()=>onBlockAction(s.id,'move',sections[i-1].id)}>↑</button><button disabled={busy||i===sections.length-1} onClick={()=>onBlockAction(s.id,'move',sections[i+1].id)}>↓</button></div>
+        </div>)}
+      </div>}
       <label>Khu vực<select value={section?.id||''} onChange={e=>{setSectionId(e.target.value);studio.clear();document.getElementById('pt-'+e.target.value)?.scrollIntoView({block:'start',behavior:'smooth'})}}>{sections.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label>
       <div className="pt-studio-panel__grid">
         {Object.entries(labels).map(([kind,label])=><button disabled={busy||!section} key={kind} onClick={()=>kind==='image'?upload.current.click():onAdd(section.id,kind)}>+ {label}</button>)}

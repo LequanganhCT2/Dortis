@@ -9,7 +9,7 @@ import {getPublishedText,isEditablePortfolioText} from './publicTextContent'
 import {removeSceneNote} from './sectionDesign.js'
 import InlinePortfolioInspector from './InlinePortfolioInspector'
 import {setSlotImage} from './model.js'
-import {addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
+import {manageContentBlock,addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements,resolveStudioLayout,isStudioText} from './studioModel.js'
 import StudioPanel from './StudioPanel'
 import {quickTextPreset} from './textQuickLayouts.js'
 import {studioTextMotion} from './studioTextPresentation.js'
@@ -266,13 +266,20 @@ export default function PublishedPortfolio(){
       return replaceStudioElements(replaceStudioElements(doc,sectionId,studioElements(doc,sectionId).filter(e=>e.id!==id)),target,[...studioElements(doc,target),item])
     })))selectCustom(target,id)
   }
-  function addSection(label){
+  function addSection(label,title='',body=''){
     const extra=studioSession.session.current?.working.content.extraSections||[]
     if(extra.length>=24){setSaveNotice('Đã đạt giới hạn 24 khu vực bổ sung của Form.');return}
     const id='studio-'+crypto.randomUUID().replaceAll('-','').slice(0,24)
-    if(studioSession.commit(pair=>addStudioSection(pair,id,label))){
+    if(studioSession.commit(pair=>{const next=addStudioSection(pair,id,label);return {content:{...next.content,sections:{...next.content.sections,[id]:{...next.content.sections[id],title,body}}},snapshot:{...next.snapshot,view:{...next.snapshot.view,sections:next.snapshot.view.sections.map(s=>s.id===id?{...s,title,body}:s)}}}})){
       clearSelection();requestAnimationFrame(()=>document.getElementById('pt-'+id)?.scrollIntoView({block:'start'}));return id
     }
+  }
+  function blockAction(id,action,target){
+    if(action==='clone'){
+      if((studioSession.session.current?.working.content.extraSections||[]).length>=24){setSaveNotice('Đã đạt giới hạn 24 khu vực bổ sung.');return}
+      target='studio-'+crypto.randomUUID().replaceAll('-','').slice(0,24)
+    }
+    if(studioSession.commit(pair=>manageContentBlock(pair,id,action,target)))clearSelection()
   }
   function uploadItems(sectionId,files,replaceId){
     return studioSession.upload(sectionId,files,(path,name)=>{
@@ -398,7 +405,7 @@ export default function PublishedPortfolio(){
       onDirectTextFinish={finishInlineTextEdit}
       device={device}/>}
     {editorActive&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
-      onAdd={addItem} onAddSection={addSection} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
+      onAdd={addItem} onAddSection={addSection} onBlockAction={blockAction} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}
       canUndo={studioSession.canUndo} canRedo={studioSession.canRedo} onDevice={value=>{clearSelection();setDeviceOverride(value)}}
       onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice} inspector={customText?(<InlinePortfolioInspector embedded

@@ -83,3 +83,31 @@ export function addStudioSection(pair,id,label){
       {...definition,title:'',body:'',eyebrow:'',images:[]}]}}}
 }
 export function withoutPending(content){const {studioPending,...rest}=content||{};return rest}
+
+export const CONTENT_BLOCK_PRESETS=[
+ ['Nghệ danh & Vai trò','Singer','Nhập nghệ danh và vai trò nghệ thuật.'],
+ ['Tiểu sử ngắn','Tiểu sử ngắn','Giới thiệu về hành trình âm nhạc và kinh nghiệm của nghệ sĩ.'],
+ ['Điểm nổi bật','Điểm nổi bật','Nhập những dấu ấn nổi bật.'],
+ ['Thành tích & Giải thưởng','Thành tích & Giải thưởng','Nhập thành tích và năm đạt giải.'],
+ ['Kinh nghiệm biểu diễn','Kinh nghiệm biểu diễn','Nhập sân khấu, sự kiện và kinh nghiệm.'],
+ ['Phong cách âm nhạc','Phong cách âm nhạc','Nhập thể loại và phong cách.'],
+ ['Hình ảnh & Video','Hình ảnh & Video','Thêm hình ảnh hoặc liên kết video.'],
+ ['Thông tin liên hệ','Thông tin liên hệ','Nhập thông tin booking và liên hệ.']
+]
+export function manageContentBlock(pair,id,action,target){
+ const sections=pair.snapshot.view.sections
+ const source=sections.find(s=>s.id===id)
+ if(!source)return pair
+ if(action==='clone'){
+   const next=addStudioSection(pair,target,source.label+' (bản sao)')
+   const copy={...source,id:target,label:source.label+' (bản sao)'}
+   const items=studioElements(pair.snapshot,id).map(e=>({...e,id:crypto.randomUUID()}))
+   return {content:replaceStudioElements({...next.content,sections:{...next.content.sections,[target]:{...pair.content.sections?.[id],title:source.title,body:source.body,eyebrow:source.eyebrow,fieldOverrides:{title:true,body:true,eyebrow:true}}}},target,items),
+   snapshot:replaceStudioElements({...next.snapshot,view:{...next.snapshot.view,sections:sections.flatMap(s=>s.id===id?[s,copy]:[s])}},target,items)}
+ }
+ const order=sections.map(s=>s.id)
+ if(action==='move'){const from=order.indexOf(id),to=order.indexOf(target);if(to<0)return pair;order.splice(from,1);order.splice(to,0,id)}
+ const hidden={...pair.snapshot.contentBlockHidden}
+ if(action==='toggle')hidden[id]=!hidden[id]
+ return {content:{...pair.content,contentBlockOrder:order,contentBlockHidden:hidden},snapshot:{...pair.snapshot,contentBlockOrder:order,contentBlockHidden:hidden,view:{...pair.snapshot.view,sections:order.map(key=>sections.find(s=>s.id===key))}}}
+}

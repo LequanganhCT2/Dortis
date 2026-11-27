@@ -425,7 +425,11 @@ export default function PortfolioTemplateSite({
   editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,
   publishedView,motionPaused=false,revealReplayKey=0,publicPage=false,forceMotion=false,studio
 }){
-  const view=publishedView||resolveArtistPortfolio(template,instance,profile)
+  const rawView=publishedView||resolveArtistPortfolio(template,instance,profile)
+  const blockHidden=instance?.content?.contentBlockHidden||{}
+  const blockOrder=instance?.content?.contentBlockOrder||[]
+  const orderedSections=[...rawView.sections].sort((a,b)=>(blockOrder.indexOf(a.id)<0?999:blockOrder.indexOf(a.id))-(blockOrder.indexOf(b.id)<0?999:blockOrder.indexOf(b.id)))
+  const view={...rawView,sections:orderedSections.filter(s=>!blockHidden[s.id])}
   // The Form identity is authoritative. Old persisted blueprints or snapshots
   // may have a red-gold theme even though they belong to Silk Flow.
   const flowForm=template?.slug==='silk-flow'
