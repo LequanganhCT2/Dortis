@@ -51,7 +51,7 @@ export function studioTextPresentation({v,kind,section,device,scene,typography,c
   const custom={size:'fontSize',font:'fontFamily',weight:'fontWeight',align:'textAlign',spacing:'letterSpacing',lineHeight:'lineHeight',color:'color'}
   for(const key of STUDIO_TEXT_KEYS){
     if(!overrides[key])continue
-    const value=key==='size'?(scene?'clamp(8px,'+(v.size*100/(device==='mobile'?390:1200)).toFixed(3)+'cqw,240px)':v.size+'px'):key==='spacing'?v.spacing+'px':v[key]
+    const value=key==='size'?v.size+'px':key==='spacing'?v.spacing+'px':v[key]
     style[custom[key]]=value
     if(key==='size')style['--pt-direct-font-size']=value
     if(key==='color')style['--pt-direct-text-color']=value

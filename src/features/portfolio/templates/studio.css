@@ -12,7 +12,6 @@
 .pt-site .pt-studio-layer .pt-studio-copy{position:relative!important;inset:auto!important;display:block!important;width:100%!important;height:100%!important;min-width:0!important;max-width:none!important;margin:0!important;padding:0!important}
 .pt-site .pt-studio-layer .pt-studio-copy [data-studio-text-id]{max-width:100%;margin:0;overflow-wrap:anywhere}
 .pt-site .pt-studio-layer .pt-studio-copy [data-pt-authored-font-size="true"]{font-size:var(--pt-direct-font-size)!important}
-.pt-studio-shape-reveal{height:100%;width:100%}
 .pt-studio-layer.is-editable{pointer-events:auto;cursor:grab;touch-action:none}
 .pt-studio-layer.is-selected{outline:2px solid #6ba7ff;outline-offset:3px;z-index:100!important}
 .pt-studio-layer.is-hidden{outline:1px dashed #888}
