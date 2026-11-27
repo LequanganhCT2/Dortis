@@ -246,6 +246,21 @@ export default function PublishedPortfolio(){
       document.getElementById('pt-'+sectionId)?.scrollIntoView({block:'start',behavior:'smooth'})
     }
   }
+  function addPresetLayer(sectionId,preset){
+    const [label,title,body]=preset
+    const kind=label==='Nghệ danh & Vai trò'?'title':'body'
+    const item=newStudioElement(kind,crypto.randomUUID(),{text:kind==='title'?title:title+'\n'+body})
+    if(studioSession.commit(pair=>both(pair,doc=>replaceStudioElements(doc,sectionId,[...studioElements(doc,sectionId),item]))))selectCustom(sectionId,item.id)
+  }
+  function cloneBaseLayer(sectionId,key){
+    const section=publication.view?.sections?.find(s=>s.id===sectionId)
+    if(!section)return
+    const image=key.startsWith('image:')?section.images?.[Number(key.slice(6))]:null
+    if(key.startsWith('image:')&&!image?.path)return
+    const kind=image?'image':key==='title'?'title':key==='body'?'body':'text'
+    const item=newStudioElement(kind,crypto.randomUUID(),image?{path:image.path,alt:image.alt||''}:{text:getPublishedText(publication,sectionId,device,key)||section[key]||''})
+    if(studioSession.commit(pair=>both(pair,doc=>replaceStudioElements(doc,sectionId,[...studioElements(doc,sectionId),item]))))selectCustom(sectionId,item.id)
+  }
   function patchItem(sectionId,id,patch,internal=false){
     studioSession.commit(pair=>both(pair,doc=>patchStudioElement(doc,sectionId,id,device,patch)),internal)
   }
@@ -406,7 +421,7 @@ export default function PublishedPortfolio(){
       onDirectTextFinish={finishInlineTextEdit}
       device={device}/>}
     {editorActive&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
-      onAdd={addItem} onAddSection={addSection} onBlockAction={blockAction} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
+      onAdd={addItem} onAddPresetLayer={addPresetLayer} onCloneBaseLayer={cloneBaseLayer} onAddSection={addSection} onBlockAction={blockAction} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}
       canUndo={studioSession.canUndo} canRedo={studioSession.canRedo} onDevice={value=>{clearSelection();setDeviceOverride(value)}}
       onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice} inspector={customText?(<InlinePortfolioInspector embedded
