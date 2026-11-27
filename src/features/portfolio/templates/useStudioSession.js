@@ -23,12 +23,12 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
     const guard=e=>{const s=session.current;if(s&&(s.version!==s.savedVersion||busyRef.current)){e.preventDefault();e.returnValue=''}}
     window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard)
   },[active])
-  async function signed(paths){
+  async function signed(paths,strict=true){
     if(!paths.length)return {}
     const {data,error}=await supabase.storage.from(BUCKET).createSignedUrls(paths,3600)
     if(error)throw error
     const result=Object.fromEntries((data||[]).filter(x=>x.signedUrl).map(x=>[x.path,x.signedUrl]))
-    if(Object.keys(result).length!==paths.length)throw new Error('Một số ảnh chưa có quyền đọc hoặc không tồn tại.')
+    if(strict&&Object.keys(result).length!==paths.length)throw new Error('Một số ảnh chưa có quyền đọc hoặc không tồn tại.')
     return result
   }
   async function open(){
@@ -49,8 +49,8 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
         if(!window.confirm('Bản nháp Studio cũ không còn khớp phiên bản. Bỏ bản nháp cũ để bắt đầu lại từ website hiện tại?')){notify('error','Bản nháp cũ được giữ nguyên.');return false}
       }
       const working=matches?{snapshot:pending.snapshot,content:pending.content}:{snapshot:live.snapshot,content:base}
-      const liveUrls=await signed(Array.isArray(live.image_paths)?live.image_paths:[])
-      const draftUrls=await signed(snapshotImagePaths(working.snapshot))
+      const liveUrls=await signed(Array.isArray(live.image_paths)?live.image_paths:[],false)
+      const draftUrls=await signed(snapshotImagePaths(working.snapshot),false)
       if(user.current?.id!==owner)return false
       session.current={owner,revision:draft.revision,base,basePublishedAt:live.published_at,
         live:live.snapshot,liveUrls,profileId:draft.profile_id,templateId:draft.template_id,
@@ -113,15 +113,14 @@ export default function useStudioSession({supabase,id,admin,publication,publishe
       if(saving.current&&!await saving.current)throw new Error('Bản nháp chưa được lưu do xung đột phiên bản.')
       if(!valid(s))return false
       const {snapshot,content}=s.working
-      const {error}=await supabase.rpc('publish_artist_portfolio',{p_instance_id:id,p_revision:s.revision,
+      const {data,error}=await supabase.rpc('publish_artist_portfolio',{p_instance_id:id,p_revision:s.revision,
         p_content:withoutPending(content),p_snapshot:snapshot,p_image_paths:snapshotImagePaths(snapshot)}).single()
       if(error)throw error
       if(!valid(s))return false
       // The RPC commits the draft and the public snapshot atomically under admin RLS.
       reset(false);setPublication(snapshot)
       setUrls(previous=>Object.fromEntries(Object.entries(previous).filter(([path])=>snapshotImagePaths(snapshot).includes(path))))
-      const latest=await supabase.from('artist_portfolio_publications').select('published_at').eq('instance_id',id).single()
-      if(latest.data?.published_at)setPublishedAt(latest.data.published_at)
+      if(data?.updated_at)setPublishedAt(data.updated_at)
       notify('saved','Đã xuất bản website công khai.');return true
     }catch(e){if(valid(s))notify('error','Không xuất bản được: '+e.message);return false}
     finally{lock(false)}

@@ -10,12 +10,13 @@ function StudioLayer({item,sectionId,device,urls,studio,paused}){
   const [inline,setInline]=useState(false)
   const editing=Boolean(studio),selected=studio?.selection?.sectionId===sectionId&&studio?.selection?.id===item.id
   useEffect(()=>{
+    if(v.hidden&&!editing)return
     if(editing||paused||v.effect==='none'||typeof IntersectionObserver==='undefined'||window.matchMedia('(prefers-reduced-motion: reduce)').matches){setVisible(true);return}
     const node=ref.current
     if(!node)return
     const io=new IntersectionObserver(([entry])=>setVisible(old=>entry.isIntersecting||(!v.reverse&&old)),{threshold:.12})
     setVisible(false);io.observe(node);return ()=>io.disconnect()
-  },[editing,paused,v.effect,v.reverse])
+  },[editing,paused,v.effect,v.reverse,v.hidden])
   useEffect(()=>{if(!selected||!editing)setInline(false)},[selected,editing])
   function start(e,resize=''){
     if(!editing||e.button!==0||inline)return
