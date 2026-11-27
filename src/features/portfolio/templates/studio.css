@@ -60,8 +60,26 @@
 .pt-site .pt-studio-layer .pt-studio-scene-copy {position:relative; display:block; width:100%; min-width:0;}
 .pt-site .pt-studio-scene-copy .pt-artboard__text {position:relative; display:block; width:100%; height:auto; margin:0; overflow:visible;}
 
-/* Shared inspector lives inside the single Studio panel. */
-.pt-studio-embedded-inspector{min-width:0;display:flex;flex-direction:column;gap:8px;background:#fcfefd;color:#243c4c;border-radius:10px;overflow:hidden}
-.pt-studio-embedded-inspector .pt-inline-inspector__tabs{flex-wrap:wrap}
-.pt-studio-embedded-inspector .pt-inline-inspector__body{overflow:visible;min-height:0}
-.pt-studio-embedded-inspector .pt-inline-inspector__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+/* Unified editor: one vertical scroll surface; never compress controls. */
+.pt-studio-panel{width:min(360px,calc(100vw - 24px));max-height:calc(100dvh - var(--studio-panel-y,95px) - 12px);color-scheme:dark}
+.pt-studio-panel__header{flex:0 0 auto}
+.pt-studio-panel__body{display:flex;flex-direction:column;align-items:stretch;flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.pt-studio-panel__body>*{flex:0 0 auto;min-width:0}
+.pt-studio-panel__layers{display:flex;flex-direction:column;max-height:180px;min-height:100px;overflow-y:auto}
+.pt-studio-panel__layers button{flex:0 0 auto;min-height:34px}
+.pt-studio-panel button{min-height:32px}
+.pt-studio-panel label{color:#edf3fa}
+.pt-studio-panel .pt-studio-embedded-inspector{display:flex;flex-direction:column;flex:0 0 auto;min-width:0;gap:0;background:#282f3a;color:#edf3fa;border:1px solid #49576a;border-radius:8px;overflow:visible}
+.pt-studio-panel .pt-studio-embedded-inspector>*{flex:0 0 auto;min-width:0}
+.pt-studio-panel .pt-inline-inspector__tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px;border-color:#49576a;overflow:visible}
+.pt-studio-panel .pt-inline-inspector__tabs button{white-space:normal;color:#edf3fa;background:#343d4b;border:1px solid #596579}
+.pt-studio-panel .pt-inline-inspector__tabs button.is-active{background:#3869a6;color:white;border-color:#719cce}
+.pt-studio-panel .pt-inline-inspector__body{overflow:visible;min-height:0;padding:10px;gap:10px}
+.pt-studio-panel .pt-inline-inspector__body>*{flex:0 0 auto;min-width:0}
+.pt-studio-panel .pt-inline-inspector__measure,.pt-studio-panel .pt-inline-inspector__input{background:#202630;border-color:#596579;color:#edf3fa}
+.pt-studio-panel .pt-inline-inspector__measure strong,.pt-studio-panel .pt-inline-inspector__measure small,.pt-studio-panel .pt-inline-inspector__field>span,.pt-studio-panel .pt-inline-inspector__hint,.pt-studio-panel .pt-inline-inspector__actual,.pt-studio-panel .pt-inline-inspector__actual b,.pt-studio-panel .pt-inline-inspector__input small{color:#cbd7e5}
+.pt-studio-panel .pt-inline-inspector__input input{color:#edf3fa!important}
+.pt-studio-panel .pt-inline-inspector__input:hover,.pt-studio-panel .pt-inline-inspector__input:focus-within{background:#303846}
+.pt-studio-panel .pt-inline-inspector__presets button,.pt-studio-panel .pt-inline-inspector__replay,.pt-studio-panel .pt-inline-inspector__textarea,.pt-studio-panel .pt-inline-inspector__field>select{background:#343d4b;color:#edf3fa;border-color:#596579}
+.pt-studio-panel .pt-inline-inspector__grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:480px){.pt-studio-panel{width:min(360px,calc(100vw - 16px));max-height:calc(100dvh - var(--studio-panel-y,95px) - 8px)}}
