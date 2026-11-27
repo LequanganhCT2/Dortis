@@ -229,3 +229,24 @@
     animation:pt-ambient-image-drift 8s ease-in-out infinite;
   }
 }
+
+/* Staggered wave on existing grapheme spans; independent of reveal transform. */
+@keyframes pt-ambient-glyph-wave {
+  0%,100% { translate:0 0; }
+  25% { translate:0 -.16em; }
+  50% { translate:0 .045em; }
+  75% { translate:0 0; }
+}
+@media(prefers-reduced-motion:no-preference){
+  .pt-site:not(.pt-site--motion-paused) :is(.pt-ribbon__copy,.pt-site__copy,.pt-artboard__text,.pt-studio-copy):has(.pt-burst-letter,.pt-burst-word[data-pt-burst-word]){
+    animation:none;
+  }
+  .pt-site:not(.pt-site--motion-paused) .pt-burst-letter{
+    animation:pt-ambient-glyph-wave 2.8s ease-in-out infinite!important;
+    animation-delay:calc(var(--pt-wave-index,0) * -90ms)!important;
+  }
+  .pt-site:not(.pt-site--motion-paused) .pt-burst-word[data-pt-burst-word]{
+    animation:pt-ambient-glyph-wave 3.8s ease-in-out infinite!important;
+    animation-delay:calc(var(--pt-word-delay,0ms) * -3)!important;
+  }
+}

@@ -38,7 +38,7 @@ export default function CharacterBurst({text,disabled=false,maxCharacters=160,mo
         <span className="pt-burst-word" key={i}>
           {token.letters.map(letter=><span
             key={letter.index} className="pt-burst-letter"
-            style={{'--pt-letter-delay':Math.min(380,letter.index*14)+'ms'}}>
+            style={{'--pt-letter-delay':Math.min(380,letter.index*14)+'ms','--pt-wave-index':letter.index}}>
             {letter.text}
           </span>)}
         </span>)}
