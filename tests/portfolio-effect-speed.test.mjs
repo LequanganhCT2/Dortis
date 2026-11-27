@@ -39,7 +39,7 @@ test('Animation speed is a per-artist setting persisted in the content snapshot'
   assert.match(editor,/PORTFOLIO_REVEAL_SPEEDS\.map/)
   assert.match(editor,/setContent\(previous=>\(\{\.\.\.previous,revealSpeed:speed\}\)\)/)
   assert.match(editor,/setDirty\(true\)/)
-  assert.match(editor,/p_content:content,p_snapshot:snapshot/)
+  assert.match(editor,/p_content:withoutPending\(content\),p_snapshot:snapshot/)
   assert.match(editor,/Đã lưu/)
 })
 test('Web Animations and fallback CSS use the same speed multiplier',()=>{

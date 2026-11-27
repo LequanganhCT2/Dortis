@@ -1,0 +1,57 @@
+/* Isolated from artist palettes and legacy content. */
+.pt-site>section:has(.pt-studio-layer-plane){position:relative}
+.pt-studio-layer-plane{position:absolute;inset:0;pointer-events:none;container-type:inline-size;z-index:20}
+.pt-studio-layer{position:absolute;box-sizing:border-box;pointer-events:none}
+.pt-studio-layer__visual{width:100%;height:100%;box-sizing:border-box;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere;
+  opacity:var(--studio-opacity);filter:blur(var(--studio-blur));transition:opacity var(--studio-duration) var(--studio-delay),transform var(--studio-duration) var(--studio-delay),filter var(--studio-duration) var(--studio-delay)}
+.pt-studio-layer__visual img{width:100%;height:100%;display:block}
+.pt-studio-layer__visual a{color:inherit;pointer-events:auto}
+.pt-studio-layer__visual textarea{width:100%;height:100%;font:inherit;color:inherit;background:#fff2;border:0;resize:none;white-space:pre-wrap}
+.pt-studio-layer__visual:not(.is-visible):not(.fx-none){opacity:0}
+.pt-studio-layer__visual.fx-slide:not(.is-visible){transform:translateY(45px)}
+.pt-studio-layer__visual.fx-zoom:not(.is-visible){transform:scale(.8)}
+.pt-studio-layer__visual.fx-flip:not(.is-visible){transform:perspective(800px) rotateX(60deg)}
+.pt-studio-layer__visual.fx-blur:not(.is-visible){filter:blur(18px)}
+.pt-studio-letter{display:inline-block;white-space:pre;transition:transform var(--studio-duration),opacity var(--studio-duration)}
+.fx-letters:not(.is-visible) .pt-studio-letter{transform:translateY(20px);opacity:0}
+.pt-studio-layer.is-editable{pointer-events:auto;cursor:grab;touch-action:none}
+.pt-studio-layer.is-selected{outline:2px solid #6ba7ff;outline-offset:3px;z-index:100!important}
+.pt-studio-layer.is-hidden{outline:1px dashed #888}
+.pt-studio-layer__resize{position:absolute;right:0;bottom:0;width:28px;height:28px;background:#226ce0;color:white;border:1px solid white;cursor:nwse-resize;touch-action:none}
+.pt-studio-panel{position:fixed;z-index:1300;left:var(--studio-panel-x,12px);top:var(--studio-panel-y,95px);width:min(300px,calc(100vw - 12px));max-height:min(620px,calc(100dvh - var(--studio-panel-y,95px)));display:flex;flex-direction:column;overflow:hidden;background:#202630;color:#edf3fa;border:1px solid #414d5e;border-radius:12px;box-shadow:0 12px 36px #0005;font:12px/1.4 system-ui,sans-serif}
+.pt-studio-panel__header{padding:10px;display:flex;align-items:center;justify-content:space-between;cursor:grab;touch-action:none;user-select:none;gap:8px;background:#303846}
+.pt-studio-panel__body{overflow:auto;padding:10px;display:grid;gap:9px;min-height:0}
+.pt-studio-panel button,.pt-studio-panel select,.pt-studio-panel input,.pt-studio-panel textarea{font:inherit;box-sizing:border-box;color:inherit;background:#343d4b;border:1px solid #596579;border-radius:5px;padding:7px;min-width:0}
+.pt-studio-panel button{cursor:pointer}.pt-studio-panel button:disabled{opacity:.45;cursor:not-allowed}
+.pt-studio-panel button[aria-pressed=true]{background:#3869a6}
+.pt-studio-panel label{display:grid;gap:4px;min-width:0}
+.pt-studio-panel textarea{width:100%;resize:vertical}
+.pt-studio-panel__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.pt-studio-panel__layers{display:grid;gap:4px;max-height:180px;overflow:auto}
+.pt-studio-panel__layers button{text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt-studio-panel__tabs{display:flex;flex-wrap:wrap;gap:4px}
+.pt-studio-panel__status{font-size:11px;color:#cad5e1}
+.pt-studio-publish{background:#243b5c!important;color:#fff!important}
+.pt-published__toolbar{flex-wrap:wrap}
+@media(prefers-reduced-motion:reduce){.pt-studio-layer__visual,.pt-studio-letter{transition:none!important;opacity:var(--studio-opacity)!important;transform:none!important;filter:none!important}}
+
+.pt-studio-layer__resize{width:12px;height:12px;padding:0;background:#fff;border:2px solid #4388e7;border-radius:1px;z-index:2;transform:translate(-50%,-50%);right:auto;bottom:auto}
+.pt-studio-layer__resize.handle-nw{left:0;top:0;cursor:nwse-resize}
+.pt-studio-layer__resize.handle-n{left:50%;top:0;cursor:ns-resize}
+.pt-studio-layer__resize.handle-ne{left:100%;top:0;cursor:nesw-resize}
+.pt-studio-layer__resize.handle-e{left:100%;top:50%;cursor:ew-resize}
+.pt-studio-layer__resize.handle-se{left:100%;top:100%;cursor:nwse-resize}
+.pt-studio-layer__resize.handle-s{left:50%;top:100%;cursor:ns-resize}
+.pt-studio-layer__resize.handle-sw{left:0;top:100%;cursor:nesw-resize}
+.pt-studio-layer__resize.handle-w{left:0;top:50%;cursor:ew-resize}
+.pt-studio-layer__resize:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.pt-studio-panel input[hidden]{display:none}
+
+/* The older ribbon rule targets every child of its grid. Keep the Studio
+   overlay outside that grid so percentages always refer to the full page. */
+.pt-site>section>.pt-studio-layer-plane{position:absolute!important;inset:0!important;z-index:20!important}
+.pt-site>section[id^="pt-studio-"]{min-height:clamp(420px,56.25vw,1080px)}
+.pt-device--mobile .pt-site>section[id^="pt-studio-"]{min-height:620px}
+.pt-published.pt-studio-mobile-preview>.pt-device--mobile{width:min(390px,100%);margin-inline:auto}
+.pt-site>section:has(.pt-studio-layer-plane){overflow:visible}
+.pt-published--admin-edit .pt-site>section:has(.pt-studio-layer-plane){overflow:visible!important}

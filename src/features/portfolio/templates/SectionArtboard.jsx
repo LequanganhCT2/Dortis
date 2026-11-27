@@ -261,7 +261,7 @@ export default function SectionArtboard({
   index=0,ribbonLayout='vertical',ribbonDirection='right',continuousSilk=false,
   selectedLayer='',onSelectLayer,onDirectPatchLayer,onPublicSelect,publicSelection,
   editingText,onDirectStartTextEdit,onDirectTextChange,onDirectTextFinish,
-  onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true
+  onPatchLayer,onUploadImage,onAddNote,lockImageRatio=true,children
 }){
   const boardRef=useRef(null),dragRef=useRef(null)
   const fileRef=useRef(null),pendingSlot=useRef(null)
@@ -371,5 +371,6 @@ export default function SectionArtboard({
         Kéo chữ hoặc ảnh để đổi vị trí · Thả file lên ô ảnh hoặc nhấp chuột phải để thêm ảnh
       </div>}
     </div>
+    {children}
   </section>
 }

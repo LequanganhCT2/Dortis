@@ -3,6 +3,8 @@ name: Dortis frontend build
 on:
   push:
     branches: [main, 'feat/clean-architecture-long-nhat']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
