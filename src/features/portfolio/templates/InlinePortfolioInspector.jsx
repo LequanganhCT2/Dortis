@@ -90,7 +90,7 @@ function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}
 
 export default function InlinePortfolioInspector({
   selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion,
-  textValue='',onStartInlineEdit,onDelete,onToggleHidden,onResetTypography,onCustomPatch
+  textValue='',onStartInlineEdit,onDelete,onToggleHidden,onResetTypography,onCustomPatch,embedded=false
 }){
   const [tab,setTab]=useState('size')
   const [panelPosition,setPanelPosition]=useState(null)
@@ -163,23 +163,7 @@ export default function InlinePortfolioInspector({
           if(next!==hex(value))apply(group,{[key]:next})
         }}/>
     </label>
-  return <aside ref={panelRef} className={'pt-inline-inspector pt-studio-inspector'+(panelPosition?' is-positioned':'')+(collapsed?' is-collapsed':'')} role="dialog"
-    aria-label={'Chỉnh trực tiếp '+title} style={{'--pt-inspector-top':posTop+'px',...(panelPosition?{'--studio-x':panelPosition.x+'px','--studio-y':panelPosition.y+'px'}:{})}}
-    onClick={event=>event.stopPropagation()}
-    onPointerDown={event=>event.stopPropagation()}>
-    <header className="pt-inline-inspector__header" onPointerDown={startPanelDrag}
-      onPointerMove={movePanel} onPointerUp={endPanelDrag} onPointerCancel={endPanelDrag}
-      onLostPointerCapture={endPanelDrag}>
-      <div>
-        <strong>⠿ {title}</strong>
-        <span>{layer.section.label} · {device==='mobile'?'Mobile':'Desktop'}</span>
-      </div>
-      <div className="pt-studio-panel-actions">
-        <button type="button" aria-label="Đặt lại vị trí menu" onClick={()=>setPanelPosition(null)}>↺</button>
-        <button type="button" aria-label={collapsed?'Mở rộng menu':'Thu nhỏ menu'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?'+':'−'}</button>
-        <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
-      </div>
-    </header>
+  const content=<>
     <div className="pt-inline-inspector__tabs" role="tablist" aria-label="Thông số phần tử">
       {!image&&<button type="button" role="tab" aria-selected={tab==='content'}
         className={tab==='content'?'is-active':''}
@@ -357,6 +341,26 @@ export default function InlinePortfolioInspector({
           Chỉnh viền và khung không làm thay đổi tệp ảnh hoặc nội dung gốc.</p>
       </>}
     </div>
+  </>
+  if(embedded)return <div className="pt-studio-embedded-inspector">{content}</div>
+  return <aside ref={panelRef} className={'pt-inline-inspector pt-studio-inspector'+(panelPosition?' is-positioned':'')+(collapsed?' is-collapsed':'')} role="dialog"
+    aria-label={'Chỉnh trực tiếp '+title} style={{'--pt-inspector-top':posTop+'px',...(panelPosition?{'--studio-x':panelPosition.x+'px','--studio-y':panelPosition.y+'px'}:{})}}
+    onClick={event=>event.stopPropagation()}
+    onPointerDown={event=>event.stopPropagation()}>
+    <header className="pt-inline-inspector__header" onPointerDown={startPanelDrag}
+      onPointerMove={movePanel} onPointerUp={endPanelDrag} onPointerCancel={endPanelDrag}
+      onLostPointerCapture={endPanelDrag}>
+      <div>
+        <strong>⠿ {title}</strong>
+        <span>{layer.section.label} · {device==='mobile'?'Mobile':'Desktop'}</span>
+      </div>
+      <div className="pt-studio-panel-actions">
+        <button type="button" aria-label="Đặt lại vị trí menu" onClick={()=>setPanelPosition(null)}>↺</button>
+        <button type="button" aria-label={collapsed?'Mở rộng menu':'Thu nhỏ menu'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?'+':'−'}</button>
+        <button type="button" aria-label="Đóng menu chỉnh sửa" onClick={onClose}>×</button>
+      </div>
+    </header>
+    {content}
     <footer className="pt-inline-inspector__footer">
       <small>Thay đổi hiển thị ngay · tự lưu sau khi dừng thao tác</small>
       <button type="button" onClick={onClose}>Xong</button>

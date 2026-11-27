@@ -59,3 +59,9 @@
 }
 .pt-site .pt-studio-layer .pt-studio-scene-copy {position:relative; display:block; width:100%; min-width:0;}
 .pt-site .pt-studio-scene-copy .pt-artboard__text {position:relative; display:block; width:100%; height:auto; margin:0; overflow:visible;}
+
+/* Shared inspector lives inside the single Studio panel. */
+.pt-studio-embedded-inspector{min-width:0;display:flex;flex-direction:column;gap:8px;background:#fcfefd;color:#243c4c;border-radius:10px;overflow:hidden}
+.pt-studio-embedded-inspector .pt-inline-inspector__tabs{flex-wrap:wrap}
+.pt-studio-embedded-inspector .pt-inline-inspector__body{overflow:visible;min-height:0}
+.pt-studio-embedded-inspector .pt-inline-inspector__grid{grid-template-columns:repeat(2,minmax(0,1fr))}

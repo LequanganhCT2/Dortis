@@ -13,7 +13,7 @@ function NumberField({label,value,min,max,step=1,onChange}){
   },[value,min,max,step,onChange])
   return <label>{label}<input ref={ref} type="number" value={value} min={min} max={max} step={step} onChange={e=>{if(e.target.value!=='')onChange(Number(e.target.value))}}/></label>
 }
-export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice}){
+export default function StudioPanel({publication,device,studio,baseSelection,busy,onAdd,onAddSection,onUpload,onReplaceBase,onPatchBaseImage,onSelectBase,onUndo,onRedo,canUndo,canRedo,onDevice,onPreview,onPublish,onDiscard,notice,inspector}){
   const sections=publication?.view?.sections||[]
   const [sectionId,setSectionId]=useState(sections[0]?.id||'')
   const [tab,setTab]=useState('content')
@@ -74,6 +74,7 @@ export default function StudioPanel({publication,device,studio,baseSelection,bus
         <NumberField label="Cường độ ảnh (%)" value={photoMotionIntensity(baseImage)} min={0} max={100} onChange={value=>onPatchBaseImage(section.id,baseSelection.layerId,{motionIntensity:value})}/>
         {supportsPhotoPointer(photoMotionMode(baseImage))&&<label><span><input type="checkbox" checked={photoMotionPointer(baseImage)} onChange={e=>onPatchBaseImage(section.id,baseSelection.layerId,{motionPointer:e.target.checked})}/> Theo con trỏ</span></label>}</>}
       </>}
+      {inspector}
       {item&&isStudioText(item.kind)&&<div className="pt-studio-panel__grid"><button onClick={()=>studio.duplicate(section.id,item.id)}>Nhân bản</button><button onClick={()=>patch({locked:!v.locked})}>{v.locked?'Mở khóa':'Khóa vị trí'}</button><label>Chuyển khu vực<select value={section.id} onChange={e=>studio.move(section.id,item.id,e.target.value)}>{sections.map(s=><option key={s.id} value={s.id}>{s.label}</option>)}</select></label></div>}
       {item&&!isStudioText(item.kind)&&<>
         <div className="pt-studio-panel__tabs">{[['content','Nội dung'],['type','Kiểu chữ'],['layout','Bố cục'],['style','Giao diện'],['motion','Hiệu ứng'],['layer','Layer']].map(([id,label])=><button key={id} aria-pressed={tab===id} onClick={()=>setTab(id)}>{label}</button>)}</div>

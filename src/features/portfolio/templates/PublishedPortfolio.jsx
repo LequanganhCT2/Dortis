@@ -352,7 +352,6 @@ export default function PublishedPortfolio(){
     patchItem(sectionId,id,{...rest,...(borderWidth!=null?{border:borderWidth}:{})})
   }
   const editorActive=Boolean(admin&&editMode&&studioSession.active)
-  const activeInspector=Boolean(customText||(selection&&lookupPublishedLayer(publication,selection.sectionId,device,selection.layerId)))
   return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')+(studioSession.active&&deviceOverride==='mobile'?' pt-studio-mobile-preview':'')}>
     {admin&&publication&&<div className="pt-published__toolbar"
       role="group" aria-label="Chọn chế độ xem hoặc chỉnh sửa portfolio">
@@ -398,17 +397,11 @@ export default function PublishedPortfolio(){
         applyPublicEdit(section,key,'content',{value}):undefined}
       onDirectTextFinish={finishInlineTextEdit}
       device={device}/>}
-    {editorActive&&!activeInspector&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
+    {editorActive&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
       onAdd={addItem} onAddSection={addSection} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}
       canUndo={studioSession.canUndo} canRedo={studioSession.canRedo} onDevice={value=>{clearSelection();setDeviceOverride(value)}}
-      onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice}/>}
-    {editorActive&&activeInspector&&<div className="pt-unified-editor-actions" style={{position:'fixed',bottom:12,left:12,zIndex:1300,display:'flex',flexWrap:'wrap',gap:6,maxWidth:'calc(100vw - 24px)',padding:8,background:'#18232e',color:'#fff',borderRadius:10}}>
-      <button type="button" onClick={()=>{clearSelection();finishPendingPublicEdits()}}>← Layer / Studio</button>
-      {customText&&<><button type="button" onClick={()=>duplicateItem(customSection.id,customItem.id)}>Nhân bản</button><button type="button" onClick={()=>patchItem(customSection.id,customItem.id,{locked:!customValues.locked})}>{customValues.locked?'Mở khóa':'Khóa'}</button></>}
-      <button type="button" disabled={studioSession.busy} onClick={publishStudio}>Xuất bản</button>
-    </div>}
-    {editorActive&&admin&&customText&&<InlinePortfolioInspector
+      onPreview={previewStudio} onPublish={publishStudio} onDiscard={discardStudio} notice={saveNotice} inspector={customText?(<InlinePortfolioInspector embedded
       selection={{sectionId:customSection.id,layerId:customItem.id,...(customMetrics.id===customItem.id?customMetrics:{})}}
       layer={{section:customSection,scene:true,custom:true,kind:customItem.kind,values:{...customValues,borderWidth:customValues.border,motion:studioTextMotion(customValues)}}}
       device={device} onApply={applyCustomText} textValue={customItem.text||''}
@@ -416,8 +409,7 @@ export default function PublishedPortfolio(){
       onToggleHidden={()=>patchItem(customSection.id,customItem.id,{hidden:!customValues.hidden})}
       onResetTypography={()=>patchItem(customSection.id,customItem.id,{inheritTypography:true})}
       onCustomPatch={patch=>patchItem(customSection.id,customItem.id,patch)}
-      onReplayMotion={()=>setReplayKey(v=>v+1)} onClose={()=>{clearSelection();finishPendingPublicEdits()}}/>}
-    {editorActive&&admin&&selection&&publication&&<InlinePortfolioInspector
+      onReplayMotion={()=>setReplayKey(v=>v+1)} onClose={()=>{clearSelection();finishPendingPublicEdits()}}/ >):selection&&publication?(<InlinePortfolioInspector embedded
       selection={selection}
       layer={lookupPublishedLayer(publication,selection.sectionId,
         device,selection.layerId)}
@@ -429,6 +421,6 @@ export default function PublishedPortfolio(){
       onStartInlineEdit={()=>beginInlineTextEdit(selection.sectionId,
         selection.layerId)}
       onReplayMotion={()=>setReplayKey(v=>v+1)}
-      onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/>}
+      onClose={()=>{setEditingText(null);setSelection(null);finishPendingPublicEdits()}}/ >):null}/>}
   </div>
 }
