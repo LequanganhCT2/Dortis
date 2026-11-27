@@ -242,11 +242,11 @@
     animation:none;
   }
   .pt-site:not(.pt-site--motion-paused) .pt-burst-letter{
-    animation:pt-ambient-glyph-wave 2.8s ease-in-out infinite!important;
+    animation:pt-ambient-glyph-wave 3.8s ease-in-out infinite!important;
     animation-delay:calc(var(--pt-wave-index,0) * -90ms)!important;
   }
   .pt-site:not(.pt-site--motion-paused) .pt-burst-word[data-pt-burst-word]{
-    animation:pt-ambient-glyph-wave 3.8s ease-in-out infinite!important;
+    animation:pt-ambient-glyph-wave 5s ease-in-out infinite!important;
     animation-delay:calc(var(--pt-word-delay,0ms) * -3)!important;
   }
 }

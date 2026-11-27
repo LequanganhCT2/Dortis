@@ -10,13 +10,13 @@ export default function CharacterBurst({text,disabled=false,maxCharacters=160,mo
   if(disabled)return value
   // Block motion operates on this inner span, leaving the authored outer
   // frame's position/size/rotation completely untouched.
-  if(mode==='block'||!allowCharacterBurst(value,maxCharacters))
+  if(mode==='block'||(mode!=='words'&&!allowCharacterBurst(value,maxCharacters)))
     return <span className="pt-burst-text pt-burst-text--block">
       <span className="pt-burst-visual">{value}</span>
     </span>
   if(mode==='words'){
     const tokens=splitBurstWords(value)
-    if(tokens.filter(token=>token.letters).length>170)return value
+    if(tokens.filter(token=>token.letters).length>1200)return value
     let index=0
     return <span className="pt-burst-text pt-burst-text--words" data-pt-burst="words">
       <span className="pt-burst-sr">{value}</span>
@@ -24,7 +24,7 @@ export default function CharacterBurst({text,disabled=false,maxCharacters=160,mo
         {tokens.map((token,i)=>token.space?
           <React.Fragment key={i}>{token.space}</React.Fragment>:
           <span className="pt-burst-word" key={i} data-pt-burst-word="true"
-            style={{'--pt-word-delay':Math.min(650,index++*24)+'ms'}}>
+            style={{'--pt-word-delay':(index++*24)+'ms'}}>
             {token.letters.map(letter=>letter.text).join('')}
           </span>)}
       </span>

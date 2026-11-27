@@ -145,7 +145,7 @@ export default function ScrollTextAtmosphere({
           const words=Array.from(node.querySelectorAll('.pt-burst-word[data-pt-burst-word]'))
           const unit=motion.unit==='auto'?kind==='body'?'words':'letters':motion.unit
           const targets=unit==='letters'&&letters.length&&letters.length<=300?letters:
-            unit==='words'&&words.length&&words.length<=190?words:
+            unit==='words'&&words.length&&words.length<=1200?words:
             [node.querySelector('.pt-burst-visual')||node]
           targets.forEach((target,index)=>start(target,
             textMotionFrames(motion.effect,motion.direction,motion.distance),{
@@ -172,7 +172,7 @@ export default function ScrollTextAtmosphere({
               {opacity:0,transform:'translate3d(0,15px,-12px) rotateX(-28deg) scale(.72)'},
               {opacity:1,transform:'translate3d(0,-2px,2px) rotateX(2deg) scale(1.04)',offset:.74},
               {opacity:1,transform:'none'}
-            ],{duration:300,delay:Math.min(240,index*11),
+            ],{duration:300,delay:index*Math.min(24,2400/Math.max(1,letters.length-1)),
               easing:'cubic-bezier(.18,.85,.27,1)'})
           })
         }else if(kind==='body'&&words.length){
@@ -180,7 +180,7 @@ export default function ScrollTextAtmosphere({
             {opacity:0,transform:'translate3d(0,12px,0) scale(.97)'},
             {opacity:1,transform:'translate3d(0,-1px,0) scale(1.005)',offset:.75},
             {opacity:1,transform:'none'}
-          ],{duration:320,delay:Math.min(650,index*24),
+          ],{duration:480,delay:index*Math.min(65,4200/Math.max(1,words.length-1)),
             easing:'cubic-bezier(.16,.87,.26,1)'}))
         }else if(kind==='image'&&
           (node.classList.contains('pt-photo-reveal')||
