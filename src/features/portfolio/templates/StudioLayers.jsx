@@ -52,7 +52,7 @@ function StudioLayer({item,section,sectionId,device,urls,studio,scene,typography
   const isText=isStudioText(item.kind)
   const presentation=isText?studioTextPresentation({v,kind:item.kind,section,device,scene,typography,continuousSilk}):null
   const TextTag=item.kind==='title'?'h2':'p'
-  const copyClass=scene?'pt-artboard__layer is-text':useClassic?'pt-site__copy':'pt-ribbon__copy'
+  const copyClass=scene?'pt-studio-scene-copy':useClassic?'pt-site__copy':'pt-ribbon__copy'
   return <div ref={ref} className={'pt-studio-layer'+(editing?' is-editable':'')+(selected?' is-selected':'')+(v.hidden?' is-hidden':'')}
     style={{left:p.x+'%',top:p.y+'%',width:p.w+'%',height:p.h+'%',zIndex:p.z,
       transform:'rotate('+p.rotation+'deg)',opacity:(v.hidden ? .25 : 1)*v.opacity/100}}
