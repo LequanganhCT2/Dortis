@@ -18,7 +18,8 @@
       .pt-ribbon__media .pt-photo-motion[data-pt-reveal-part],
       .pt-site__media .pt-photo-motion[data-pt-reveal-part],
       .pt-artboard__layer .pt-artboard__text[data-pt-reveal-part],
-      .pt-artboard__layer .pt-photo-motion[data-pt-reveal-part]){
+      .pt-artboard__layer .pt-photo-motion[data-pt-reveal-part],
+      [data-pt-studio-reveal][data-pt-reveal-part]){
   animation-duration:var(--pt-reveal-duration,410ms)!important;
   animation-timing-function:cubic-bezier(.16,.88,.25,1)!important;
   animation-fill-mode:both!important;

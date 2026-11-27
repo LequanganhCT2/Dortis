@@ -13,17 +13,10 @@ import DirectEditableText from './DirectEditableText'
 import {motionUnit,textMotionAttributes} from './textLayerMotion'
 import PortfolioRibbonBackdrop from './PortfolioRibbonBackdrop'
 import './section-artboard.css'
+import {sceneTextStyle} from './studioTextPresentation.js'
 
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v))
 const snap=v=>Math.round(v*2)/2
-function ribbonTextColor(color){
-  const channels=[1,3,5].map(offset=>{
-    const srgb=parseInt(color.slice(offset,offset+2),16)/255
-    return srgb<=.04045?srgb/12.92:((srgb+.055)/1.055)**2.4
-  })
-  const luminance=channels[0]*.2126+channels[1]*.7152+channels[2]*.0722
-  return luminance<.53?'#fff1e0':color
-}
 function toPosition(layer,board){
   return {left:layer.x+'%',top:layer.y+'%',width:layer.w+'%',height:layer.h+'%',
     zIndex:layer.z,opacity:layer.opacity/100,
@@ -46,17 +39,7 @@ function LayerElement({section,layerId,layer,scene,urls,device,editable,selected
   const label=sceneLayerTitle(layerId)
   const authoredColor=type==='text'&&
     layer.color!==sceneLayerDefault(layerId,section,device).color
-  const ratio=device==='mobile'?390:1200
-  const textStyle={
-    color:section.backdrop===LUXURY_RIBBON||continuousSilk?ribbonTextColor(layer.color):layer.color,textAlign:layer.align,fontFamily:sceneFont(layer.font),
-    fontWeight:layer.weight,lineHeight:layer.lineHeight,
-    letterSpacing:layer.spacing+'px',whiteSpace:'pre-line',
-    fontSize:'clamp(9px,'+(layer.size*100/ratio).toFixed(3)+'cqw,180px)',
-    textShadow:layerId==='title'?'0 7px 22px #0a132837':'none',
-    '--pt-direct-text-color':authoredColor?layer.color:undefined,
-    filter:layer.blur?'blur('+layer.blur+'px)':'none',
-    overflowWrap:'anywhere'
-  }
+  const textStyle=sceneTextStyle(layer,layerId,section,device,continuousSilk)
   const publicEditing=!editable&&Boolean(onDirectPatchLayer)
   const inlineEditing=publicEditing&&editingText?.sectionId===section.id&&
     editingText?.layerId===layerId&&type==='text'
@@ -370,7 +353,7 @@ export default function SectionArtboard({
       {editable&&<div className="pt-artboard__edit-hint">
         Kéo chữ hoặc ảnh để đổi vị trí · Thả file lên ô ảnh hoặc nhấp chuột phải để thêm ảnh
       </div>}
+      {children}
     </div>
-    {children}
   </section>
 }

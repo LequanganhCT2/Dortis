@@ -56,6 +56,7 @@ export default function ScrollTextAtmosphere({
     for(const section of sections){
       let bodyIndex=0,photoIndex=0
       const register=(node,kind,index=0)=>{
+        if(node.dataset.ptStudioReveal==='true'&&node.dataset.ptMotionEffect==='none')return
         const {enter,exit}=portfolioPartDelays(kind,index)
         node.dataset.ptRevealPart=kind
         trackedParts.add(node)
@@ -127,7 +128,7 @@ export default function ScrollTextAtmosphere({
         animation.onfinish=()=>{animation.cancel()}
       }
       const kind=node.dataset.ptRevealPart
-      const customEffect=kind!=='image'&&node.dataset.ptMotionEffect
+      const customEffect=(kind!=='image'||node.dataset.ptStudioReveal==='true')&&node.dataset.ptMotionEffect
       // A custom setting belongs to this exact text layer, never its
       // neighboring heading/description or its draggable outer frame.
       if(customEffect&&customEffect!=='auto'){
@@ -271,6 +272,7 @@ export default function ScrollTextAtmosphere({
     function markPart(node,state,entryDirection=direction){
       if(node.dataset.ptRevealState===state)return
       const wasSeen=node.dataset.ptRevealSeen==='true'
+      if(wasSeen&&state!=='visible'&&node.dataset.ptMotionReverse==='false')return
       node.dataset.ptRevealDirection=entryDirection
       if(state==='visible')node.dataset.ptRevealSeen='true'
       node.dataset.ptRevealState=state

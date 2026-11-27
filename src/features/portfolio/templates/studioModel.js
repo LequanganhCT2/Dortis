@@ -1,6 +1,9 @@
 const clamp=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback
 export const STUDIO_KINDS=['title','text','body','image','shape','button']
-export const STUDIO_EFFECTS=['none','fade','slide','zoom','flip','blur','letters']
+export const STUDIO_EFFECTS=['inherit','auto','none','fade','rise','slide','zoom','flip','blur','letters']
+export const STUDIO_TEXT_KEYS=['size','font','weight','align','spacing','lineHeight','color']
+export const isStudioText=kind=>['title','text','body','button'].includes(kind)
+export const studioTextRole=kind=>kind==='title'?'title':'body'
 export const STUDIO_FONTS=['Georgia','Arial','Be Vietnam Pro','Cormorant Garamond','Barlow Condensed','Times New Roman']
 const hex=(v,d)=>/^#[0-9a-f]{6}$/i.test(v||'')?v:d
 export function studioLayout(raw={},kind='text',device='desktop'){
@@ -20,10 +23,22 @@ export function studioLayout(raw={},kind='text',device='desktop'){
     border:clamp(raw.border,0,20,0),borderColor:hex(raw.borderColor,'#233950'),
     shadow:clamp(raw.shadow,0,80,0),blur:clamp(raw.blur,0,20,0),
     fit:raw.fit==='contain'?'contain':'cover',
-    effect:STUDIO_EFFECTS.includes(raw.effect)?raw.effect:'none',
+    effect:STUDIO_EFFECTS.includes(raw.effect)?raw.effect:'inherit',
     duration:clamp(raw.duration,.1,5,.8),delay:clamp(raw.delay,0,5,0),
     reverse:raw.reverse!==false,hidden:raw.hidden===true,locked:raw.locked===true
   }
+}
+// Old Studio records persisted every default value, so preserve differences
+// from the old defaults as authored overrides. New records track exactly
+// which properties the editor has changed, even when equal to a default.
+export function resolveStudioLayout(raw={},kind='text',device='desktop'){
+  const v=studioLayout(raw,kind,device)
+  const defaults=studioLayout({},kind,device)
+  const textOverrides=raw.textOverrides&&typeof raw.textOverrides==='object'?
+    Object.fromEntries(STUDIO_TEXT_KEYS.filter(k=>raw.textOverrides[k]===true).map(k=>[k,true])):
+    Object.fromEntries(STUDIO_TEXT_KEYS.filter(k=>raw[k]!=null&&v[k]!==defaults[k]).map(k=>[k,true]))
+  const effect=raw.styleVersion!==2&&raw.effect==='none'&&raw.duration===.8&&raw.delay===0&&raw.reverse!==false?'inherit':v.effect
+  return {...v,effect,textOverrides,styleVersion:2}
 }
 export function studioElements(doc,sectionId){
   return Array.isArray(doc?.studioElements?.[sectionId])?doc.studioElements[sectionId]:[]
@@ -31,7 +46,7 @@ export function studioElements(doc,sectionId){
 export function newStudioElement(kind,id,extra={}){
   if(!STUDIO_KINDS.includes(kind)||!id)throw new Error('Loại phần tử không hợp lệ')
   return {id,kind,text:({title:'Tiêu đề mới',text:'Text mới',body:'Nhập nội dung tại đây',button:'Tìm hiểu thêm'})[kind]||'',path:'',alt:'',href:'',...extra,
-    desktop:studioLayout({},kind,'desktop'),mobile:studioLayout({},kind,'mobile')}
+    desktop:resolveStudioLayout({textOverrides:{},styleVersion:2},kind,'desktop'),mobile:resolveStudioLayout({textOverrides:{},styleVersion:2},kind,'mobile')}
 }
 export function replaceStudioElements(doc,sectionId,items){
   return {...doc,studioElements:{...(doc.studioElements||{}),[sectionId]:items}}
@@ -39,11 +54,13 @@ export function replaceStudioElements(doc,sectionId,items){
 export function patchStudioElement(doc,sectionId,id,device,patch){
   return replaceStudioElements(doc,sectionId,studioElements(doc,sectionId).map(e=>{
     if(e.id!==id)return e
-    const {text,path,alt,href,...style}=patch
+    const {text,path,alt,href,inheritTypography,...style}=patch
+    const current=resolveStudioLayout(e[device],e.kind,device)
+    const textOverrides=inheritTypography?{}:{...current.textOverrides,...Object.fromEntries(STUDIO_TEXT_KEYS.filter(k=>Object.hasOwn(style,k)).map(k=>[k,true]))}
     return {...e,...(typeof text==='string'?{text:text.slice(0,10000)}:{}),
       ...(typeof path==='string'?{path}:{}),...(typeof alt==='string'?{alt:alt.slice(0,240)}:{}),
       ...(typeof href==='string'?{href:href.slice(0,2000)}:{}),
-      [device]:studioLayout({...e[device],...style},e.kind,device)}
+      [device]:resolveStudioLayout({...current,...style,textOverrides,styleVersion:2},e.kind,device)}
   }))
 }
 export function studioImagePaths(doc){
