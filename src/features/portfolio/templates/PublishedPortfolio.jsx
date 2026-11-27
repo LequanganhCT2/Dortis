@@ -6,6 +6,7 @@ import PortfolioTemplateSite from './PortfolioTemplateSite'
 import {withPublishedTitlePosition} from './publicTitlePosition'
 import {lookupPublishedLayer,patchPublishedElement} from './publicElementStyle'
 import {getPublishedText,isEditablePortfolioText} from './publicTextContent'
+import {removeSceneNote} from './sectionDesign.js'
 import InlinePortfolioInspector from './InlinePortfolioInspector'
 import {setSlotImage} from './model.js'
 import {addStudioSection,newStudioElement,patchStudioElement,replaceStudioElements,studioElements} from './studioModel.js'
@@ -220,6 +221,15 @@ export default function PublishedPortfolio(){
     const apply=doc=>patchPublishedElement(doc,sectionId,device,layerId,group,patch,section)
     studioSession.commit(pair=>({content:apply(pair.content),snapshot:apply(pair.snapshot)}))
   }
+  function deletePublicText(sectionId,layerId){
+    if(!admin||!editMode||!publication||!isEditablePortfolioText(layerId))return
+    const section=publication.view?.sections?.find(s=>s.id===sectionId)
+    if(!section)return
+    const remove=doc=>layerId.startsWith('note:')?
+      removeSceneNote(doc,section,layerId.slice(5)):
+      patchPublishedElement(doc,sectionId,device,layerId,'content',{value:''},section)
+    if(studioSession.commit(pair=>({content:remove(pair.content),snapshot:remove(pair.snapshot)})))clearSelection()
+  }
   function clearSelection(){setSelection(null);setEditingText(null);setCustomSelection(null)}
   function selectCustom(sectionId,id){setSelection(null);setEditingText(null);setCustomSelection({sectionId,id})}
   function selectBase(sectionId,layerId){
@@ -376,6 +386,7 @@ export default function PublishedPortfolio(){
         device,selection.layerId)}
       device={device}
       onApply={applyPublicEdit}
+      onDelete={isEditablePortfolioText(selection.layerId)?()=>deletePublicText(selection.sectionId,selection.layerId):undefined}
       textValue={getPublishedText(publication,selection.sectionId,
         device,selection.layerId)}
       onStartInlineEdit={()=>beginInlineTextEdit(selection.sectionId,

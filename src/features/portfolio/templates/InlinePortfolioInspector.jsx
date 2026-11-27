@@ -89,7 +89,7 @@ function LiveNumberField({label,value,min,max,step=1,suffix='',onApply,identity}
 
 export default function InlinePortfolioInspector({
   selection,layer,device='desktop',onApply,onClose,onClearNotice,onReplayMotion,
-  textValue='',onStartInlineEdit
+  textValue='',onStartInlineEdit,onDelete
 }){
   const [tab,setTab]=useState('size')
   const [panelPosition,setPanelPosition]=useState(null)
@@ -215,6 +215,7 @@ export default function InlinePortfolioInspector({
           onClick={onStartInlineEdit}>
           <span aria-hidden="true">✎</span> Sửa trực tiếp trên chữ
         </button>
+        {onDelete&&<button type="button" className="pt-inline-inspector__replay" style={{color:"#ff7777"}} onClick={()=>{if(window.confirm("Xóa nội dung này khỏi portfolio?"))onDelete()}}>Xóa nội dung</button>}
         <p className="pt-inline-inspector__actual">
           Nhấp đúp lên chữ trong trang để nhập ngay tại vị trí đó. Nội dung
           cập nhật tức thì và tự lưu. Bản gốc trong hồ sơ nghệ sĩ không bị sửa.
