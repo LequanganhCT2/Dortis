@@ -3,7 +3,8 @@ import {supabase} from '../../../infrastructure/supabase/client'
 import {newStyledImage} from './newImageAppearance.js'
 import {canManageContent} from '../../../core/auth/roles'
 import {clientNavigate} from '../../../app/navigation'
-import PortfolioTemplateSite from './PortfolioTemplateSite'
+import LegacyPortfolioTemplateSite from './PortfolioTemplateSite'
+import PortfolioV2 from '../v2/PortfolioV2.jsx'
 import {withPublishedTitlePosition} from './publicTitlePosition'
 import {lookupPublishedLayer,patchPublishedElement} from './publicElementStyle'
 import {getPublishedText,isEditablePortfolioText} from './publicTextContent'
@@ -60,6 +61,7 @@ function measurePublicElement(element){
  * snapshot loaded once at mount time.
  */
 export default function PublishedPortfolio(){
+  const PortfolioTemplateSite=new URLSearchParams(window.location.search).get('renderer')==='v2'?PortfolioV2:LegacyPortfolioTemplateSite
   const id=window.location.pathname.split('/')[2]
   const [publication,setPublication]=useState(null)
   const [saveState,setSaveState]=useState('')
