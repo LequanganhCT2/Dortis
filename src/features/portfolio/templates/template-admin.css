@@ -254,8 +254,8 @@
   cursor:pointer}
 .pt-editor__view-button.is-active{background:#163c4a;color:#fff;border-color:#163c4a}
 .pt-editor__view-button:disabled{opacity:.5;cursor:not-allowed}
-.pt-published > .pt-device{max-height:none;border:0;border-radius:0;box-shadow:none;overflow:visible}
-.pt-published > .pt-device--mobile{width:100%}
+.pt-published > .pt-device,.pt-published > .pt-entrance-shell > .pt-device{max-height:none;border:0;border-radius:0;box-shadow:none;overflow:visible}
+.pt-published > .pt-device--mobile,.pt-published > .pt-entrance-shell > .pt-device--mobile{width:100%}
 .pt-published__toolbar{display:flex;justify-content:flex-end;padding:10px clamp(16px,4vw,64px);background:#edf3f4}
 .pt-site [data-portfolio-edit-field]{position:relative;cursor:text;outline-offset:4px;outline:1px dashed #11858b80}
 .pt-site [data-portfolio-edit-field]:hover,

@@ -144,7 +144,9 @@ export default function ScrollTextAtmosphere({
           const letters=Array.from(node.querySelectorAll('.pt-burst-letter'))
           const words=Array.from(node.querySelectorAll('.pt-burst-word[data-pt-burst-word]'))
           const unit=motion.unit==='auto'?kind==='body'?'words':'letters':motion.unit
-          const targets=unit==='letters'&&letters.length&&letters.length<=300?letters:
+          const targets=device==='mobile'&&kind==='body'&&motion.unit==='auto'?
+            [node.querySelector('.pt-burst-visual')||node]:
+            unit==='letters'&&letters.length&&letters.length<=300?letters:
             unit==='words'&&words.length&&words.length<=1200?words:
             [node.querySelector('.pt-burst-visual')||node]
           targets.forEach((target,index)=>start(target,
@@ -175,7 +177,7 @@ export default function ScrollTextAtmosphere({
             ],{duration:300,delay:index*Math.min(24,2400/Math.max(1,letters.length-1)),
               easing:'cubic-bezier(.18,.85,.27,1)'})
           })
-        }else if(kind==='body'&&words.length){
+        }else if(kind==='body'&&words.length&&device!=='mobile'){
           words.forEach((word,index)=>start(word,[
             {opacity:0,transform:'translate3d(0,12px,0) scale(.97)'},
             {opacity:1,transform:'translate3d(0,-1px,0) scale(1.005)',offset:.75},
@@ -201,7 +203,7 @@ export default function ScrollTextAtmosphere({
           // Never override user-authored layer transforms/scale/position.
           // Fallback for very long descriptions: a visible lift, not an
           // imperceptible opacity-only change, but never affect text frames.
-          const target=kind==='body'?
+          const target=kind==='body'&&device!=='mobile'?
             [{opacity:0,filter:'blur(5px)'},{opacity:1,filter:'blur(0px)'}]:
             [{opacity:0},{opacity:1}]
           start(node,target,{
@@ -272,6 +274,10 @@ export default function ScrollTextAtmosphere({
     function markPart(node,state,entryDirection=direction){
       if(node.dataset.ptRevealState===state)return
       const wasSeen=node.dataset.ptRevealSeen==='true'
+      if(node.dataset.ptRevealPart==='image'){
+        const photo=node.matches('.pt-photo-motion')?node:node.querySelector('.pt-photo-motion')
+        photo?.classList.toggle('is-photo-visible',state==='visible')
+      }
       if(wasSeen&&state!=='visible'&&node.dataset.ptMotionReverse==='false')return
       node.dataset.ptRevealDirection=entryDirection
       if(state==='visible')node.dataset.ptRevealSeen='true'
@@ -304,13 +310,13 @@ export default function ScrollTextAtmosphere({
         if(disposed)return
         changeDirection()
         const area=viewport()
-        for(const entry of entries){
+        const states=entries.map(entry=>({entry,state:entry.isIntersecting?'visible':
+          entry.boundingClientRect.bottom<=area.top+(area.bottom-area.top)/2?'hidden-top':'hidden-bottom'}))
+        for(const {entry,state} of states){
           if(trackedParts.has(entry.target)){
-            markPart(entry.target,classifyPortfolioPart(entry.target.getBoundingClientRect(),
-              area.top,area.bottom))
+            markPart(entry.target,state)
           }else{
-            mark(entry.target,classifyPortfolioBlock(entry.boundingClientRect,
-              area.top,area.bottom))
+            mark(entry.target,state)
           }
         }
       },{
@@ -321,18 +327,20 @@ export default function ScrollTextAtmosphere({
     function scan(){
       fallbackFrame=0
       if(disposed)return
+      changeDirection()
       const area=viewport()
-      for(const section of sections){
-        mark(section,classifyPortfolioBlock(section.getBoundingClientRect(),
-          area.top,area.bottom))
-      }
-      for(const part of revealParts){
-        markPart(part,classifyPortfolioPart(part.getBoundingClientRect(),
-          area.top,area.bottom))
-      }
+      const sectionStates=sections.map(section=>[section,classifyPortfolioBlock(section.getBoundingClientRect(),area.top,area.bottom)])
+      const partStates=revealParts.map(part=>[part,classifyPortfolioPart(part.getBoundingClientRect(),area.top,area.bottom)])
+      sectionStates.forEach(([section,state])=>mark(section,state))
+      partStates.forEach(([part,state])=>markPart(part,state))
     }
     function onScroll(){
-      changeDirection()
+      // Public pages already receive viewport transitions from the observer.
+      // Only embedded editor panes need the explicit per-frame geometry scan.
+      if(observer&&publicPage){
+        if(!fallbackFrame)fallbackFrame=requestAnimationFrame(()=>{fallbackFrame=0;changeDirection()})
+        return
+      }
       // Explicitly scan the embedded editor scroll container every frame of
       // movement, even when IntersectionObserver does not deliver callbacks.
       if(!fallbackFrame)fallbackFrame=requestAnimationFrame(scan)

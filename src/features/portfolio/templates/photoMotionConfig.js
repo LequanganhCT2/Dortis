@@ -53,3 +53,9 @@ export function photoPointerOffsets(mode,x,y,intensity=45){
     ly:((ny+1)*50).toFixed(1)+'%'
   }
 }
+/** Stable independent loop phase; never synchronizes siblings by array order. */
+export function photoMotionPhase(key){
+  let hash=2166136261
+  for(const character of String(key||''))hash=Math.imul(hash^character.charCodeAt(0),16777619)
+  return -((hash>>>0)%12000)/1000
+}

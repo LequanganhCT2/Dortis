@@ -1,0 +1,5 @@
+@layer portfolio-text{
+  /* Authored typography remains authoritative. This layer styles only the greeting. */
+  .pt-clean-portfolio .pt-welcome h1{font:400 clamp(52px,9vw,112px)/1.1 Georgia,serif;margin:0}
+  .pt-clean-portfolio .pt-welcome p{margin:0;font:14px/1.7 system-ui,sans-serif}
+}

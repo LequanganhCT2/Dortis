@@ -1,6 +1,6 @@
 import React,{useEffect,useLayoutEffect,useId,useRef} from 'react'
 import {
-  photoMotionSetting,photoPointerOffsets
+  photoMotionSetting,photoPointerOffsets,photoMotionPhase
 } from './photoMotionConfig'
 import './photo-motion.css'
 
@@ -10,7 +10,7 @@ import './photo-motion.css'
  * Transform is isolated from parent translate/scale, so Admin edits survive.
  */
 export default function PhotoMotion({
-  asset,paused=false,revealOrder=0,children
+  asset,paused=false,revealOrder=0,motionKey,preview=false,children
 }){
   const host=useRef(null),frame=useRef(0),pending=useRef(null)
   const svgId='pt-water-'+useId().replace(/:/g,'')
@@ -30,7 +30,8 @@ export default function PhotoMotion({
       shell.classList.remove('pt-photo-frame-transferred')
       const computed=getComputedStyle(shell)
       const props=['backgroundColor','backgroundImage','borderTop','borderRight','borderBottom','borderLeft','borderRadius','boxShadow']
-      for(const prop of props)surface.style[prop]=computed[prop]
+      const values=props.map(prop=>[prop,computed[prop]])
+      for(const [prop,value] of values)surface.style[prop]=value
       shell.classList.add('pt-photo-frame-transferred')
     }
     sync()
@@ -43,7 +44,7 @@ export default function PhotoMotion({
       shell.classList.remove('pt-photo-frame-transferred')
       for(const prop of ['backgroundColor','backgroundImage','borderTop','borderRight','borderBottom','borderLeft','borderRadius','boxShadow'])surface.style[prop]=''
     }
-  },[mode,paused,asset])
+  },[mode,paused])
   const apply=values=>{
     const element=host.current
     if(!element)return
@@ -67,19 +68,10 @@ export default function PhotoMotion({
       reset()
       return
     }
-    if(typeof IntersectionObserver==='undefined'){
+    if(preview){
       element.classList.add('is-photo-visible')
-      return
     }
-    const observer=new IntersectionObserver(([entry])=>{
-      element.classList.toggle('is-photo-visible',Boolean(entry?.isIntersecting))
-    },{rootMargin:'120px 0px'})
-    observer.observe(element)
-    return ()=>{
-      observer.disconnect()
-      if(frame.current){cancelAnimationFrame(frame.current);frame.current=0}
-    }
-  },[enabled])
+  },[enabled,preview])
   useEffect(()=>()=>{
     if(frame.current)cancelAnimationFrame(frame.current)
   },[])
@@ -101,10 +93,12 @@ export default function PhotoMotion({
     className={'pt-photo-motion pt-photo-motion--'+mode+
       (enabled?'':' is-photo-paused')}
     data-photo-motion={mode}
+    data-photo-detail-id={motionKey||asset?.path||svgId}
     data-pt-scroll-reveal="image"
     data-pt-reveal-order={revealOrder}
     style={{
       '--pm-amp':(power*14).toFixed(2)+'px',
+      '--pm-phase':photoMotionPhase(motionKey||asset?.path||svgId)+'s',
       '--pm-orbit':(power*9).toFixed(2)+'px',
       '--pm-turn':(power*2.4).toFixed(2)+'deg',
       '--pm-breath':(1+power*.055).toFixed(4),

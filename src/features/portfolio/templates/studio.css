@@ -87,3 +87,6 @@
 .pt-studio-workspace-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;position:sticky;top:0;background:#202630;z-index:2;padding:4px 0}
 .pt-studio-panel__body select{width:100%;max-width:100%}
 .pt-studio-panel__layers{max-height:none;min-height:0;overflow:visible}
+.pt-site .pt-studio-layer:has(img),.pt-site .pt-artboard__layer.is-image{
+  translate:0 var(--pt-photo-flow-shift,0px);
+}

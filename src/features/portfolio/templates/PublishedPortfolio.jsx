@@ -16,6 +16,8 @@ import {quickTextPreset} from './textQuickLayouts.js'
 import {studioTextMotion} from './studioTextPresentation.js'
 import {photoMotionMode,photoMotionIntensity,photoMotionPointer} from './photoMotionConfig.js'
 import useStudioSession from './useStudioSession.js'
+import usePortfolioEntrance from './usePortfolioEntrance.js'
+import './portfolio-clean-page.css'
 import './template-admin.css'
 
 const BUCKET='dortis-artist-web-drafts'
@@ -378,7 +380,24 @@ export default function PublishedPortfolio(){
     patchItem(sectionId,id,{...rest,...(borderWidth!=null?{border:borderWidth}:{})})
   }
   const editorActive=Boolean(admin&&editMode&&studioSession.active)
-  return <div className={'pt-published'+(editorActive?' pt-published--admin-edit':'')+(studioSession.active&&deviceOverride==='mobile'?' pt-studio-mobile-preview':'')}>
+  const cleanPage=id==='9ff93d63-8db9-4ca9-8d3c-89ddd63b4f4e'
+  const entrance=usePortfolioEntrance(urls,cleanPage&&!loading&&!!publication)
+  const waiting=cleanPage&&!editorActive&&(!entrance.ready||loading||Boolean(error))
+  useEffect(()=>{
+    if(!waiting)return
+    const previous=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    return()=>{document.body.style.overflow=previous}
+  },[waiting])
+  return <div data-pt-entry-ready={cleanPage?entrance.ready:undefined}
+    data-pt-loaded-images={cleanPage?entrance.done:undefined}
+    data-pt-total-images={cleanPage?entrance.total:undefined}
+    className={'pt-published'+(cleanPage?' pt-clean-portfolio':'')+(editorActive?' pt-published--admin-edit':'')+(studioSession.active&&deviceOverride==='mobile'?' pt-studio-mobile-preview':'')}>
+    {waiting&&<div className="pt-welcome" role="status" aria-live="polite"><h1>Xin chào.</h1><p>{error||'Một chút nữa, sân khấu sẽ sẵn sàng.'}</p>
+      <p>{entrance.done}/{entrance.total} ảnh đã tải</p>
+      {error&&<button type="button" onClick={()=>window.location.reload()}>Tải lại trang</button>}
+      {entrance.failed>0&&<><p>{entrance.failed} ảnh chưa tải được.</p><button type="button" onClick={entrance.retry}>Thử tải lại</button></>}
+    </div>}
     {admin&&publication&&<div className="pt-published__toolbar"
       role="group" aria-label="Chọn chế độ xem hoặc chỉnh sửa portfolio">
       <div className="pt-published__mode-switch" role="group" aria-label="Chế độ trang">
@@ -404,10 +423,10 @@ export default function PublishedPortfolio(){
     </div>}
     {error&&<p className="pt-alert" role="alert">{error}</p>}
     {loading&&<p role="status">Đang tải portfolio…</p>}
-    {!loading&&publication&&<PortfolioTemplateSite
+    {!loading&&publication&&<div className={'pt-entrance-shell'+(waiting?' is-waiting':'')} inert={waiting?true:undefined} aria-hidden={waiting?true:undefined}><PortfolioTemplateSite
       key={id+':'+publishedAt}
       publishedView={view} template={publishedTemplate} publicPage
-      motionPaused={editorActive||Boolean(editingText)} studio={editorActive?studio:undefined}
+      motionPaused={waiting||editorActive||Boolean(editingText)} studio={editorActive?studio:undefined}
       revealReplayKey={replayKey} forceMotion={replayKey>0}
       instance={{content}} urls={urls}
       onDirectMoveTitle={editorActive?movePublishedTitle:undefined}
@@ -422,7 +441,7 @@ export default function PublishedPortfolio(){
       onDirectTextChange={editorActive?(section,key,value)=>
         applyPublicEdit(section,key,'content',{value}):undefined}
       onDirectTextFinish={finishInlineTextEdit}
-      device={device}/>}
+      device={device}/></div>}
     {editorActive&&<StudioPanel publication={publication} device={device} studio={studio} baseSelection={selection} busy={studioSession.busy}
       onAdd={addItem} onAddPresetLayer={addPresetLayer} onCloneBaseLayer={cloneBaseLayer} onAddSection={addSection} onBlockAction={blockAction} onUpload={uploadItems} onReplaceBase={replaceBaseImage} onPatchBaseImage={patchBaseImage} onSelectBase={selectBase}
       onUndo={()=>{clearSelection();studioSession.history('undo')}} onRedo={()=>{clearSelection();studioSession.history('redo')}}

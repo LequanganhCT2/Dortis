@@ -1,0 +1,9 @@
+@import './portfolio-clean-type.css';
+@layer portfolio-page{
+  .pt-clean-portfolio{min-height:100svh}
+  .pt-entrance-shell{position:relative}
+  .pt-entrance-shell.is-waiting{height:100svh;overflow:hidden;pointer-events:none;user-select:none;filter:blur(16px);opacity:.35}
+  .pt-entrance-shell.is-waiting *{animation-play-state:paused!important}
+  .pt-welcome{position:fixed;inset:0;z-index:2000;display:grid;place-content:center;gap:16px;text-align:center;background:#f4f1ebc9;backdrop-filter:blur(12px);color:#212020;padding:24px}
+  .pt-welcome button{font:inherit;padding:12px 20px;background:transparent;border:1px solid currentColor;border-radius:0;cursor:pointer}
+}

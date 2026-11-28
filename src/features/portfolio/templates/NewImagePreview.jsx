@@ -34,7 +34,7 @@ export default function NewImagePreview({files,busy=false,onCancel,onConfirm}){
     <div className="pt-new-image__layout">
       <div className="pt-new-image__stage">
         {entry?<div className="pt-studio-layer__visual pt-new-image__photo" style={{borderRadius:style.radius,boxShadow:'0 6px '+style.shadow+'px #0004'}}>
-          <PhotoMotion asset={{motion:style.photoMotion,motionIntensity:style.photoIntensity}}>
+          <PhotoMotion preview motionKey={entry.file.name} asset={{motion:style.photoMotion,motionIntensity:style.photoIntensity}}>
             <img src={entry.url} alt={entry.file.name} style={{objectFit:style.fit}}/>
           </PhotoMotion></div>:<p role="status">Đang đọc thông tin ảnh…</p>}
       </div>
